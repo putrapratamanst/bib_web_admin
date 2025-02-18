@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExcelController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
@@ -9,7 +10,7 @@ Route::get("/", App\Livewire\Home::class)->name('home');
 Route::get("/under-construction", App\Livewire\UnderConstruction::class)->name('under-construction');
 
 Route::prefix('master')->group(function () {
-    
+
     // company
     Route::get("/company", App\Livewire\Master\Company\Index::class)->name('company.index');
     Route::get("/company/create", App\Livewire\Master\Company\Create::class)->name('company.create');
@@ -57,4 +58,9 @@ Route::prefix('transaction')->group(function () {
 
     Route::get('payment-allocation', App\Livewire\Transaction\PaymentAllocation\Index::class)->name('transaction.payment-allocation.index');
     Route::get('payment-allocation/create', App\Livewire\Transaction\PaymentAllocation\Create::class)->name('transaction.payment-allocation.create');
+});
+
+Route::prefix('report')->group(function () {
+    Route::get('/download-balance', [ExcelController::class, 'downloadBalance'])->name('report.balance.excel');;
+    Route::get('/download-profit-and-loss', [ExcelController::class, 'downloadProfitAndLoss'])->name('report.profitloss.excel');;
 });

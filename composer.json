@@ -10,6 +10,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.4",
+        "maatwebsite/excel": "*",
         "spatie/laravel-flash": "^1.10",
         "wire-elements/modal": "^2.0"
     },
