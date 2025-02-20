@@ -62,10 +62,13 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="{{ route("report.balance.excel") }}" target="_blank">Balance Excel</a>
+                            <a class="dropdown-item" href="{{ route("report.balance.index") }}">Balance</a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{{ route("report.profitloss.excel") }}" target="_blank">Profit & Loss</a>
+                            <a class="dropdown-item" href="{{ route("report.profitandloss.index") }}">Profit & Loss</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route("report.cashflow.index") }}">Cash Flow</a>
                         </li>
                     </ul>
                 </li>

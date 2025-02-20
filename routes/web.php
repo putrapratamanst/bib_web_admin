@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\BalanceController;
+use App\Http\Controllers\CashFlowController;
 use App\Http\Controllers\ExcelController;
+use App\Http\Controllers\ProfitAndLossController;
+use App\Models\ProfitAndLoss;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
@@ -61,6 +65,10 @@ Route::prefix('transaction')->group(function () {
 });
 
 Route::prefix('report')->group(function () {
-    Route::get('/download-balance', [ExcelController::class, 'downloadBalance'])->name('report.balance.excel');;
-    Route::get('/download-profit-and-loss', [ExcelController::class, 'downloadProfitAndLoss'])->name('report.profitloss.excel');;
+    Route::get('/balance', App\Livewire\Report\Balance\Index::class)->name('report.balance.index');
+    Route::get('/profit-and-loss', App\Livewire\Report\ProfitAndLoss\Index::class)->name('report.profitandloss.index');
+    Route::get('/cash-flow', App\Livewire\Report\CashFlow\Index::class)->name('report.cashflow.index');
+    Route::get('/download-balance', [BalanceController::class, 'downloadBalance'])->name('report.balance.download');
+    Route::get('/download-profit-and-loss', [ProfitAndLossController::class, 'downloadProfitAndLoss'])->name('report.profitandloss.download');
+    Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
 });

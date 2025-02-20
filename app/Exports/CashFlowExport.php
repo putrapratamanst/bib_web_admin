@@ -1,13 +1,16 @@
 <?php
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class ProfitAndLossExport implements FromArray, WithHeadings, WithStyles
+class CashFlowExport implements FromArray, WithHeadings, WithStyles
 {
+    
     protected $data;
 
     public function __construct($data)
@@ -25,10 +28,10 @@ class ProfitAndLossExport implements FromArray, WithHeadings, WithStyles
         return $this->data[0];
     }
 
+
     public function styles(Worksheet $sheet)
     {
-        // Atur border untuk seluruh tabel
-        $sheet->getStyle('A1:F27')->applyFromArray([
+        $sheet->getStyle('A1:D44')->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -37,8 +40,7 @@ class ProfitAndLossExport implements FromArray, WithHeadings, WithStyles
             ],
         ]);
 
-        // Atur heading tebal
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
 
         return [];
     }
