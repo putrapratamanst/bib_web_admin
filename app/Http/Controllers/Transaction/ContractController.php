@@ -3,50 +3,37 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contact;
 use App\Models\Contract;
-use App\Models\ContractType;
-use App\Models\Currency;
 use Illuminate\Http\Request;
 
 class ContractController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        return view('transaction.contract.index');
-    }
+        $contractTypes = \App\Models\ContractType::all();
 
-    public function show($id)
-    {
-        $contract = Contract::with(['client', 'contractType', 'currency'])->find($id);
-
-        if (!$contract) {
-            flash('Transaction Contract not found.', 'danger');
-            return redirect()->route('transaction.contract.index');
-        }
-
-        return view('transaction.contract.show', compact('contract'));
+        return view('transaction.contract.index', [
+            'contractTypes' => $contractTypes,
+        ]);
     }
 
     public function create()
     {
-        $clients = Contact::whereHas('type', function ($query) {
-            $query->where('type', 'client');
-        })->orderBy('name')->get();
+        $contractTypes = \App\Models\ContractType::all();
+        $currencies = \App\Models\Currency::all();
 
-        $insurances = Contact::whereHas('type', function ($query) {
-            $query->where('type', 'insurance');
-        })->orderBy('name')->get();
-        
-        $currencies = Currency::orderBy('name')->get();
+        return view('transaction.contract.create', [
+            'contractTypes' => $contractTypes,
+            'currencies' => $currencies,
+        ]);
+    }
 
-        $contractTypies = ContractType::orderBy('name')->get();
+    public function show($id)
+    {
+        $contract = Contract::find($id);
 
-        return view('transaction.contract.create', compact(
-            'clients', 
-            'insurances', 
-            'currencies', 
-            'contractTypies'
-        ));
+        return view('transaction.contract.show', [
+            'contract' => $contract,
+        ]);
     }
 }

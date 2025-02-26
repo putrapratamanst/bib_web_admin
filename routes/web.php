@@ -2,67 +2,70 @@
 
 use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\CashFlowController;
-use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\ProfitAndLossController;
-use App\Models\ProfitAndLoss;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
-
-Route::get("/", App\Livewire\Home::class)->name('home');
-
-Route::get("/under-construction", App\Livewire\UnderConstruction::class)->name('under-construction');
+Route::get('/', function () {
+    return view('home');
+})->name('home');
 
 Route::prefix('master')->group(function () {
-
-    // company
-    Route::get("/company", App\Livewire\Master\Company\Index::class)->name('company.index');
-    Route::get("/company/create", App\Livewire\Master\Company\Create::class)->name('company.create');
-    Route::get("/company/edit/{id}", App\Livewire\Master\Company\Edit::class)->name('company.edit');
-
-    // bank
-    Route::get("/bank", App\Livewire\Master\Bank\Index::class)->name('bank.index');
-    Route::get("/bank/create", App\Livewire\Master\Bank\Create::class)->name('bank.create');
-    Route::get("/bank/edit/{id}", App\Livewire\Master\Bank\Edit::class)->name('bank.edit');
-
-    // contact
-    Route::get("/contact", App\Livewire\Master\Contact\Index::class)->name('contact.index');
-    Route::get("/contact/create", App\Livewire\Master\Contact\Create::class)->name('contact.create');
-    Route::get("/contact/edit/{id}", App\Livewire\Master\Contact\Edit::class)->name('contact.edit');
-
     // Chart of Account
-    Route::get("/coa", App\Livewire\Master\ChartOfAccount\Index::class)->name('coa.index');
-    Route::get("/coa/create", App\Livewire\Master\ChartOfAccount\Create::class)->name('coa.create');
-    Route::get("/coa/edit/{id}", App\Livewire\Master\ChartOfAccount\Edit::class)->name('coa.edit');
+    Route::get('/chart-of-accounts', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'index'])->name('master.chart-of-accounts.index');
+    Route::get('/chart-of-accounts/create', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'create'])->name('master.chart-of-accounts.create');
+
+    // Contact Group
+    Route::get('/contact-groups', [\App\Http\Controllers\Master\ContactGroupController::class, 'index'])->name('master.contact-groups.index');
+    Route::get('/contact-groups/create', [\App\Http\Controllers\Master\ContactGroupController::class, 'create'])->name('master.contact-groups.create');
+
+    // Contact
+    Route::get('/contacts', [\App\Http\Controllers\Master\ContactController::class, 'index'])->name('master.contacts.index');
+    Route::get('/contacts/create', [\App\Http\Controllers\Master\ContactController::class, 'create'])->name('master.contacts.create');
+    Route::get('/contacts/{id}', [\App\Http\Controllers\Master\ContactController::class, 'show'])->name('master.contacts.show');
 });
 
+// route group transaction
 Route::prefix('transaction')->group(function () {
-    // Route::get("cash-bank", App\Livewire\Transaction\CashBank\Index::class)->name('transaction.cash-bank.index');
-    // Route::get("cash-bank/create_receive", App\Livewire\Transaction\CashBank\Create\Receive::class)->name('transaction.cash-bank.create_receive');
+    Route::get('/cash-banks', [\App\Http\Controllers\Transaction\CashBankController::class, 'index'])->name('transaction.cash-banks.index');
+    Route::get('/cash-banks/create', [\App\Http\Controllers\Transaction\CashBankController::class, 'create'])->name('transaction.cash-banks.create');
 
-    Route::get("cash-bank", [App\Http\controllers\CashBankController::class, 'index'])->name('transaction.cash-bank.index');
+    // Contract
+    Route::get('/contracts', [\App\Http\Controllers\Transaction\ContractController::class, 'index'])->name('transaction.contracts.index');
+    Route::get('/contracts/create', [\App\Http\Controllers\Transaction\ContractController::class, 'create'])->name('transaction.contracts.create');
+    Route::get('/contracts/{id}', [\App\Http\Controllers\Transaction\ContractController::class, 'show'])->name('transaction.contracts.show');
 
+    // Journal Entry
+    Route::get('/journal-entries', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'index'])->name('transaction.journal-entries.index');
+    Route::get('/journal-entries/create', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'create'])->name('transaction.journal-entries.create');
 
-    Route::get("contract", [App\Http\Controllers\Transaction\ContractController::class, 'index'])->name('transaction.contract.index');
-    Route::get("contract/{id}", [App\Http\Controllers\Transaction\ContractController::class, 'show'])->name('transaction.contract.show');
-    Route::get("contract/create", [App\Http\Controllers\Transaction\ContractController::class, 'create'])->name('transaction.contract.create');
+    // Credit Note
+    Route::get(
+        '/credit-notes',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'index']
+    )->name('transaction.credit-notes.index');
+    Route::get(
+        '/credit-notes/create',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'create']
+    )->name('transaction.credit-notes.create');
+    Route::get(
+        '/credit-notes/{id}',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'show']
+    )->name('transaction.credit-notes.show');
 
-    Route::get("billing", App\Livewire\Transaction\Billing\Index::class)->name('transaction.billing.index');
-
-    // Route::get("billing", [App\Http\Controllers\Transaction\BillingController::class, 'index'])->name('transaction.billing.index');
-    Route::get("billing/create/{contractId}", [App\Http\Controllers\Transaction\BillingController::class, 'create'])->name('transaction.billing.create');
-
-    Route::get("credit-note", App\Livewire\Transaction\CreditNote\Index::class)->name('transaction.credit-note.index');
-
-    Route::get("cash-transactions", [App\Http\Controllers\Transaction\CashTransactionController::class, 'index'])->name('transaction.cash-transaction.index');
-    Route::get("cash-transactions/create", [App\Http\Controllers\Transaction\CashTransactionController::class, 'create'])->name('transaction.cash-transaction.create');
-
-    Route::get("cash-transactions/{id}", [App\Http\Controllers\Transaction\CashTransactionController::class, 'show'])->name('transaction.cash-transaction.show');
-
-
-    Route::get('payment-allocation', App\Livewire\Transaction\PaymentAllocation\Index::class)->name('transaction.payment-allocation.index');
-    Route::get('payment-allocation/create', App\Livewire\Transaction\PaymentAllocation\Create::class)->name('transaction.payment-allocation.create');
+    // Debit Note
+    Route::get(
+        '/debit-notes',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'index']
+    )->name('transaction.debit-notes.index');
+    // Route::get('/debit-notes/create', 
+    // [\App\Http\Controllers\Transaction\DebitNoteController::class, 'create'])->name('transaction.debit-notes.create');
+    Route::get(
+        '/debit-notes/{id}',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
+    )->name('transaction.debit-notes.show');
 });
+
+
 
 Route::prefix('report')->group(function () {
     Route::get('/balance', App\Livewire\Report\Balance\Index::class)->name('report.balance.index');
@@ -71,4 +74,8 @@ Route::prefix('report')->group(function () {
     Route::get('/download-balance', [BalanceController::class, 'downloadBalance'])->name('report.balance.download');
     Route::get('/download-profit-and-loss', [ProfitAndLossController::class, 'downloadProfitAndLoss'])->name('report.profitandloss.download');
     Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
+    Route::get('/console', [\App\Http\Controllers\Report\ConsoleReportController::class, 'index'])->name('report.console.index');
+
+    // Balance Sheet
+    Route::get('/balance-sheet', [\App\Http\Controllers\Report\BalanceSheetController::class, 'index'])->name('report.balance-sheet.index');
 });

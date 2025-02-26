@@ -9,12 +9,11 @@ class Currency extends Model
 {
     use HasFactory;
 
-    protected $table = 'currencies';
-    protected $primaryKey = 'id';
-    protected $keyType = 'int';
+    protected $primaryKey = 'code';
 
-    public $incrementing = true;
-    public $timestamps = true;
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     protected $fillable = [
         'code',

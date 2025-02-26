@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Http\Controllers\Api\Report;
+
+use App\Exports\ConsoleReportExport;
+use App\Http\Controllers\Controller;
+use App\Models\Contract;
+use App\Models\ContractDetail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+
+class ConsoleReportController extends Controller
+{
+    public function index(Request $request)
+    {
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
+
+        $from_date = $from_date ? $from_date : date('Y-m-01');
+        $to_date = $to_date ? $to_date : date('Y-m-t');
+
+        $from_date = date('Y-m-d', strtotime($from_date));
+        $to_date = date('Y-m-d', strtotime($to_date));
+
+        $report = Contract::with(['details', 'debitNotes' => function ($query) {
+                $query->orderBy('installment', 'asc');
+            }])
+            // top 10
+            ->whereBetween('period_start', [$from_date, $to_date])
+            // ->where('policy_number', '1101092300102')
+            // ->where('number', 'C-000055')
+            ->where('number', 'C-000059')
+            // where have debit notes
+            ->get()
+            ->map(function ($c) {
+                $details = $c->debitNotes->map(function ($dn) use ($c) {
+                    return $c->details->map(function ($detail) use ($dn, $c) {
+                        $c->installment_count = $c->installment_count == 0 ? 1 : $c->installment_count;
+
+                        // amount = net premium
+                        $amount = $c->amount / $c->installment_count;
+                        $netPremium = $amount * ($detail->percentage / 100);
+
+                        // brokerage fee
+                        // (gross premium * share) * (brokerage_fee - discount)
+                        $grossPremium = $c->gross_premium / $c->installment_count;
+                        $brokerageFee = $grossPremium == 0 ? 0 : ($grossPremium * ($detail->percentage / 100)) * ($detail->brokerage_fee - $c->discount);
+
+                        // eng fee
+                        // gross premi * share * eng fee
+                        $engFee = $grossPremium == 0 ? 0 : $grossPremium * ($detail->percentage / 100) * ($detail->eng_fee / 100);
+
+                        return [
+                            'dn_installment' => $dn->installment,
+                            'dn_number' => $dn->number,
+                            'dn_date' => $dn->date,
+                            'dn_due_date' => $dn->due_date,
+                            'dn_percentage' => $detail->percentage_formatted,
+                            'dn_amount' => $dn->amount,
+                            'insurance_name' => $detail->insurance->display_name,
+                            'share_percentage' => $detail->percentage_formatted,
+                            'share_amount' => $netPremium,
+                            'brokerage_fee' => $detail->brokerage_fee_formatted,
+                            'brokerage_fee_amount' => $brokerageFee,
+                            'eng_fee' => $detail->eng_fee_formatted,
+                            'eng_fee_amount' => $engFee,
+                        ];
+                    });
+                })->flatten(1);
+        
+                return [
+                    'number' => $c->number,
+                    'contract_status' => Str::ucfirst($c->contract_status),
+                    'contact_group' => $c->contact ? $c->contact->contactGroup ? $c->contact->contactGroup->display_name : 'N/A' : 'N/A',
+                    'contact' => $c->contact ? $c->contact->display_name : 'N/A',
+                    'contract_type' => $c->contractType->name,
+                    'policy_number' => $c->policy_number,
+                    'period_start' => $c->period_start_formatted,
+                    'period_end' => $c->period_end_formatted,
+                    'installment_count' => $c->installment_count,
+                    'coverage_amount' => $c->coverage_amount * 1,
+                    'gross_premium' => $c->gross_premium * 1,
+                    'discount' => $c->discount * 1,
+                    'discount_amount' => $c->discount_amount * 1,
+                    'stamp_fee' => $c->stamp_fee * 1,
+                    'amount' => $c->amount * 1,
+                    'debit_notes' => $details,
+                ];
+            });
+
+        if ($request->input('format') == "json") {
+            return response()->json([
+                'report' => $report
+            ]);
+        }
+        else if ($request->input('format') == "excel") {
+            return Excel::download(new ConsoleReportExport($report), 'report.xlsx');
+        }
+        else {
+            return view('api.report.console', [
+                'report' => $report
+            ]);
+        }
+    }
+}

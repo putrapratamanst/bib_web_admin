@@ -9,40 +9,65 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CreditNote extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    use HasUuids;
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     protected $fillable = [
-        'billing_id',
+        'contract_id',
+        'debit_note_id',
         'number',
         'date',
-        'amount',
         'description',
+        'currency_code',
+        'exchange_rate',
+        'amount',
         'status',
-        'note',
+        'created_by',
+        'updated_by',
     ];
 
-    public function billing(): BelongsTo
+    protected $appends = [
+        'exchange_rate_formatted',
+        'amount_formatted',
+        'date_formatted',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+    ];
+
+    public function getExchangeRateFormattedAttribute(): string
     {
-        return $this->belongsTo(Billing::class, 'billing_id', 'id');
+        return number_format($this->exchange_rate, 2, ",", ".");
     }
 
-    public function createdBy(): BelongsTo
+    public function getAmountFormattedAttribute(): string
     {
-        return $this->belongsTo(User::class, 'created_by', 'id');
+        return number_format($this->amount, 2, ",", ".");
     }
 
-    public function updatedBy(): BelongsTo
+    public function getDateFormattedAttribute(): string
     {
-        return $this->belongsTo(User::class, 'updated_by', 'id');
+        return $this->date->format('d M Y');
     }
 
-    public function getDateAttribute($value): string
+    public function contract(): BelongsTo
     {
-        return date('d-m-Y', strtotime($value));
+        return $this->belongsTo(Contract::class, 'contract_id', 'id');
     }
 
-    public function getAmountAttribute($value): string
+    public function debitNote(): BelongsTo
     {
-        return number_format($value, 2, ',', '.');
+        return $this->belongsTo(DebitNote::class, 'debit_note_id', 'id');
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_code', 'code');
     }
 }

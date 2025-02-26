@@ -15,33 +15,8 @@ class ContactType extends Model
         'type',
     ];
 
-    public function getTypeDisplayAttribute()
-    {
-        return match ($this->type) {
-            'client' => 'Client',
-            'agent' => 'Agent',
-            'insurance' => 'Insurance',
-            default => 'Unknown',
-        };
-    }
-
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'contact_id', 'id');
-    }
-
-    public function scopeClient($query)
-    {
-        return $query->where('type', 'client');
-    }
-
-    public function scopeAgent($query)
-    {
-        return $query->where('type', 'agent');
-    }
-
-    public function scopeInsurance($query)
-    {
-        return $query->where('type', 'insurance');
     }
 }

@@ -7,33 +7,23 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class CashBankResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'number' => $this->number,
             'type' => $this->type,
-            'chart_of_account' => $this->chartOfAccount->only(['id', 'name']),
-            'contact' => $this->contact->only(['id', 'name']),
+            'number' => $this->number,
+            'contact' => new ContactResource($this->contact),
             'date' => $this->date,
-            'reference' => $this->reference,
-            'memo' => $this->memo,
-            'currency' => $this->currency->only(['id', 'code', 'name']),
-            'exchange_rate' => $this->exchange_rate,
+            'chart_of_account' => new ChartOfAccountResource($this->chartOfAccount),
             'amount' => $this->amount,
-            'details' => $this->details->map(function ($detail) {
-                return [
-                    'id' => $detail->id,
-                    'chart_of_account_id' => $detail->chart_of_account_id,
-                    'description' => $detail->description,
-                    'amount' => $detail->amount,
-                ];
-            }),
+            'description' => $this->description,
+            'reference' => $this->reference,
+            'status' => $this->status,
+            'created_by' => $this->createdBy ? $this->createdBy->name : null,
+            'updated_by' => $this->updatedBy ? $this->updatedBy->name : null,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

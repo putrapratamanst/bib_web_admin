@@ -7,46 +7,48 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory;
 
-    protected $keyType = 'string';
-
-    public $incrementing = false;
+    use HasUuids;
 
     protected $fillable = [
-        'code',
+        'contact_group_id',
+        'display_name',
         'name',
         'email',
         'phone',
-        'address',
-        'description',
-        'status',
-        'account_mapping_receivable',
-        'account_mapping_payable',
+        'created_by',
+        'updated_by',
     ];
 
-    // one contact have more type
-    public function type(): HasMany
+    // append additional attribute for types first array
+    protected $appends = ['type'];
+
+    public function getTypeAttribute(): array
+    {
+        return $this->contactTypes->pluck('type')->toArray();
+    }
+
+    public function contactGroup(): BelongsTo
+    {
+        return $this->belongsTo(ContactGroup::class, 'contact_group_id', 'id');
+    }
+    
+    public function contactTypes(): HasMany
     {
         return $this->hasMany(ContactType::class, 'contact_id', 'id');
     }
 
-    public function contracts(): HasMany
+    public function createdBy(): BelongsTo
     {
-        return $this->hasMany(Contract::class, 'client_id', 'id');
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
 
-    // public function accountReceivable(): BelongsTo
-    // {
-    //     return $this->belongsTo(ChartOfAccount::class, 'account_mapping_receivable', 'id');
-    // }
-
-    // public function accountPayable(): BelongsTo
-    // {
-    //     return $this->belongsTo(ChartOfAccount::class, 'account_mapping_payable', 'id');
-    // }
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'id');
+    }
 }

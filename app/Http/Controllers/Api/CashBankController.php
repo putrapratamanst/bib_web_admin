@@ -3,134 +3,77 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCashBankRequest;
-use App\Http\Requests\UpdateCashBankRequest;
+use App\Http\Requests\CashBankStoreRequest;
 use App\Http\Resources\CashBankResource;
 use App\Models\CashBank;
-use Exception;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class CashBankController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $cashBanks = CashBank::with(['chartOfAccount', 'contact', 'currency', 'details'])
-            ->when($request->keyword, function ($query) use ($request) {
-                $query->where('number', 'like', "%$request->keyword%")
-                    ->orWhere('date', 'like', "%$request->keyword%")
-                    ->orWhere('reference', 'like', "%$request->keyword%")
-                    ->orWhere('memo', 'like', "%$request->keyword%");
+        $q = request('q');
+
+        $cashBanks = CashBank::where('number', 'like', "%$q%")
+            ->orWhereHas('contact', function ($query) use ($q) {
+                $query->where('display_name', 'like', "%$q%");
             })
             ->orderBy('date', 'desc')
-            ->paginate($request->pageSize);
+            ->paginate(10);
 
         return CashBankResource::collection($cashBanks);
     }
 
-    
-    public function store(StoreCashBankRequest $request)
+    public function datatables()
+    {
+        $query = CashBank::with('contact', 'chartOfAccount')->orderBy('date', 'desc');
+
+        return DataTables::eloquent($query)
+            ->addColumn('contact_name', function (CashBank $cashBank){
+                return $cashBank->contact->display_name;
+            })
+            ->filterColumn('contact_name', function ($query, $keyword) {
+                $query->whereHas('contact', function ($query) use ($keyword) {
+                    $query->where('display_name', 'like', "%$keyword%");
+                });
+            })
+            ->make(true);
+    }
+
+    public function store(CashBankStoreRequest $request)
     {
         try {
             $data = $request->validated();
 
-            $cashBank = CashBank::create([
-                'number' => $data['number'],
+            $data['date'] = date('Y-m-d', strtotime($data['date']));
+
+            $cashBanks = CashBank::create([
                 'type' => $data['type'],
-                'chart_of_account_id' => $data['chart_of_account_id'],
+                'number' => $data['number'],
                 'contact_id' => $data['contact_id'],
                 'date' => $data['date'],
-                'reference' => $data['reference'],
-                'memo' => $data['memo'],
-                'currency_id' => $data['currency_id'],
-                'exchange_rate' => $data['exchange_rate'],
+                'chart_of_account_id' => $data['chart_of_account_id'],
                 'amount' => $data['amount'],
+                'description' => $data['description'],
+                'reference' => $data['reference'],
+                'status' => $data['status'],
+                // 'created_by' => auth()->id()
             ]);
 
-            $cashBank->details()->createMany($data['details']);
-
             return response()->json([
-                'message' => 'Transaction created successfully',
+                'message' => 'Data has been created',
+                'data' => new CashBankResource($cashBanks)
             ], 201);
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
             return response()->json([
                 'errors' => [
                     'message' => [
-                        $e->getMessage()
+                        'Something went wrong'
                     ]
                 ]
-            ])->setStatusCode(500);
+            ], 500);
         }
-    }
-
-    public function show(string $id): CashBankResource
-    {
-        $cashBank = CashBank::with(['chartOfAccount', 'contact', 'currency', 'details'])->find($id);
-
-        if (!$cashBank) {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => [
-                        "data not found"
-                    ]
-                ]
-            ])->setStatusCode(404));
-        }
-
-        return new CashBankResource($cashBank);
-    }
-
-    public function update(UpdateCashBankRequest $request, string $id)
-    {
-        try {
-            $data = $request->validated();
-
-            $cashBank = CashBank::find($id);
-
-            if (!$cashBank) {
-                throw new HttpResponseException(response()->json([
-                    'errors' => [
-                        'message' => [
-                            "data not found"
-                        ]
-                    ]
-                ])->setStatusCode(404));
-            }
-
-            $cashBank->update([
-                'number' => $data['number'],
-                'type' => $data['type'],
-                'chart_of_account_id' => $data['chart_of_account_id'],
-                'contact_id' => $data['contact_id'],
-                'date' => $data['date'],
-                'reference' => $data['reference'],
-                'memo' => $data['memo'],
-                'currency_id' => $data['currency_id'],
-                'exchange_rate' => $data['exchange_rate'],
-                'amount' => $data['amount'],
-            ]);
-
-            $cashBank->details()->delete();
-            $cashBank->details()->createMany($data['details']);
-
-            return response()->json([
-                'message' => 'Transaction updated successfully',
-            ]);
-        }
-        catch (Exception $e) {
-            return response()->json([
-                'errors' => [
-                    'message' => [
-                        $e->getMessage()
-                    ]
-                ]
-            ])->setStatusCode(500);
-        }
-    }
-
-    public function destroy(string $id)
-    {
-        
     }
 }

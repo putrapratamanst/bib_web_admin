@@ -10,33 +10,48 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CashBank extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
-    protected $keyType = 'string';
+    use HasUuids;
 
     public $incrementing = false;
 
+    protected $keyType = 'string';
+
     protected $fillable = [
-        'number',
         'type',
-        'chart_of_account_id',
+        'number',
         'contact_id',
         'date',
-        'reference',
-        'memo',
-        'currency_id',
-        'exchange_rate',
+        'chart_of_account_id',
         'amount',
+        'description',
+        'reference',
+        'status',
+        'created_by',
+        'updated_by',
     ];
 
-    public function details(): HasMany
+    // atribut display_date
+    protected $appends = [
+        'display_type',
+        'display_date',
+        'display_amount',
+    ];
+
+    public function getDisplayTypeAttribute(): string
     {
-        return $this->hasMany(CashBankDetail::class, 'cash_bank_id', 'id');
+        return $this->type === 'receive' ? 'Receive' : 'Payment';
     }
 
-    public function chartOfAccount(): BelongsTo
+    public function getDisplayDateAttribute(): string
     {
-        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id');
+        return date('d M Y', strtotime($this->date));
+    }
+
+    public function getDisplayAmountAttribute(): string
+    {
+        return number_format($this->amount, 2, ',', '.');
     }
 
     public function contact(): BelongsTo
@@ -44,8 +59,23 @@ class CashBank extends Model
         return $this->belongsTo(Contact::class, 'contact_id', 'id');
     }
 
-    public function currency(): BelongsTo
+    public function chartOfAccount(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_id', 'id');
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'id');
+    }
+
+    public function cashBankDetails(): HasMany
+    {
+        return $this->hasMany(CashBankDetail::class, 'cash_bank_id', 'id');
     }
 }

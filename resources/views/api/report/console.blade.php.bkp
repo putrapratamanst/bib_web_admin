@@ -1,0 +1,102 @@
+<div class="container">
+    <link rel="stylesheet" href="{{ asset("assets/bootstrap/css/bootstrap.min.css") }}" />
+    <div class="table-responsive"> 
+        <table class="table table-bordered table-sm table-striped">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="text-center align-middle">Status</th>
+                    <th rowspan="2" class="text-center align-middle">Group</th>
+                    <th rowspan="2" class="text-center align-middle">Contact</th>
+                    <th rowspan="2" class="text-center align-middle">Type</th>
+                    <th rowspan="2" class="text-center align-middle">Policy Number</th>
+                    <th rowspan="2" class="text-center align-middle">Period Start</th>
+                    <th rowspan="2" class="text-center align-middle">Period End</th>
+                    <th rowspan="2" class="text-center align-middle">Coverage Amount</th>
+                    <th rowspan="2" class="text-center align-middle">Gross Premium</th>
+                    <th colspan="2" class="text-center align-middle">Discount</th>
+                    <th rowspan="2" class="text-center align-middle">Stamp Fee</th>
+                    <th rowspan="2" class="text-center align-middle">Net Premium</th>
+                    <th rowspan="2" class="text-center align-middle">DN Number</th>
+                    <th rowspan="2" class="text-center align-middle">Installment</th>
+                    <th rowspan="2" class="text-center align-middle">DN Date</th>
+                    <th rowspan="2" class="text-center align-middle">DN Due Date</th>
+                    <th rowspan="2" class="text-center align-middle">Insurance</th>
+                    <th colspan="2" class="text-center align-middle">Share</th>
+                    <th colspan="2" class="text-center align-middle">Brokerage Fee</th>
+                    <th colspan="2" class="text-center align-middle">Eng Fee</th>
+                </tr>
+                <tr>
+                    <th>Percentage</th>
+                    <th>Amount</th>
+                    <th>Percentage</th>
+                    <th>Amount</th>
+                    <th>Percentage</th>
+                    <th>Amount</th>
+                    <th>Percentage</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $tempPolicyNumber = [];
+                @endphp
+
+                @forelse ($report as $r)
+                    @foreach ($r['debit_notes'] as $dn)
+                        <tr>
+                            @if (!in_array($r["policy_number"], $tempPolicyNumber))
+                                <td>{{ $r["contract_status"] }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                            @if (!in_array($r["policy_number"], $tempPolicyNumber))
+                                <td>{{ $r["contact_group"] }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                            @if (!in_array($r["policy_number"], $tempPolicyNumber))
+                                <td>{{ $r["contact"] }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                            @if (!in_array($r["policy_number"], $tempPolicyNumber))
+                                <td>{{ $r["contract_type"] }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                            @if (!in_array($r["policy_number"], $tempPolicyNumber))
+                                <td>{{ $r["policy_number"] }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                            <td>{{ $r["period_start"] }} </td>
+                            <td>{{ $r["period_end"] }} </td>
+                            <td>{{ $r["coverage_amount"] }} </td>
+                            <td>{{ $r["gross_premium"] }} </td>
+                            <td>{{ $r["discount"] }} </td>
+                            <td>{{ $r["discount_amount"] }} </td>
+                            <td>{{ $r["stamp_fee"] }} </td>
+                            <td>{{ $r["amount"] }} </td>
+                            <td>{{ $dn['dn_number'] }}</td>
+                            <td>{{ $dn['dn_installment'] }}</td>
+                            <td>{{ $dn['dn_date'] }}</td>
+                            <td>{{ $dn['dn_due_date'] }}</td>
+                            <td>{{ $dn['insurance_name'] }}</td>
+                            <td>{{ $dn['share_percentage'] }}</td>
+                            <td>{{ $dn['share_amount'] }}</td>
+                            <td>{{ $dn['brokerage_fee'] }}</td>
+                            <td>{{ $dn['brokerage_fee_amount'] }}</td>
+                            <td>{{ $dn['eng_fee'] }}</td>
+                            <td>{{ $dn['eng_fee_amount'] }}</td>
+                        </tr>
+                        @php $tempPolicyNumber[] = $r["policy_number"]; @endphp
+                    @endforeach
+                @empty
+                    <tr>
+                        <td class="text-center" colspan="11">No Data</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
