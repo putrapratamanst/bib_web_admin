@@ -10,7 +10,6 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class BalanceExport implements FromArray, WithHeadings, WithStyles
 {
-    
     protected $data;
 
     public function __construct($data)
@@ -20,18 +19,25 @@ class BalanceExport implements FromArray, WithHeadings, WithStyles
 
     public function array(): array
     {
-        return array_slice($this->data, 1);
+        return $this->data->toArray();
     }
 
     public function headings(): array
     {
-        return $this->data[0];
+        return [
+            'Urutan',
+            'Uraian',
+            'Kode',
+            'Rincian',
+            'Tipe',
+            'Amount'
+        ];
     }
 
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:F33')->applyFromArray([
+        $sheet->getStyle('A1:F24')->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,

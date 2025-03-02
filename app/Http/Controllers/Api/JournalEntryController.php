@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\JournalEntryStoreRequest;
 use App\Http\Resources\JournalEntryResource;
 use App\Models\JournalEntry;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -34,10 +35,11 @@ class JournalEntryController extends Controller
     {
         try {
             $data = $request->validated();
+            $formattedDate = Carbon::createFromFormat('d-m-Y', $data['entry_date'])->setTime(14, 33, 0)->format('Y-m-d H:i:s');
 
             $journalEntries = JournalEntry::create([
                 'number' => $data['number'],
-                'entry_date' => $data['entry_date'],
+                'entry_date' => $formattedDate,
                 'reference' => $data['reference'],
                 'description' => $data['description'],
                 'status' => $data['status'],

@@ -8,20 +8,6 @@
                 </div>
             </div>
             <div class="card-body">
-                <!-- <div class="d-flex flex-column flex-md-row justify-between mb-4 gap-2">
-                    <div class="col">
-                        <select wire:model.live="perPage" class="form-select w-auto">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                        </select>
-                    </div>
-                    <div class="col col-md-4 col-lg-3">
-                        <input wire:model.live="search" type="text" class="form-control" placeholder="Search...">
-                    </div>
-                </div> -->
-
                 <table class="table table-bordered table-hover table-striped table-sm">
                     <thead>
                         <tr>
@@ -31,17 +17,17 @@
                             <th width="12%">Rincian</th>
                             <th width="12%">Tipe</th>
                             <th width="15%">Amount</th>
-                      </tr>
+                        </tr>
                     </thead>
                     <tbody>
                         @forelse ($data as $d)
-                        <tr wire:key={{ $d[0] }}>
-                            <td class="text-center">{{ $d[0] }}</td>
-                            <td>{{ $d[1] }}</td>
-                            <td>{{ $d[2] }}</td>
-                            <td>{{ $d[3] }}</td>
-                            <td>{{ $d[4] }}</td>
-                            <td>{{ $d[5] }}</td>
+                        <tr wire:key={{ $loop->iteration }}>
+                            <td class="text-center">{{ $loop->iteration }}</td> {{-- Menampilkan nomor urut --}}
+                            <td>{{ $d->name }}</td>
+                            <td>{{ $d->code }}</td>
+                            <td>    </td>
+                            <td>{{ $d->balance_type }}</td>
+                            <td>{{ $d->total_debit }}</td>
                         </tr>
                         @empty
                         <tr>

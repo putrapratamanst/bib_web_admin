@@ -9,7 +9,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-nav-link>
-                
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Master Data
@@ -41,11 +41,15 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.credit-notes.index') }}">Credit Note</a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.journal-entries.index') }}">Journal Entry</a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.cash-banks.index') }}">Cash &amp; Bank</a>
                         </li>
@@ -62,6 +66,15 @@
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('report.balance-sheet.index') }}">Balance Sheet</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route("report.balance.index") }}">Balance</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route("report.profitandloss.index") }}">Profit & Loss</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route("report.cashflow.index") }}">Cash Flow</a>
                         </li>
                     </ul>
                 </li>

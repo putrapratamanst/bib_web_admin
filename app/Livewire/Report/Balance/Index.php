@@ -11,7 +11,6 @@ class Index extends Component
     public function mount()
     {
         $this->data = Balance::getData();
-        array_shift($this->data);
     }
 
     public function render()

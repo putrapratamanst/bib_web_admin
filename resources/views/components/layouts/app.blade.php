@@ -47,6 +47,7 @@
             });
         });
     </script>
+    {{ $slot }}
     @stack('scripts')
     @livewireScripts
 </body>

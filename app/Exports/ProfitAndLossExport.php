@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -17,18 +18,25 @@ class ProfitAndLossExport implements FromArray, WithHeadings, WithStyles
 
     public function array(): array
     {
-        return array_slice($this->data, 1);
+        return $this->data->toArray();
     }
 
     public function headings(): array
     {
-        return $this->data[0];
+        return [
+            'Urutan',
+            'Uraian',
+            'Kode',
+            'Rincian',
+            'Tipe',
+            'Amount'
+        ];
     }
 
     public function styles(Worksheet $sheet)
     {
         // Atur border untuk seluruh tabel
-        $sheet->getStyle('A1:F27')->applyFromArray([
+        $sheet->getStyle('A1:F32')->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,

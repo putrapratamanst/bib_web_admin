@@ -26,7 +26,7 @@ class BalanceSheetController extends Controller
             LEFT JOIN account_categories AS ac ON ac.id = coa.account_category_id
             LEFT JOIN journal_entry_details je ON je.chart_of_account_id = coa.id
             WHERE coa.financial_statement = 'balance_sheet'
-            GROUP BY ac.name, coa.code, coa.name
+            GROUP BY ac.name, ac.number_order, coa.code, coa.name
             ORDER BY ac.number_order asc
         ");
 

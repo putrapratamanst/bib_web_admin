@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Balance extends Model
 {
@@ -11,46 +12,136 @@ class Balance extends Model
 
     // Jika menggunakan database nanti, atur fillable field di sini
     protected $fillable = [
-        'urutan', 'uraian', 'kode', 'rincian', 'tipe', 'amount'
+        'urutan',
+        'uraian',
+        'kode',
+        'rincian',
+        'tipe',
+        'amount'
     ];
 
     // Data sementara (hardcoded) untuk sekarang
     public static function getData()
     {
-        return [
-            ['Urutan', 'Uraian', 'Kode', 'Rincian', 'Tipe', 'Amount'],
-            ['1', 'ASET', '', '', 'P', ''],
-            ['2', 'Kas dan Setara Kas', '1100', 'PK01', 'H', ''],
-            ['3', 'Rekening Operasional', '1110', '', 'D', ''],
-            ['4', 'Rekening Premi', '1120', 'PK02', 'D', ''],
-            ['5', 'Investasi', '1200', 'PK03', 'D', ''],
-            ['6', 'Piutang Premi', '1300', 'PK04', 'D', ''],
-            ['7', 'Piutang Jasa Keperantaraan', '1400', 'PK05', 'D', ''],
-            ['8', 'Piutang Klaim', '', '', 'D', ''],
-            ['9', 'Piutang Konsultasi', '1500', 'PK06', 'D', ''],
-            ['10', 'Piutang Jasa Penangan Klaim', '1600', 'PK06', 'D', ''],
-            ['11', 'Aset Tetap', '1700', 'PK07', 'D', ''],
-            ['12', 'Aset Lain', '1900', 'PK08', 'D', ''],
-            ['13', 'Jumlah Aset', '1000', '', 'T', ''],
-            ['14', 'LIABILITAS & EKUITAS', '', '', 'P', ''],
-            ['15', 'Liabilitas', '', '', 'H', ''],
-            ['16', 'Utang Premi', '2100', 'PK09', 'D', ''],
-            ['17', 'Pendapatan Jasa Keperantaraan', '2200', '', 'D', ''],
-            ['18', 'Utang Klaim', '2300', 'PK10', 'D', ''],
-            ['19', 'Utang Komisi', '2400', 'PK11', 'D', ''],
-            ['20', 'Utang Pajak', '2500', 'PK12', 'D', ''],
-            ['21', 'Utang Lain', '2900', 'PK13', 'D', ''],
-            ['22', 'Jumlah Liabilitas', '2000', '', 'T', ''],
-            ['23', 'Ekuitas', '', '', 'H', ''],
-            ['24', 'Modal Disetor', '3100', '', 'D', ''],
-            ['25', 'Tambahan Modal Disetor', '3200', '', 'D', ''],
-            ['26', 'Laba Ditahan', '3300', '', 'D', ''],
-            ['27', 'Laba Tahun Berjalan', '3400', '', 'D', ''],
-            ['28', 'Ekuitas Lainnya', '3500', '', 'D', ''],
-            ['29', 'Saldo Komponen Ekuitas', '3510', '', 'D', ''],
-            ['30', 'Kenaikan (Kerugian) Komponen', '3520', '', 'D', ''],
-            ['31', 'Jumlah Ekuitas', '3000', '', 'T', ''],
-            ['32', 'Jumlah Liabilitas dan Ekuitas', '', '', 'T', ''],
-        ];
+        $data = ChartOfAccount::from('chart_of_accounts as ca')
+        ->leftJoin('journal_entry_details as jed', 'jed.chart_of_account_id', '=', 'ca.id')
+        ->select(
+            'ca.id',
+            'ca.code',
+            'ca.name',
+            DB::raw('"D" as balance_type'),
+            DB::raw('COALESCE(SUM(jed.debit), 0) as total_debit'),
+            DB::raw('COALESCE(SUM(jed.credit), 0) as total_credit')
+        )
+        ->where(function ($query) {
+            $query->where('ca.code', 'LIKE', '1%')
+                ->orWhere('ca.code', 'LIKE', '2%')
+                ->orWhere('ca.code', 'LIKE', '3%');
+        })
+        ->where('ca.is_active', 1)
+        ->where('ca.financial_statement', 'balance_sheet')
+        ->groupBy('ca.id', 'ca.code', 'ca.name', 'ca.balance_type')
+        ->orderByRaw('LENGTH(ca.code), ca.code')
+        ->get();
+
+    // Kelompokkan berdasarkan angka pertama dari code
+    $grouped = $data->groupBy(function ($item) {
+        return substr($item->code, 0, 1);
+    });
+
+    $finalData = collect();
+    $totalLiabilitas = 0;
+    $totalEkuitas = 0;
+
+    foreach ($grouped as $key => $items) {
+        // Tambahkan header berdasarkan kategori
+        if ($key == '1') {
+            $headerName = 'Aset';
+            $balanceType = 'P';
+        } elseif ($key == '2') {
+            $headerName = 'Liabilitas & Ekuitas';
+            $balanceType = 'P';
+        } elseif ($key == '3') {
+            $headerName = 'Ekuitas';
+            $balanceType = 'H';
+        } else {
+            $headerName = null;
+            $balanceType = null;
+        }
+
+        if ($headerName) {
+            $finalData->push((object) [
+                'id' => null,
+                'code' => null,
+                'name' => $headerName,
+                'balance_type' => $balanceType,
+                'total_debit' => null,
+                'total_credit' => null,
+            ]);
+        }
+
+        // Tambahkan "Liabilitas" setelah "Liabilitas & Ekuitas"
+        if ($key == '2') {
+            $finalData->push((object) [
+                'id' => null,
+                'code' => null,
+                'name' => 'Liabilitas',
+                'balance_type' => 'H',
+                'total_debit' => null,
+                'total_credit' => null,
+            ]);
+        }
+
+        // Hitung total kategori
+        $totalDebit = $items->sum('total_debit');
+        $totalCredit = $items->sum('total_credit');
+
+        // Simpan total liabilitas & ekuitas untuk perhitungan terakhir
+        if ($key == '2') {
+            $totalLiabilitas = $totalDebit - $totalCredit;
+        } elseif ($key == '3') {
+            $totalEkuitas = $totalDebit - $totalCredit;
+        }
+
+        // Tambahkan data asli
+        $finalData = $finalData->merge($items);
+
+        // Tentukan nama total berdasarkan kode awal
+        if ($key == '1') {
+            $totalName = 'Jumlah Aset';
+            $balanceType = 'T';
+        } elseif ($key == '2') {
+            $totalName = 'Jumlah Liabilitas';
+            $balanceType = 'T';
+        } elseif ($key == '3') {
+            $totalName = 'Jumlah Ekuitas';
+            $balanceType = 'T';
+        } else {
+            $totalName = "Total {$key}000";
+            $balanceType = null;
+        }
+
+        // Tambahkan total untuk kategori
+        $finalData->push((object) [
+            'id' => null,
+            'code' => "{$key}000",
+            'name' => $totalName,
+            'balance_type' => $balanceType,
+            'total_debit' => $totalDebit,
+            'total_credit' => $totalCredit,
+        ]);
     }
+
+    // Tambahkan "Jumlah Ekuitas & Liabilitas"
+    $finalData->push((object) [
+        'id' => null,
+        'code' => '4000',
+        'name' => 'Jumlah Ekuitas & Liabilitas',
+        'balance_type' => 'T',
+        'total_debit' => $totalLiabilitas + $totalEkuitas,
+        'total_credit' => 0,
+    ]);
+
+    // Kembalikan array tanpa key-value
+    return $finalData->values()->all();    }
 }

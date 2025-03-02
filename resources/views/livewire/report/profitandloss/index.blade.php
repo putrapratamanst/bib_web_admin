@@ -17,17 +17,17 @@
                             <th width="12%">Rincian</th>
                             <th width="12%">Tipe</th>
                             <th width="15%">Amount</th>
-                      </tr>
+                        </tr>
                     </thead>
                     <tbody>
                         @forelse ($data as $d)
-                        <tr wire:key={{ $d[0] }}>
-                            <td class="text-center">{{ $d[0] }}</td>
-                            <td>{{ $d[1] }}</td>
-                            <td>{{ $d[2] }}</td>
-                            <td>{{ $d[3] }}</td>
-                            <td>{{ $d[4] }}</td>
-                            <td>{{ $d[5] }}</td>
+                        <tr wire:key={{ $loop->iteration }}>
+                            <td class="text-center">{{ $loop->iteration }}</td> {{-- Menampilkan nomor urut --}}
+                            <td>{{ $d->name }}</td>
+                            <td>{{ $d->code }}</td>
+                            <td>    </td>
+                            <td>{{ $d->balance_type }}</td>
+                            <td>{{ $d->total_debit }}</td>
                         </tr>
                         @empty
                         <tr>

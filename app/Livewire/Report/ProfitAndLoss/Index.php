@@ -1,8 +1,13 @@
-<?php 
+<?php
+
 namespace App\Livewire\Report\ProfitAndLoss;
 
+use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
 use Livewire\Component;
 use App\Models\ProfitAndLoss;
+use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Chart\Chart;
 
 class Index extends Component
 {
@@ -11,7 +16,6 @@ class Index extends Component
     public function mount()
     {
         $this->data = ProfitAndLoss::getData();
-        array_shift($this->data);
     }
 
     public function render()

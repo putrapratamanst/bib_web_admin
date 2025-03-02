@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ProfitAndLoss extends Model
 {
@@ -11,40 +12,138 @@ class ProfitAndLoss extends Model
 
     // Jika menggunakan database nanti, atur fillable field di sini
     protected $fillable = [
-        'urutan', 'uraian', 'kode', 'rincian', 'tipe', 'amount'
+        'urutan',
+        'uraian',
+        'kode',
+        'rincian',
+        'tipe',
+        'amount'
     ];
 
-    // Data sementara (hardcoded) untuk sekarang
     public static function getData()
     {
-        return [
-            ['Urutan', 'Uraian', 'Kode', 'Rincian', 'Tipe', 'Amount'],
-            [1, "PENDAPATAN", "", "", "P", ""],
-            [2, "Pendapatan Jasa Keperantaraan", "4100", "LR01", "T", ""],
-            [3, "Pendapatan Jasa Keperantaraan Langsung", "4110", "", "D", ""],
-            [4, "-/- Bagian Pendapatan Jasa Keperantaaran", "4200", "LR01", "D", ""],
-            [5, "Pendapatan Jasa Keperantaraan Tidak", "4300", "LR01", "D", ""],
-            [6, "Pendapatan Jasa Konsultasi", "4400", "LR01", "D", ""],
-            [7, "Pendapatan Jasa Penanganan Klaim", "4900", "", "D", ""],
-            [8, "Pendapatan Lainnya", "4004", "", "D", ""],
-            [9, "Jumlah Pendapatan", "", "", "T", ""],
-            [10, "BEBAN", "", "", "P", ""],
-            [11, "Beban Operasional", "6000", "", "T", ""],
-            [12, "Beban Pegawai dan Pengurus", "6001", "LR04", "D", ""],
-            [13, "Beban Pendidikan dan Latihan", "6002", "LR05", "D", ""],
-            [14, "Beban Pemasaran", "6009", "", "D", ""],
-            [15, "Beban Komisi", "6025", "LR06", "D", ""],
-            [16, "Beban Operasional Lain", "6020", "LR07", "D", ""],
-            [17, "Beban Non Operasional", "6200", "LR08", "D", ""],
-            [18, "Jumlah Beban", "5000", "", "T", ""],
-            [19, "Laba (Rugi) Sebelum Pajak", "6100", "", "T", ""],
-            [20, "Beban Pajak", "5600", "", "D", ""],
-            [21, "Laba (Rugi) Setelah Pajak", "6250", "", "T", ""],
-            [22, "Pendapatan (Beban) Komprehensif", "", "", "T", ""],
-            [23, "Kenaikan (Penurunan) Penilaian Aset Tetap", "5710", "", "D", ""],
-            [24, "Keuntungan (Kerugian) Mata Uang Asing dan Lainnya", "5720", "", "D", ""],
-            [25, "Total Pendapatan (Beban) Komprehensif", "5700", "", "D", ""],
-            [26, "Laba (Rugi) Komprehensif", "6300", "", "T", ""],
-        ];
+        $data = ChartOfAccount::from('chart_of_accounts as ca')
+            ->leftJoin('journal_entry_details as jed', 'jed.chart_of_account_id', '=', 'ca.id')
+            ->select(
+                'ca.id',
+                'ca.code',
+                'ca.name',
+                DB::raw('"D" as balance_type'),
+                DB::raw('COALESCE(SUM(jed.debit), 0) as total_debit'),
+                DB::raw('COALESCE(SUM(jed.credit), 0) as total_credit')
+            )
+            ->where(function ($query) {
+                $query->where('ca.code', 'LIKE', '4%')
+                    ->orWhere('ca.code', 'LIKE', '5%')
+                    ->orWhere('ca.code', 'LIKE', '6%');
+            })
+            ->where('ca.is_active', 1)
+            ->where('ca.financial_statement', 'profit_loss')
+            ->groupBy('ca.id', 'ca.code', 'ca.name', 'ca.balance_type')
+            ->orderByRaw("
+            CASE 
+                WHEN ca.code = '4100' THEN 1
+                WHEN ca.code = '4110' THEN 2
+                WHEN ca.code = '4200' THEN 3
+                WHEN ca.code = '4300' THEN 4
+                WHEN ca.code = '4400' THEN 5
+                WHEN ca.code = '4900' THEN 6
+                WHEN ca.code = '4004' THEN 7
+                WHEN ca.code = '6000' THEN 8
+                WHEN ca.code = '6001' THEN 9
+                WHEN ca.code = '6002' THEN 10
+                WHEN ca.code = '6009' THEN 11
+                WHEN ca.code = '6025' THEN 12
+                WHEN ca.code = '6020' THEN 13
+                WHEN ca.code = '6200' THEN 14
+                WHEN ca.code = '5000' THEN 15
+                WHEN ca.code = '6100' THEN 16
+                WHEN ca.code = '5600' THEN 17
+                WHEN ca.code = '6250' THEN 18
+                WHEN ca.code = '5710' THEN 19
+                WHEN ca.code = '5720' THEN 20
+                WHEN ca.code = '5700' THEN 21
+                WHEN ca.code = '6300' THEN 22
+                ELSE 99
+            END, ca.code
+        ")->get();
+
+        // Kelompokkan berdasarkan angka pertama dari code
+        $grouped = $data->groupBy(function ($item) {
+            return substr($item->code, 0, 1);
+        });
+
+        $finalData = collect();
+
+        foreach ($grouped as $key => $items) {
+            if ($key == '4') {
+                $headerName = 'PENDAPATAN';
+                $balanceType = 'P';
+            } elseif ($key == '6') {
+                $headerName = 'BEBAN';
+                $balanceType = 'P';
+            } else {
+                $headerName = null;
+                $balanceType = null;
+            }
+
+            if ($headerName) {
+                $finalData->push((object) [
+                    'id' => null,
+                    'code' => null,
+                    'name' => $headerName,
+                    'balance_type' => $balanceType,
+                    'total_debit' => null,
+                    'total_credit' => null,
+                ]);
+            }
+            foreach ($items as $item) {
+                if ($item->code === '6000' || $item->code === '4100') {
+                    $item->balance_type = 'T';
+                }
+
+                // Sisipkan "Pendapatan (Beban) Komprehensif" sebelum kode 5710
+                if ($item->code === '5710') {
+                    $finalData->push((object) [
+                        'id' => null,
+                        'code' => null,
+                        'name' => 'Pendapatan (Beban) Komprehensif',
+                        'balance_type' => 'T',
+                        'total_debit' => null,
+                        'total_credit' => null,
+                    ]);
+                }
+
+                $finalData->push($item);
+            }
+
+            // Hitung total kategori
+            
+            $totalDebit = $items->sum('total_debit');
+            $totalCredit = $items->sum('total_credit');
+            if ($item->code === '6200') {
+
+                $finalData->push((object) [
+                    'id' => null,
+                    'code' => '5000',
+                    'name' => 'Jumlah Beban',
+                    'balance_type' => 'T',
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                ]);
+            }
+            if ($item->code === '4004') {
+                $finalData->push((object) [
+                    'id' => null,
+                    'code' => '',
+                    'name' => 'Jumlah Pendapatan',
+                    'balance_type' => 'T',
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                ]);
+            }
+        }
+
+        return $finalData->values()->all();
     }
 }
