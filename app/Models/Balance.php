@@ -23,25 +23,30 @@ class Balance extends Model
     // Data sementara (hardcoded) untuk sekarang
     public static function getData()
     {
-        $data = ChartOfAccount::from('chart_of_accounts as ca')
-        ->leftJoin('journal_entry_details as jed', 'jed.chart_of_account_id', '=', 'ca.id')
-        ->select(
-            'ca.id',
-            'ca.code',
-            'ca.name',
-            DB::raw('"D" as balance_type'),
-            DB::raw('COALESCE(SUM(jed.debit), 0) as total_debit'),
-            DB::raw('COALESCE(SUM(jed.credit), 0) as total_credit')
-        )
-        ->where(function ($query) {
-            $query->where('ca.code', 'LIKE', '1%')
-                ->orWhere('ca.code', 'LIKE', '2%')
-                ->orWhere('ca.code', 'LIKE', '3%');
+        $data = ReportFinance::from('report_finance as rf')
+        ->leftJoin('chart_of_accounts as coa', function ($join) {
+            $join->on('coa.code', '>=', DB::raw('rf.from_account_code'))
+                 ->where('coa.code', '<=', DB::raw('rf.to_account_code'));
+                //  ->whereIn('coa.prefix', [1, 2, 3]);
         })
-        ->where('ca.is_active', 1)
-        ->where('ca.financial_statement', 'balance_sheet')
-        ->groupBy('ca.id', 'ca.code', 'ca.name', 'ca.balance_type')
-        ->orderByRaw('LENGTH(ca.code), ca.code')
+        ->leftJoin('journal_entry_details as jed', 'jed.chart_of_account_id', '=', 'coa.id')
+        ->select(
+            'rf.id',
+            'rf.code',
+            'rf.name',
+            DB::raw('"D" as balance_type'),
+            DB::raw('COALESCE(SUM(jed.debit), 0) - COALESCE(SUM(jed.credit), 0) as total_debit')
+            )
+        ->where(function ($query) {
+            $query->where('rf.code', 'LIKE', '1%')
+                ->orWhere('rf.code', 'LIKE', '2%')
+                ->orWhere('rf.code', 'LIKE', '3%');
+        })
+        
+        ->where('rf.is_active', 1)
+        ->where('rf.financial_statement', 'balance_sheet')
+        ->groupBy('rf.id', 'rf.code', 'rf.name', 'rf.balance_type')
+        ->orderByRaw('LENGTH(rf.code), rf.code')
         ->get();
 
     // Kelompokkan berdasarkan angka pertama dari code
@@ -143,5 +148,6 @@ class Balance extends Model
     ]);
 
     // Kembalikan array tanpa key-value
-    return $finalData->values()->all();    }
+    return $finalData->values();   
+ }
 }

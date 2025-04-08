@@ -15,6 +15,10 @@
                             <input type="text" class="form-control" id="code" name="code" />
                         </div>
                         <div class="mb-3">
+                            <label for="prefix" class="form-label">Prefix<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" id="prefix" name="prefix" />
+                        </div>
+                        <div class="mb-3">
                             <label for="name" class="form-label">Name<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" id="name" name="name" />
                         </div>

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class CoaStoreRequest extends FormRequest
 {
@@ -17,9 +18,19 @@ class CoaStoreRequest extends FormRequest
     {
         return [
             'account_category_id' => 'required|exists:account_categories,id',
-            'code' => 'required|unique:chart_of_accounts,code|max:10',
+            // 'code' => 'required|unique:chart_of_accounts,code|max:10',
+            'code' => [
+                'required',
+                'max:10',
+                Rule::unique('chart_of_accounts')->where(function ($query) {
+                    return $query->where('prefix', request('prefix'));
+                }),
+            ],
+            'prefix' => 'required|max:10',
             'name' => 'required|unique:chart_of_accounts,name|max:50',
             'balance_type' => 'required|in:DEBIT,CREDIT',
+            'prefix' => 'required|max:10',
+
         ];
     }
 

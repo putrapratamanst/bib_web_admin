@@ -15,6 +15,7 @@
             <table class="table table-new table-hover table-striped table-bordered" id="coa-table">
                 <thead class="table-header">
                     <tr>
+                        <th>Prefix</th>
                         <th>Account Code</th>
                         <th>Account Name</th>
                         <th>Category</th>
@@ -34,6 +35,10 @@
             serverSide: true,
             ajax: "{{ route('api.chart-of-accounts.datatables') }}",
             columns: [
+                { 
+                    data: 'prefix', 
+                    name: 'prefix',
+                },
                 { 
                     data: 'code', 
                     name: 'code',

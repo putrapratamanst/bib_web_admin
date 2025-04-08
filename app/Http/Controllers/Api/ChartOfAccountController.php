@@ -40,7 +40,7 @@ class ChartOfAccountController extends Controller
 
         $chartOfAccounts = ChartOfAccount::where('name', 'like', "%$q%")
             ->orWhere('code', 'like', "%$q%")
-            ->orderBy('id', 'asc')
+            ->orderBy('prefix', 'asc')
             ->get();
 
         if ($c) {
@@ -48,7 +48,7 @@ class ChartOfAccountController extends Controller
         }
 
         $formattedCoa = $chartOfAccounts->map(function ($d) {
-            return ['id' => $d->id, 'text' => $d->display_name];
+            return ['id' => $d->id, 'text' => $d->prefix . '-' . $d->display_name];
         });
 
         return response()->json([
