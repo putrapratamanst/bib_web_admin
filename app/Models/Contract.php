@@ -158,4 +158,9 @@ class Contract extends Model
     {
         return $this->hasMany(DebitNote::class, 'contract_id', 'id');
     }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class, 'contract_id', 'id');
+    }
 }

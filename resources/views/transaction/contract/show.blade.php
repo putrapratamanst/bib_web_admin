@@ -7,7 +7,7 @@
     <div class="card">
         <div class="card-header">
             Detail Contract
-        </div>        
+        </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
                 <div class="row">
@@ -93,7 +93,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
@@ -115,6 +115,25 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-lg-3">
+                    <div class="mb-3">
+                        <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
+                        <div class="input-group">
+                            <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount_formatted }}" />
+                            <span class="input-group-text" style="font-size: 14px;">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="mb-3">
+                        <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
+                        <div class="input-group">
+                            <span class="input-group-text curr-code" style="font-size: 14px;">Rp</span>
+                            <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount_formatted }}" readonly />
+                        </div>
+                    </div>
+                </div>
+
 
                 <div class="row">
                     <div class="col-md-8 col-lg-6">
@@ -133,7 +152,7 @@
                             {{-- <select name="installment_count" id="installment_count" class="form-select">
                                 @for($i = 0; $i <= 12; $i++)
                                 <option value="{{ $i }}" {{ $contract->installment_count == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
+                            @endfor
                             </select> --}}
                         </div>
                     </div>

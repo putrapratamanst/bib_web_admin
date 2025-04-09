@@ -31,7 +31,6 @@ class ContractController extends Controller
     public function show($id)
     {
         $contract = Contract::find($id);
-
         return view('transaction.contract.show', [
             'contract' => $contract,
         ]);

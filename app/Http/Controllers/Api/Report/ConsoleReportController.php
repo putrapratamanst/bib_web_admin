@@ -25,7 +25,7 @@ class ConsoleReportController extends Controller
 
         $report = Contract::with(['details', 'debitNotes' => function ($query) {
                 $query->orderBy('installment', 'asc');
-            }])
+            },'creditNotes'])
             ->whereBetween('period_start', [$from_date, $to_date])
             // ->where('policy_number', '1101092300102')
             // ->where('number', 'C-000102')
@@ -49,7 +49,6 @@ class ConsoleReportController extends Controller
                         $eng_fee_amount = $share_amount * $detail->eng_fee / 100;
                         return $carry + $eng_fee_amount;
                     }, 0);
-
                     return [
                         'id' => $dn->id,
                         'number' => $dn->number,
@@ -60,6 +59,7 @@ class ConsoleReportController extends Controller
                         'credit_note_amount' => $dn->credit_note_amount * 1,
                         'total_brokerage_fee' => $total_brokerage_fee,
                         'total_eng_fee' => $total_eng_fee,
+                        'currency_code' => $dn->currency_code,
                         'nett_income_bib' => $total_brokerage_fee - $dn->credit_note_amount,
                         'details' => $c->details->map(function ($detail) use ($dn, $c) {
                             $share_amount = $dn->amount * $detail->percentage / 100;
@@ -75,6 +75,7 @@ class ConsoleReportController extends Controller
                             $piutang_receive = $nominal_receive - $nominal_receive_billing > 0 ? 0 : $nominal_receive - $nominal_receive_billing;
 
                             $tanggal_pay = $dn->payDate;
+                            $curreny_code = $dn->currency_code;
                             $nominal_pay = $dn->payAmount * 1;
                             $nominal_pay_billing = $share_amount - ($brokerage_fee_amount * 1.02) - $eng_fee_amount;
                             $hutang_pay = $nominal_pay - $nominal_pay_billing < 0 ? 0 : $nominal_pay - $nominal_pay_billing;
@@ -100,6 +101,7 @@ class ConsoleReportController extends Controller
                                 'nominal_pay_billing' => $nominal_pay_billing,
                                 'hutang_pay' => $hutang_pay,
                                 'piutang_pay' => $piutang_pay,
+                                'currency_code' => $curreny_code,
                             ];
                         }),
                     ];

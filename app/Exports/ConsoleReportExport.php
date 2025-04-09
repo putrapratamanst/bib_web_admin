@@ -4,10 +4,14 @@ namespace App\Exports;
 
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class ConsoleReportExport implements FromView, WithEvents
+class ConsoleReportExport implements FromView, WithEvents, ShouldAutoSize
 {
     protected $data;
 
@@ -51,10 +55,10 @@ class ConsoleReportExport implements FromView, WithEvents
                             'color' => ['rgb' => '000000'],
                         ],
                     ],
-                    'alignment' => [
-                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                    ],
+                    // 'alignment' => [
+                    //     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    //     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    // ],
                 ]);
 
                 // Apply bold font to the first row (A1) and set alignment to center
@@ -75,7 +79,7 @@ class ConsoleReportExport implements FromView, WithEvents
                     ],
                 ]);
 
-                for ($row = 1; $row <= $highestRow; $row++) {
+                for ($row = 3; $row <= $highestRow; $row++) {
                     $cellB = "B{$row}";
                     $cellC = "C{$row}";
 
@@ -90,6 +94,34 @@ class ConsoleReportExport implements FromView, WithEvents
                     if (!empty($valueC)) {
                         $sheet->setCellValue($cellC, strtoupper($valueC));
                     }
+                }
+
+                $highestColumn = $event->sheet->getDelegate()->getHighestColumn(); // misal 'B'
+                $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn); // misal 2
+
+                for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                    $cell = Coordinate::stringFromColumnIndex($col) . '1'; // A1, B1, ...
+                    $value = $event->sheet->getCell($cell)->getValue();
+
+                    // Set kembali dengan huruf kapital
+                    $event->sheet->setCellValue($cell, strtoupper($value));
+                    $event->sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                }
+
+
+                // Format kolom H sebagai teks
+                $event->sheet->getDelegate()
+                    ->getStyle('H:H')
+                    ->getNumberFormat()
+                    ->setFormatCode(NumberFormat::FORMAT_TEXT);
+
+                // Kalau perlu: ubah semua cell di kolom H agar dianggap teks
+                $highestRow = $event->sheet->getDelegate()->getHighestRow();
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $cell = 'H' . $row;
+                    $value = $event->sheet->getCell($cell)->getValue();
+                    // Tambahkan tanda kutip supaya dianggap teks
+                    $event->sheet->setCellValueExplicit($cell, $value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 }
             }
         ];
