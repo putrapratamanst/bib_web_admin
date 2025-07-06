@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ContractStoreRequest;
 use App\Http\Resources\ContractResource;
+use App\Models\AutomobileUnit;
 use App\Models\Contract;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -18,21 +19,22 @@ class ContractController extends Controller
         return ContractResource::collection($contract);
     }
 
+
     public function datatables(Request $request)
     {
         $query = Contract::query();
 
         return DataTables::of($query)
-            ->orderColumn('number', function($query, $order) {
+            ->orderColumn('number', function ($query, $order) {
                 $query->orderBy('number', $order);
             })
-            ->addColumn('contract_type', function(Contract $c) {
+            ->addColumn('contract_type', function (Contract $c) {
                 return $c->contractType->name;
             })
-            ->addColumn('contact', function(Contract $c) {
+            ->addColumn('contact', function (Contract $c) {
                 return $c->contact->display_name;
             })
-            ->filter(function($query) use ($request) {
+            ->filter(function ($query) use ($request) {
                 if ($request->has('contract_type') && $request->contract_type != '') {
                     $query->where('contract_type_id', $request->contract_type);
                 }
@@ -49,7 +51,6 @@ class ContractController extends Controller
     {
         try {
             $data = $request->validated();
-
             $contract = Contract::create([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
@@ -68,6 +69,7 @@ class ContractController extends Controller
                 'installment_count' => $data['installment_count'],
                 'memo' => $data['memo'],
                 'status' => 'active',
+                'covered_item' => $data['covered_item'],
                 // 'created_by' => auth()->id()
             ]);
 
@@ -86,11 +88,34 @@ class ContractController extends Controller
                 'message' => 'Data has been created',
                 'data' => new ContractResource($contract)
             ], 201);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function storeAutomobileUnit(Request $request, Contract $contract)
+    {
+        $request->validate([
+            'units' => 'required|array',
+            'units.*.no_polisi' => 'required|string',
+            'units.*.merk_tahun' => 'required|string',
+            'units.*.no_rangka_mesin' => 'required|string',
+            'units.*.penggunaan' => 'required|string',
+        ]);
+
+        foreach ($request->units as $unit) {
+            AutomobileUnit::create([
+                'contract_id' => $contract->id,
+                'no_polisi' => $unit['no_polisi'],
+                'merk_tahun' => $unit['merk_tahun'],
+                'no_rangka_mesin' => $unit['no_rangka_mesin'],
+                'penggunaan' => $unit['penggunaan'],
+            ]);
+        }
+
+        return response()->json(['message' => 'Automobile units successfully saved.']);
     }
 }

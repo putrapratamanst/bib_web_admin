@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    working_dir: /var/www
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+    networks:
+      - laravel
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  mysql:
+    image: mysql:8.0
+    container_name: laravel_mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306" 
+    environment:
+      MYSQL_DATABASE: bib_new_database
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - laravel
+
+  artisan:
+    image: php:8.2-cli
+    container_name: laravel_artisan
+    volumes:
+      - ./:/var/www
+    working_dir: /var/www
+    entrypoint: ["php", "/var/www/artisan"]
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  composer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_composer
+    volumes:
+      - ./:/var/www
+    working_dir: /var/www
+    entrypoint: ["composer"]
+    networks:
+      - laravel
+
+volumes:
+  mysql_data:
+
+networks:
+  laravel:
+    driver: bridge

@@ -39,6 +39,8 @@ Route::post('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
+Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
+
 
 // Journal Entry
 Route::get('/journal-entry', [\App\Http\Controllers\Api\JournalEntryController::class, 'index'])->name('api.journal-entries.index');

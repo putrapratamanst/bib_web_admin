@@ -24,6 +24,7 @@ class ContractResource extends JsonResource
             'stamp_fee' => $this->stamp_fee,
             'amount' => $this->amount,
             'installment_count' => $this->installment_count,
+            'covered_item' => $this->covered_item,
             'memo' => $this->memo,
             'status' => $this->status,
             'created_by' => $this->createdBy ? $this->createdBy->name : null,

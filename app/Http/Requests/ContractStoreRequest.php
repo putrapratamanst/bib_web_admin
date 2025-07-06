@@ -38,6 +38,7 @@ class ContractStoreRequest extends FormRequest
             'details.*.percentage' => 'required|numeric',
             'details.*.brokerage_fee' => 'required|numeric',
             'details.*.eng_fee' => 'required|numeric',
+            'covered_item' => 'nullable|numeric',
         ];
     }
 

@@ -20,7 +20,7 @@
                             <select name="contract_type" id="contract_type" class="form-control select2">
                                 <option value="">All</option>
                                 @foreach($contractTypes as $contractType)
-                                    <option value="{{ $contractType->id }}">{{ $contractType->name }}</option>
+                                <option value="{{ $contractType->id }}">{{ $contractType->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -38,6 +38,7 @@
                         <th>Contact</th>
                         <th>Period</th>
                         <th>Amount</th>
+                        <th>Covered Item</th>
                     </tr>
                 </thead>
             </table>
@@ -58,12 +59,11 @@
                     d.contract_type = $('#contract_type').val();
                 },
             },
-            columns: [
-                { 
-                    data: 'number', 
+            columns: [{
+                    data: 'number',
                     name: 'number',
                     render: function(data, type, row) {
-                        return '<a href="{{ route('transaction.contracts.index') }}/' + row.id + '">' + data + '</a>';
+                        return '<a href="/transaction/contracts/' + row.id + '">' + data + '</a>';
                     }
                 },
                 {
@@ -72,10 +72,38 @@
                     searchable: true,
                     className: 'text-left'
                 },
-                { data: 'contract_type', name: 'contract_type' },
-                { data: 'contact', name: 'contact' },
-                { data: 'period', name: 'period' },
-                { data: 'amount_formatted', name: 'amount_formatted', className: 'text-end' }
+                {
+                    data: 'contract_type',
+                    name: 'contract_type'
+                },
+                {
+                    data: 'contact',
+                    name: 'contact'
+                },
+                {
+                    data: 'period',
+                    name: 'period'
+                },
+                {
+                    data: 'amount_formatted',
+                    name: 'amount_formatted',
+                    className: 'text-end'
+                },
+                {
+                    data: 'covered_item',
+                    name: 'covered_item',
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        if (data > 0) {
+                            if (row.contract_type_id == 1) {
+                                return `<a href="/transaction/contracts/add-unit/automobile/${row.id}">${data} unit</a>`;
+                            } else if (row.contract_type_id == 14) {
+                                return `<a href="/transaction/contracts/add-unit/property/${row.id}">${data} location</a>`;
+                            }
+                        }
+                        return '-';
+                    }
+                }
             ]
         });
 

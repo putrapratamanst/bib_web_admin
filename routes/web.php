@@ -33,6 +33,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/contracts', [\App\Http\Controllers\Transaction\ContractController::class, 'index'])->name('transaction.contracts.index');
     Route::get('/contracts/create', [\App\Http\Controllers\Transaction\ContractController::class, 'create'])->name('transaction.contracts.create');
     Route::get('/contracts/{id}', [\App\Http\Controllers\Transaction\ContractController::class, 'show'])->name('transaction.contracts.show');
+    Route::get('/contracts/add-unit/automobile/{id} ', [\App\Http\Controllers\Transaction\ContractController::class, 'showAddUnit'])->name('transaction.contracts.show-add-unit');
 
     // Journal Entry
     Route::get('/journal-entries', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'index'])->name('transaction.journal-entries.index');

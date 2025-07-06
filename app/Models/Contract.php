@@ -32,6 +32,7 @@ class Contract extends Model
         'installment_count',
         'memo',
         'status',
+        'covered_item',
         'created_by',
         'updated_by',
     ];

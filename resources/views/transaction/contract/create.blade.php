@@ -7,7 +7,7 @@
     <div class="card">
         <div class="card-header">
             Add New Contract
-        </div>        
+        </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <input type="hidden" name="status" value="approved" />
             <div class="card-body">
@@ -28,7 +28,7 @@
                             <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select contract type --" required>
                                 <option value=""></option>
                                 @foreach($contractTypes as $contractType)
-                                    <option value="{{ $contractType->id }}">{{ $contractType->name }}</option>
+                                <option value="{{ $contractType->id }}">{{ $contractType->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -39,6 +39,13 @@
                             <select name="contact_id" id="contact_id" class="form-control">
                                 <option value=""></option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3" style="display: none;" id="covered-item-field">
+                        <div class="mb-3">
+                            <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
+                            <input type="number" name="number" id="covered-item" class="form-control" required />
                         </div>
                     </div>
                 </div>
@@ -77,7 +84,7 @@
                             <select name="currency_code" id="currency_code" class="form-control select2" data-placeholder="-- select currency --" required>
                                 <option value=""></option>
                                 @foreach($currencies as $currency)
-                                    <option value="{{ $currency->code }}">{{ $currency->code }}</option>
+                                <option value="{{ $currency->code }}">{{ $currency->code }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -165,7 +172,7 @@
                             <select name="installment_count" id="installment_count" class="form-select">
                                 @for($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}">{{ $i }}</option>
-                                @endfor
+                                    @endfor
                             </select>
                         </div>
                     </div>
@@ -242,12 +249,12 @@
                 url: "{{ route('api.contacts.select2') }}?type=client",
                 dataType: 'json',
                 delay: 500,
-                data: function (params) {
+                data: function(params) {
                     return {
                         q: params.term,
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: $.map(data.items, function(item) {
                             return {
@@ -303,6 +310,8 @@
                 amount: $("#amount").autoNumeric('get'),
                 memo: $("#memo").val(),
                 details: details,
+                covered_item: $("#covered-item").val(),
+                installment_count: $("#installment_count").val(),
             };
 
             $.ajax({
@@ -340,7 +349,7 @@
             });
         });
 
-        $('#btnAddRow').click(function () {
+        $('#btnAddRow').click(function() {
             $('#tableDetails tbody').append(`
                 <tr>
                     <td>
@@ -383,7 +392,7 @@
         });
     });
 
-    $(document).on('click', '.removeRow', function () {
+    $(document).on('click', '.removeRow', function() {
         if ($('#tableDetails tbody tr').length === 1) {
             return;
         }
@@ -399,12 +408,12 @@
                 url: "{{ route('api.contacts.select2') }}?type=insurance",
                 dataType: 'json',
                 delay: 500,
-                data: function (params) {
+                data: function(params) {
                     return {
                         q: params.term,
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: $.map(data.items, function(item) {
                             return {
@@ -419,8 +428,7 @@
         });
     }
 
-    function calculateDiscount()
-    {
+    function calculateDiscount() {
         // check if gross premium is empty var grossPremium = 0;
         var grossPremium = 0;
         var discount = 0;
@@ -449,5 +457,18 @@
         $("#discount_amount").autoNumeric('set', discountAmount);
         $("#amount").autoNumeric('set', netPremium);
     }
+
+    $('#contract_type_id').on('change', function() {
+        const selectedVal = $(this).val();
+        const $coveredItemField = $('#covered-item-field');
+
+        if (selectedVal == 1 || selectedVal == 14) {
+            $coveredItemField.show();
+            $coveredItemField.find('input, select, textarea').prop('required', true);
+        } else {
+            $coveredItemField.hide();
+            $coveredItemField.find('input, select, textarea').val('').prop('required', false);
+        }
+    });
 </script>
 @endpush

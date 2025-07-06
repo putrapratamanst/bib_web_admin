@@ -35,4 +35,11 @@ class ContractController extends Controller
             'contract' => $contract,
         ]);
     }
+    public function showAddUnit($id)
+    {
+        $contract = Contract::find($id);
+        return view('transaction.contract.show-add-unit', [
+            'contract' => $contract,
+        ]);
+    }
 }
