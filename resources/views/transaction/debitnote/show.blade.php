@@ -84,5 +84,50 @@
             </div>
         </form>
     </div>
+    @if ($debitNote->installment > 0)
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>List Billing</span>
+            <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Date</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($debitNote->debitNoteBillings as $billing)
+                        <tr>
+                            <td>{{ $billing->number }}</td>
+                            <td>{{ $billing->date }}</td>
+                            <td>{{ $billing->due_date }}</td>
+                            <td class="text-end">{{ $billing->amount }}</td>
+                            <td>
+                                @if($billing->status === 'unpaid')
+                                <span class="badge bg-danger">Unpaid</span>
+                                @else
+                                <span class="badge bg-success">Paid</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center">No billing found</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection

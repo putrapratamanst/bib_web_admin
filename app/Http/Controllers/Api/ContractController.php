@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ContractStoreRequest;
 use App\Http\Resources\ContractResource;
-use App\Models\AutomobileUnit;
+use App\Models\AutoMobileUnit;
 use App\Models\Contract;
+use App\Models\PropertyUnit;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -101,21 +102,62 @@ class ContractController extends Controller
         $request->validate([
             'units' => 'required|array',
             'units.*.no_polisi' => 'required|string',
-            'units.*.merk_tahun' => 'required|string',
-            'units.*.no_rangka_mesin' => 'required|string',
+            'units.*.merk' => 'required|string',
+            'units.*.tahun' => 'required|string',
+            'units.*.no_rangka' => 'required|string',
+            'units.*.no_mesin' => 'required|string',
             'units.*.penggunaan' => 'required|string',
+            'units.*.total' => 'required|numeric',
+            'units.*.valuta' => 'nullable|string',
+            'units.*.cover' => 'nullable|string',
+            'units.*.discount' => 'nullable|numeric',
+            'units.*.rate' => 'nullable|numeric',
+            'units.*.brokerage' => 'nullable|numeric',
         ]);
 
         foreach ($request->units as $unit) {
-            AutomobileUnit::create([
+            AutoMobileUnit::create([
                 'contract_id' => $contract->id,
-                'no_polisi' => $unit['no_polisi'],
-                'merk_tahun' => $unit['merk_tahun'],
-                'no_rangka_mesin' => $unit['no_rangka_mesin'],
+                'nopolisi' => $unit['no_polisi'],
+                'merk' => $unit['merk'],
+                'tahun' => $unit['tahun'],
+                'norangka' => $unit['no_rangka'],
+                'nomesin' => $unit['no_mesin'],
                 'penggunaan' => $unit['penggunaan'],
+                'valuta' => $unit['valuta'] ?? 'IDR',
+                'total' => $unit['total'],
+                'idcover' => $unit['cover'] ?? null,
+                'discount' => $unit['discount'] ?? null,
+                'rate' => $unit['rate'] ?? null,
+                'brokerage' => $unit['brokerage'] ?? null,
             ]);
         }
 
         return response()->json(['message' => 'Automobile units successfully saved.']);
+    }
+
+    public function storePropertyUnit(Request $request, Contract $contract)
+    {
+        $request->validate([
+            'units' => 'required|array',
+            'units.*.location' => 'required|string',
+            'units.*.risk_type' => 'required|string',
+            'units.*.reinstallment_value_clause' => 'string',
+            'units.*.nominated_loss_adjuster' => 'string',
+            'units.*.discount' => 'required|string',
+        ]);
+
+        foreach ($request->units as $unit) {
+            PropertyUnit::create([
+                'contract_id' => $contract->id,
+                'location' => $unit['location'],
+                'risk_type' => $unit['risk_type'],
+                'reinstallment_value_clause' => $unit['reinstallment_value_clause'] ?? 0,
+                'nominated_loss_adjuster' => $unit['nominated_loss_adjuster'] ?? 0,
+                'discount' => $unit['discount'] ?? 0,
+            ]);
+        }
+
+        return response()->json(['message' => 'Property units successfully saved.']);
     }
 }

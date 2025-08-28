@@ -34,11 +34,14 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function () {
+    const units = @json($units);
+    $(document).ready(function() {
         const count = parseInt($('#covered_item').val() || 0);
-        generateUnitForms(count);
+        const formCount = units.length > 0 ? units.length : count;
 
-        $('#formAddUnits').on('submit', function (e) {
+        generateUnitForms(formCount, units);
+
+        $('#formAddUnits').on('submit', function(e) {
             e.preventDefault();
             const formData = $(this).serialize();
 
@@ -46,7 +49,7 @@
                 url: "{{ route('transaction.contracts.store-automobile-units', $contract->id) }}",
                 method: "POST",
                 data: formData,
-                success: function (response) {
+                success: function(response) {
                     Swal.fire({
                         title: 'Success',
                         text: response.message,
@@ -55,7 +58,7 @@
                         window.location.href = "{{ route('transaction.contracts.index') }}";
                     });
                 },
-                error: function (xhr) {
+                error: function(xhr) {
                     const res = xhr.responseJSON;
                     Swal.fire({
                         title: 'Error',
@@ -67,42 +70,120 @@
         });
     });
 
-    function generateUnitForms(count) {
+    function generateUnitForms(count, data = []) {
         const container = $('#unit-forms-container');
         container.empty();
 
         for (let i = 0; i < count; i++) {
+            const unit = data[i] || {};
+
             container.append(`
-                <div class="card mb-3">
-                    <div class="card-header">Unit #${i + 1}</div>
-                    <div class="card-body row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">No Polisi <sup class="text-danger">*</sup></label>
-                                <input type="text" name="units[${i}][no_polisi]" class="form-control" required>
+            <div class="card mb-3">
+                <div class="card-header">Unit #${i + 1}</div>
+                <div class="card-body row">
+
+                    <!-- No Polisi -->
+                    <div class="col-md-2">
+                        <label class="form-label">No Polisi <sup class="text-danger">*</sup></label>
+                        <input type="text" name="units[${i}][no_polisi]" class="form-control" 
+                               value="${unit.no_polisi || ''}" required>
+                    </div>
+
+                    <!-- Merk -->
+                    <div class="col-md-2">
+                        <label class="form-label">Merk <sup class="text-danger">*</sup></label>
+                        <input type="text" name="units[${i}][merk]" class="form-control"
+                               value="${unit.merk || ''}" required>
+                    </div>
+
+                    <!-- Tahun -->
+                    <div class="col-md-1">
+                        <label class="form-label">Tahun <sup class="text-danger">*</sup></label>
+                        <input type="number" min="1900" max="2100" name="units[${i}][tahun]" 
+                               class="form-control" value="${unit.tahun || ''}" required>
+                    </div>
+
+                    <!-- No Rangka -->
+                    <div class="col-md-2">
+                        <label class="form-label">No Rangka <sup class="text-danger">*</sup></label>
+                        <input type="text" name="units[${i}][no_rangka]" class="form-control"
+                               value="${unit.no_rangka || ''}" required>
+                    </div>
+
+                    <!-- No Mesin -->
+                    <div class="col-md-2">
+                        <label class="form-label">No Mesin <sup class="text-danger">*</sup></label>
+                        <input type="text" name="units[${i}][no_mesin]" class="form-control"
+                               value="${unit.no_mesin || ''}" required>
+                    </div>
+
+                    <!-- Penggunaan -->
+                    <div class="col-md-3">
+                        <label class="form-label">Penggunaan <sup class="text-danger">*</sup></label>
+                        <input type="text" name="units[${i}][penggunaan]" class="form-control"
+                               value="${unit.penggunaan || ''}" required>
+                    </div>
+
+                    <!-- Harga / Pertanggungan -->
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label">Harga / Pertanggungan <sup class="text-danger">*</sup></label>
+                        <div class="row">
+                            <div class="col-5">
+                                <label class="form-label small">Valuta</label>
+                                <select name="units[${i}][valuta]" class="form-select" required>
+                                    ${['IDR','USD','EUR','JPY','SGD','AUD','GBP'].map(v => `
+                                        <option value="${v}" ${unit.valuta === v ? 'selected' : ''}>${v}</option>
+                                    `).join('')}
+                                </select>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Merk / Tahun <sup class="text-danger">*</sup></label>
-                                <input type="text" name="units[${i}][merk_tahun]" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">No Rangka / Mesin <sup class="text-danger">*</sup></label>
-                                <input type="text" name="units[${i}][no_rangka_mesin]" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Penggunaan <sup class="text-danger">*</sup></label>
-                                <input type="text" name="units[${i}][penggunaan]" class="form-control" required>
+                            <div class="col-7">
+                                <label class="form-label small">Total</label>
+                                <input type="text" name="units[${i}][total]" class="form-control"
+                                       value="${unit.total || ''}" required>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Cover / Discount -->
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label">Cover / Discount</label>
+                        <div class="row">
+                            <div class="col-5">
+                                <label class="form-label small">Cover</label>
+                                <select name="units[${i}][cover]" class="form-select" required>
+                                    ${['AMB','MCL','HEQ'].map(c => `
+                                        <option value="${c}" ${unit.cover === c ? 'selected' : ''}>${c}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="col-7">
+                                <label class="form-label small">Discount</label>
+                                <input type="text" name="units[${i}][discount]" class="form-control"
+                                       value="${unit.discount || ''}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rate / Brokerage -->
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label">Rate / Brokerage</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label small">Rate</label>
+                                <input type="text" name="units[${i}][rate]" class="form-control"
+                                       value="${unit.rate || ''}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">Brokerage</label>
+                                <input type="text" name="units[${i}][brokerage]" class="form-control"
+                                       value="${unit.brokerage || ''}" required>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            `);
+            </div>
+        `);
         }
     }
 </script>

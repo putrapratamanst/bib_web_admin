@@ -34,6 +34,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/contracts/create', [\App\Http\Controllers\Transaction\ContractController::class, 'create'])->name('transaction.contracts.create');
     Route::get('/contracts/{id}', [\App\Http\Controllers\Transaction\ContractController::class, 'show'])->name('transaction.contracts.show');
     Route::get('/contracts/add-unit/automobile/{id} ', [\App\Http\Controllers\Transaction\ContractController::class, 'showAddUnit'])->name('transaction.contracts.show-add-unit');
+    Route::get('/contracts/add-unit/property/{id} ', [\App\Http\Controllers\Transaction\ContractController::class, 'showAddProperty'])->name('transaction.contracts.show-add-property');
 
     // Journal Entry
     Route::get('/journal-entries', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'index'])->name('transaction.journal-entries.index');
@@ -64,6 +65,9 @@ Route::prefix('transaction')->group(function () {
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
     )->name('transaction.debit-notes.show');
+
+    Route::get('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.debit-notes-billing.create');
+    Route::post('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debitnotebillings.store');
 });
 
 

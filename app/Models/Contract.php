@@ -164,4 +164,14 @@ class Contract extends Model
     {
         return $this->hasMany(CreditNote::class, 'contract_id', 'id');
     }
+
+    public function propertyUnits()
+    {
+        return $this->hasMany(PropertyUnit::class);
+    }
+    public function autoMobileUnits()
+    {
+        return $this->hasMany(AutoMobileUnit::class);    
+    }
+    
 }

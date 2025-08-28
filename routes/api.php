@@ -40,6 +40,7 @@ Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'i
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
+Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
 
 
 // Journal Entry

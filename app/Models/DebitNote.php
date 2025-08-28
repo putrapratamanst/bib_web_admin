@@ -140,4 +140,9 @@ class DebitNote extends Model
             ->where('cash_banks.type', 'pay')
             ->max('cash_banks.date');
     }
+
+    public function debitNoteBillings(): HasMany
+    {
+        return $this->hasMany(DebitNoteBilling::class, 'debit_note_id', 'id');
+    }
 }

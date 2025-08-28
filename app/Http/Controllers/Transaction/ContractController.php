@@ -37,9 +37,19 @@ class ContractController extends Controller
     }
     public function showAddUnit($id)
     {
-        $contract = Contract::find($id);
+        $contract = Contract::with('autoMobileUnits')->findOrFail($id);
         return view('transaction.contract.show-add-unit', [
             'contract' => $contract,
+            'units' => $contract->autoMobileUnits,
+        ]);
+    }
+
+    public function showAddProperty($id)
+    {
+        $contract = Contract::with('propertyUnits')->findOrFail($id);
+        return view('transaction.contract.show-add-property', [
+            'contract' => $contract,
+            'units' => $contract->propertyUnits,
         ]);
     }
 }
