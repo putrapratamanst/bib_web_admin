@@ -88,12 +88,14 @@
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>List Billing</span>
+            @if ($debitNote->debitNoteBillings->count() < $debitNote->installment)
             <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
+            @endif
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead>
+                <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
+                    <thead class="table-header">
                         <tr>
                             <th>Number</th>
                             <th>Date</th>
@@ -105,10 +107,10 @@
                     <tbody>
                         @forelse ($debitNote->debitNoteBillings as $billing)
                         <tr>
-                            <td>{{ $billing->number }}</td>
+                            <td>{{ $billing->billing_number }}</td>
                             <td>{{ $billing->date }}</td>
                             <td>{{ $billing->due_date }}</td>
-                            <td class="text-end">{{ $billing->amount }}</td>
+                            <td class="text-end">{{ $debitNote->currency_code }}{{ number_format($billing->amount, 2, ',', '.') }}</td>
                             <td>
                                 @if($billing->status === 'unpaid')
                                 <span class="badge bg-danger">Unpaid</span>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashBankDetail;
 use Illuminate\Http\Request;
 
 class CashBankController extends Controller
@@ -18,6 +19,15 @@ class CashBankController extends Controller
 
         return view('transaction.cashbank.create', [
             'currentDate' => $currentDate
+        ]);
+    }
+
+    public function show($id)
+    {
+        $cashBank = CashBankDetail::with('cashBank','debitNote')->where('cash_bank_id', $id)->first();
+        return view('transaction.cashbank.show', [
+            'cashBank' => $cashBank->cashBank,
+            'debitNote' => $cashBank->debitNote
         ]);
     }
 }

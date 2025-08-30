@@ -37,7 +37,11 @@
             serverSide: true,
             ajax: "{{ route('api.cash-banks.datatables') }}",
             columns: [
-                { data: 'number', name: 'number' },
+                { data: 'number', name: 'number', 
+                    render: function(data, type, row) {
+                        return '<a href="{{ route('transaction.cash-banks.index') }}/' + row.id + '">' + data + '</a>';
+                 },
+                },
                 { 
                     data: 'type', 
                     render: function (data, type) {

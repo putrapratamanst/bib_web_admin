@@ -19,6 +19,7 @@ class DebitNoteBillingController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'debit_note_id' => 'required|exists:debit_notes,id',
             'billing_number'   => 'required|array',
@@ -30,8 +31,8 @@ class DebitNoteBillingController extends Controller
             'amount'   => 'required|array',
             'amount.*' => 'required|numeric|min:0',
             // kalau status juga array
-            'status'   => 'required|array',
-            'status.*' => 'required|in:unpaid,paid,overdue',
+            // 'status'   => 'required|array',
+            // 'status.*' => 'required|in:unpaid,paid,overdue',
         ]);
 
         foreach ($request->billing_number as $i => $billingNumber) {
@@ -41,14 +42,12 @@ class DebitNoteBillingController extends Controller
             $debitNoteBilling->date = $request->date[$i];
             $debitNoteBilling->due_date = $request->due_date[$i];
             $debitNoteBilling->amount = $request->amount[$i];
-            $debitNoteBilling->status = $request->status[$i] ?? 'unpaid'; // default kalau ga ada
-            $debitNoteBilling->created_by = auth()->id();
-            $debitNoteBilling->updated_by = auth()->id();
+            $debitNoteBilling->status = 'paid'; // default kalau ga ada
             $debitNoteBilling->save();
         }
 
         return redirect()
-            ->route('transaction.debitnotes.show', ['id' => $request->debit_note_id])
+            ->route('transaction.debit-notes.show', ['id' => $request->debit_note_id])
             ->with('success', 'Debit Note Billings created successfully.');
     }
 }
