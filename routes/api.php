@@ -35,6 +35,12 @@ Route::get('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, '
 Route::get('/cash-bank/datatables', [\App\Http\Controllers\Api\CashBankController::class, 'datatables'])->name('api.cash-banks.datatables');
 Route::post('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 'store'])->name('api.cash-banks.store');
 
+
+// Payment Allocation
+Route::get('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'index'])->name('api.payment-allocations.index');
+Route::get('/payment-allocation/datatables', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'datatables'])->name('api.payment-allocations.datatables');
+Route::post('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'store'])->name('api.payment-allocations.store');
+
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');

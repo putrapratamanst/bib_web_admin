@@ -26,8 +26,8 @@ class CashBankController extends Controller
     {
         $cashBank = CashBankDetail::with('cashBank','debitNote')->where('cash_bank_id', $id)->first();
         return view('transaction.cashbank.show', [
-            'cashBank' => $cashBank->cashBank,
-            'debitNote' => $cashBank->debitNote
+            'cashBank' => $cashBank->cashBank ?? null,
+            'debitNote' => $cashBank->debitNote ?? null
         ]);
     }
 }

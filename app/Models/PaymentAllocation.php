@@ -7,20 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CashBankDetail extends Model
+class PaymentAllocation extends Model
 {
     use HasFactory;
 
-    use HasUuids;
+    public $timestamps = true;
+
 
     protected $fillable = [
         'cash_bank_id',
         'debit_note_id',
-        'amount',
+        'allocation',
+        'status',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'allocation' => 'decimal:2',
     ];
 
     public function cashBank(): BelongsTo
@@ -31,10 +33,5 @@ class CashBankDetail extends Model
     public function debitNote(): BelongsTo
     {
         return $this->belongsTo(DebitNote::class, 'debit_note_id', 'id');
-    }
-
-    public function paymentAllocation(): BelongsTo
-    {
-        return $this->belongsTo(PaymentAllocation::class, 'id', 'cash_bank_id');
     }
 }

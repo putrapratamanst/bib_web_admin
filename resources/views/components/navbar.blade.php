@@ -53,6 +53,9 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.cash-banks.index') }}">Cash &amp; Bank</a>
                         </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('transaction.payment-allocations.index') }}">Payment Allocation</a>
+                        </li>
                     </ul>
                 </li>
 

@@ -1,0 +1,3 @@
+di list of payment,
+yang udah posted (status approved) tidak usah muncul di list
+tapi saat ini dia langsung approved

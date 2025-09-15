@@ -145,4 +145,9 @@ class DebitNote extends Model
     {
         return $this->hasMany(DebitNoteBilling::class, 'debit_note_id', 'id');
     }
+
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class, 'debit_note_id', 'id');
+    }
 }
