@@ -5,7 +5,7 @@
     <div class="card">
         <div class="card-header">
             Add Debit Note Allocation
-                        <div class="float-end">
+            <div class="float-end">
                 <a href="{{ route('transaction.payment-allocations.show', $dataCashBank->id) }}" class="btn btn-secondary btn-sm">
                     Back
                 </a>
@@ -13,7 +13,7 @@
         </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
-            <h5>Cash Bank Amount: {{$dataCashBank->currency_code}}{{ number_format($dataCashBank->amount, 2, ',', '.') }}</h5>
+                <h5>Cash Bank Amount: {{$dataCashBank->currency_code}}{{ number_format($dataCashBank->amount, 2, ',', '.') }}</h5>
                 <div class="row mt-4">
                     <div class="col-md-12">
                         <table class="table table-bordered">
@@ -28,15 +28,21 @@
                             </thead>
                             <tbody>
                                 @forelse($cashBank as $detail)
-                                <tr>
+                                @php
+                                $existingAllocation = $detail->debitNote->paymentAllocations
+                                ->where('cash_bank_id', $detail->cash_bank_id) // optional, kalau mau per cash bank
+                                ->first();
+                                $allocationValue = $existingAllocation->allocation ?? $detail->amount ?? 0;
+                                @endphp <tr>
                                     <td>{{ $detail->debitNote->number ?? '-' }}</td>
                                     <td>{{ $detail->debitNote->date ?? '-' }}</td>
                                     <td>{{ $detail->debitNote->due_date ?? '-' }}</td>
-                                    <td>{{$detail->debitNote->currency_code}}{{ number_format($detail->debitNote->amount, 2, ',', '.') }}</td>
+                                    <td>{{ $detail->debitNote->currency_code }}{{ number_format($detail->debitNote->amount, 2, ',', '.') }}</td>
                                     <td>
-                                        <input type="hidden" name="debit_note_id[]" value="{{ $detail->debitNote->id}}">
-                                        <input type="hidden" name="cash_bank_id[]" value="{{ $detail->cash_bank_id}}">
-                                        <input type="number" name="allocation[]" class="form-control" step="0.01">
+                                        <input type="hidden" name="debit_note_id[]" value="{{ $detail->debitNote->id }}">
+                                        <input type="hidden" name="cash_bank_id[]" value="{{ $detail->cash_bank_id }}">
+                                        <input type="number" name="allocation[]" class="form-control" step="0.01"
+                                            value="{{ old('allocation.' . $loop->index, $allocationValue) }}">
                                         <input type="hidden" name="status[]" class="form-control" value="draft">
                                     </td>
                                 </tr>

@@ -66,9 +66,15 @@
                 <div class="card-header">
                     Debit Notes Allocation
                     <div class="float-end">
+                        <!-- check if all debit notes have been allocated -->
+                        <?php $allAllocated = $paymentAllocations->sum('allocation') >= $cashBank->amount ? 'true' : 'false' ?>
+                        @if($allAllocated == 'false')
                         <a href="{{ route('transaction.payment-allocations.create', ['cashbankID' => $cashBank->id]) }} " class="btn btn-primary btn-sm">
                             Add Allocation to Debit Note
                         </a>
+                        @else
+                        <span class="text-muted">All Debit Notes have been allocated</span>
+                        @endif
                     </div>
                 </div>
 
@@ -83,22 +89,19 @@
                                 <th>Number</th>
                                 <th>Date</th>
                                 <th>Due Date</th>
-                                <th>Contract</th>
-                                <th>Installment</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Allocation</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                                @foreach($paymentAllocations as $alloc)
+                            @foreach($paymentAllocations as $alloc)
 
                             <tr>
                                 <td>{{ $alloc->debitNote->number }}</td>
                                 <td>{{ $alloc->debitNote->date }}</td>
                                 <td>{{ $alloc->debitNote->due_date }}</td>
-                                <td>{{ $alloc->debitNote->contract->number ?? '-' }}</td>
-                                <td>{{ $alloc->debitNote->installment ?? '-' }}</td>
                                 <td class="text-end">{{ $alloc->debitNote->currency_code }}{{ number_format($alloc->debitNote->amount, 2, ',', '.') }}</td>
                                 <td class="text-end"><b>{{ $alloc->debitNote->currency_code }}{{ number_format($alloc->allocation, 2, ',', '.') }}</b></td>
                                 <td>
@@ -110,8 +113,18 @@
                                     <span class="badge bg-secondary">{{ ucfirst($alloc->debitNote->status) }}</span>
                                     @endif
                                 </td>
+                                <td>
+                                    @if($alloc->status == 'draft')
+                                    <form action="{{ route('transaction.payment-allocations.post', $alloc->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to post this allocation?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success btn-sm">Posting</button>
+                                    </form>
+                                    @else
+                                    <span class="text-muted">No actions available</span>
+                                    @endif
+                                </td>
                             </tr>
-                                @endforeach
+                            @endforeach
 
                         </tbody>
                     </table>

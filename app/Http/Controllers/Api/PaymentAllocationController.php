@@ -52,13 +52,39 @@ class PaymentAllocationController extends Controller
             $data = $request->validated();
 
             $allocations = [];
+            $allocationSums = []; // menyimpan total allocation per cash_bank_id
+
             foreach ($data['debit_note_id'] as $index => $debitNoteId) {
                 $allocationAmount = $data['allocation'][$index] ?? 0;
+                $cashBankId = $data['cash_bank_id'][$index] ?? null;
 
                 // skip kalau tidak ada nilai
                 if ($allocationAmount <= 0) {
                     continue;
                 }
+
+                $allocationSums[$cashBankId] = ($allocationSums[$cashBankId] ?? 0) + $allocationAmount;
+                if ($allocationSums[$cashBankId] > CashBank::find($cashBankId)->amount) {
+                    return response()->json([
+                        'errors' => [
+                            'allocation' => [
+                                'Total allocation for Cash Bank  exceeds available amount.'
+                            ]
+                        ]
+                    ], 400);
+                }
+            // check if allocation for this debit note already exists for this cash bank
+                $existingAllocation = PaymentAllocation::where('cash_bank_id', $data['cash_bank_id'][$index] ?? null)
+                    ->where('debit_note_id', $debitNoteId)
+                    ->first();
+                if ($existingAllocation) {
+                    // update existing allocation
+                    $existingAllocation->allocation = $allocationAmount;
+                    $existingAllocation->status = $data['status'][$index] ?? 'draft';
+                    $existingAllocation->save();
+                    $allocations[] = $existingAllocation;
+                    continue;
+                }                
 
                 $allocations[] = PaymentAllocation::create([
                     'cash_bank_id'  => $data['cash_bank_id'][$index] ?? null,

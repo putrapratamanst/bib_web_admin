@@ -73,6 +73,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/payment-allocations', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'index'])->name('transaction.payment-allocations.index');
     Route::get('/payment-allocations/create/{cashbankID}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'create'])->name('transaction.payment-allocations.create');
     Route::get('/payment-allocations/{id}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'show'])->name('transaction.payment-allocations.show');
+    Route::post('/payment-allocations/post/{id}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'post'])->name('transaction.payment-allocations.post');
 });
 
 

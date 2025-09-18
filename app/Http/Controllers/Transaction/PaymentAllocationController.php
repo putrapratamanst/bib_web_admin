@@ -37,4 +37,22 @@ class PaymentAllocationController extends Controller
             'paymentAllocations' => $paymentAllocation
         ]);
     }
+
+    public function post(Request $request, $id)
+    {
+        $paymentAllocation = PaymentAllocation::find($id);
+        if (!$paymentAllocation) {
+            return redirect()->back()->with('error', 'Payment Allocation not found.');
+        }
+
+        if ($paymentAllocation->status === 'posted') {
+            return redirect()->back()->with('error', 'Payment Allocation is already posted.');
+        }
+
+        // Update the status to 'posted'
+        $paymentAllocation->status = 'posted';
+        $paymentAllocation->save();
+
+        return redirect()->back()->with('success', 'Payment Allocation has been posted successfully.');
+    }
 }
