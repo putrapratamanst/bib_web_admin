@@ -66,6 +66,7 @@ Route::get('/debit-note/datatables', [\App\Http\Controllers\Api\DebitNoteControl
 // report prefix
 Route::prefix('report')->group(function () {
     Route::get('/console', [\App\Http\Controllers\Api\Report\ConsoleReportController::class, 'index'])->name('api.report.console.index');
+    Route::get('/piutang', [\App\Http\Controllers\Api\Report\PiutangReportController::class, 'index'])->name('api.report.piutang.index');
 
     Route::get('/balance-sheet', [\App\Http\Controllers\Api\Report\BalanceSheetController::class, 'index'])->name('api.report.balance-sheet.index');
 });

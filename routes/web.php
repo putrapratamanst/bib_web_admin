@@ -86,6 +86,7 @@ Route::prefix('report')->group(function () {
     Route::get('/download-profit-and-loss', [ProfitAndLossController::class, 'downloadProfitAndLoss'])->name('report.profitandloss.download');
     Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
     Route::get('/console', [\App\Http\Controllers\Report\ConsoleReportController::class, 'index'])->name('report.console.index');
+    Route::get('/piutang', [\App\Http\Controllers\Report\PiutangReportController::class, 'index'])->name('report.piutang.index');
 
     // Balance Sheet
     Route::get('/balance-sheet', [\App\Http\Controllers\Report\BalanceSheetController::class, 'index'])->name('report.balance-sheet.index');

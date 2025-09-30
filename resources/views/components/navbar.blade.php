@@ -79,6 +79,9 @@
                         <li>
                             <a class="dropdown-item" href="{{ route("report.cashflow.index") }}">Cash Flow</a>
                         </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route("report.piutang.index") }}">Report Piutang <span class="badge bg-danger">new</span></a>
+                        </li>
                     </ul>
                 </li>
             </ul>
