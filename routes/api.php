@@ -62,11 +62,23 @@ Route::post('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::cla
 // Debit Note
 Route::get('/debit-note', [\App\Http\Controllers\Api\DebitNoteController::class, 'index'])->name('api.debit-notes.index');
 Route::get('/debit-note/datatables', [\App\Http\Controllers\Api\DebitNoteController::class, 'datatables'])->name('api.debit-notes.datatables');
+Route::get('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::class, 'show'])->name('api.debit-notes.show');
+Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteController::class, 'postDebitNote'])->name('api.debit-notes.post');
+
+// Cashout
+Route::get('/cashout', [\App\Http\Controllers\Api\CashoutController::class, 'index'])->name('api.cashouts.index');
+Route::get('/cashout/datatables', [\App\Http\Controllers\Api\CashoutController::class, 'datatables'])->name('api.cashouts.datatables');
+Route::get('/cashout/{id}', [\App\Http\Controllers\Api\CashoutController::class, 'show'])->name('api.cashouts.show');
+Route::put('/cashout/{id}', [\App\Http\Controllers\Api\CashoutController::class, 'update'])->name('api.cashouts.update');
+Route::post('/cashout/{id}/mark-paid', [\App\Http\Controllers\Api\CashoutController::class, 'markAsPaid'])->name('api.cashouts.mark-paid');
+Route::post('/cashout/{id}/mark-cancelled', [\App\Http\Controllers\Api\CashoutController::class, 'mark-cancelled'])->name('api.cashouts.mark-cancelled');
 
 // report prefix
 Route::prefix('report')->group(function () {
     Route::get('/console', [\App\Http\Controllers\Api\Report\ConsoleReportController::class, 'index'])->name('api.report.console.index');
     Route::get('/piutang', [\App\Http\Controllers\Api\Report\PiutangReportController::class, 'index'])->name('api.report.piutang.index');
+    Route::get('/cashout', [\App\Http\Controllers\Api\Report\CashoutReportController::class, 'index'])->name('api.report.cashout.index');
+    Route::get('/cashout-reconciliation', [\App\Http\Controllers\Api\Report\CashoutReportController::class, 'reconciliation'])->name('api.report.cashout-reconciliation.index');
 
     Route::get('/balance-sheet', [\App\Http\Controllers\Api\Report\BalanceSheetController::class, 'index'])->name('api.report.balance-sheet.index');
 });

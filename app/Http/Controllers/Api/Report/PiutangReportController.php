@@ -11,82 +11,77 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PiutangReportController extends Controller
 {
-public function index(Request $request)
-{
-    $as_of_date = $request->input('as_of_date') ?? now()->toDateString();
-    $from_date  = $request->input('from_date');
-    $to_date    = $request->input('to_date');
-    $client_id  = $request->input('client_id');
+    public function index(Request $request)
+    {
+        $as_of_date = $request->input('as_of_date') ?? now()->toDateString();
+        $from_date  = $request->input('from_date');
+        $to_date    = $request->input('to_date');
+        $client_id  = $request->input('client_id');
 
-    // Normalisasi tanggal dengan Carbon
-    $asOf = Carbon::parse($as_of_date)->endOfDay();
-    $from = $from_date ? Carbon::parse($from_date)->startOfDay() : null;
-    $to   = $to_date ? Carbon::parse($to_date)->endOfDay() : null;
+        $asOf = Carbon::parse($as_of_date)->endOfDay();
 
-    $query = DebitNote::with(['creditNotes', 'paymentAllocations', 'contract'])
-        // gunakan kolom 'date' pada DebitNote
-        ->when($from && $to, function ($q) use ($from, $to) {
-            $q->whereBetween('date', [$from->toDateString(), $to->toDateString()]);
-        })
-        // filter client lewat relasi contract (coba contact_id atau client_id)
-        ->when($client_id, function ($q) use ($client_id) {
-            $q->whereHas('contract', function ($q2) use ($client_id) {
-                $q2->where(function($q3) use ($client_id) {
-                    $q3->where('contact_id', $client_id)
-                       ->orWhere('client_id', $client_id);
+        $query = DebitNote::with(['creditNotes', 'paymentAllocations', 'contract'])
+            // filter range billing date
+            ->when($from_date && $to_date, function ($q) use ($from_date, $to_date) {
+                $q->whereBetween('date', [
+                    Carbon::parse($from_date)->startOfDay(),
+                    Carbon::parse($to_date)->endOfDay()
+                ]);
+            })
+            ->when($from_date && !$to_date, function ($q) use ($from_date) {
+                $q->where('date', '>=', Carbon::parse($from_date)->startOfDay());
+            })
+            ->when(!$from_date && $to_date, function ($q) use ($to_date) {
+                $q->where('date', '<=', Carbon::parse($to_date)->endOfDay());
+            })
+            // filter by client (via contract relasi)
+            ->when($client_id, function ($q) use ($client_id) {
+                $q->whereHas('contract', function ($q2) use ($client_id) {
+                    $q2->where('client_id', $client_id)
+                        ->orWhere('contact_id', $client_id);
                 });
             });
-        });
 
-    $debitNotes = $query->get()->map(function ($dn) use ($asOf) {
-        // jumlah CN (pakai kolom 'date' pada CreditNote)
-        $credit_total = $dn->creditNotes->reduce(function ($carry, $cn) use ($asOf) {
-            if (empty($cn->date)) return $carry;
-            try {
-                if (Carbon::parse($cn->date)->lte($asOf)) {
+        $debitNotes = $query->get()->map(function ($dn) use ($asOf) {
+            // Total Credit Notes sampai as_of_date
+            $credit_total = $dn->creditNotes->reduce(function ($carry, $cn) use ($asOf) {
+                if ($cn->date && Carbon::parse($cn->date)->lte($asOf)) {
                     return $carry + (float) $cn->amount;
                 }
-            } catch (\Exception $e) {
-                // jika parse gagal, skip
-            }
-            return $carry;
-        }, 0);
+                return $carry;
+            }, 0);
 
-        // jumlah alokasi (coba transfer_date, fallback ke created_at)
-        $alloc_total = $dn->paymentAllocations->reduce(function ($carry, $pa) use ($asOf) {
-            $date = $pa->transfer_date ?? $pa->date ?? $pa->created_at ?? null;
-            if (empty($date)) return $carry;
-            try {
-                if (Carbon::parse($date)->lte($asOf)) {
+            // Total Allocation sampai as_of_date
+            $alloc_total = $dn->paymentAllocations->reduce(function ($carry, $pa) use ($asOf) {
+                $date = $pa->transfer_date ?? $pa->date ?? $pa->created_at;
+                if ($date && Carbon::parse($date)->lte($asOf)) {
                     return $carry + (float) $pa->allocation;
                 }
-            } catch (\Exception $e) {
-            }
-            return $carry;
-        }, 0);
+                return $carry;
+            }, 0);
 
-        $amount = (float) $dn->amount;
+            $amount = (float) $dn->amount;
 
-        return [
-            'billing_no'   => $dn->number,
-            'billing_date' => $dn->date ? Carbon::parse($dn->date)->toDateString() : null,
-            'amount'       => $amount,
-            'credit_note'  => $credit_total,
-            'allocation'   => $alloc_total,
-            'outstanding'  => $amount - $credit_total - $alloc_total,
-        ];
-    });
+            return [
+                'billing_no'   => $dn->number,
+                'billing_date' => $dn->date ? Carbon::parse($dn->date)->toDateString() : null,
+                'amount'       => $amount,
+                'credit_note'  => $credit_total,
+                'allocation'   => $alloc_total,
+                'outstanding'  => $amount - $credit_total - $alloc_total,
+            ];
+        });
 
-    if ($request->input('format') == "json") {
-        return response()->json([
-            'report' => $debitNotes
-        ]);
-    } elseif ($request->input('format') == "excel") {
-        return Excel::download(new PiutangReportExport($debitNotes), 'Report_Piutang.xlsx');
-    } else {
-        return view('api.report.piutang', [
-            'report' => $debitNotes
-        ]);
+        if ($request->input('format') == "json") {
+            return response()->json([
+                'report' => $debitNotes
+            ]);
+        } elseif ($request->input('format') == "excel") {
+            return Excel::download(new PiutangReportExport($debitNotes), 'Report_Piutang.xlsx');
+        } else {
+            return view('api.report.piutang', [
+                'report' => $debitNotes
+            ]);
+        }
     }
-}
 }

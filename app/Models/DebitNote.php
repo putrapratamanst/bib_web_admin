@@ -44,6 +44,7 @@ class DebitNote extends Model
         'due_date_formatted',
         'exchange_rate_formatted',
         'amount_formatted',
+        'is_posted',
     ];
 
     public function contract(): BelongsTo
@@ -149,5 +150,59 @@ class DebitNote extends Model
     public function paymentAllocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class, 'debit_note_id', 'id');
+    }
+
+    public function cashouts(): HasMany
+    {
+        return $this->hasMany(Cashout::class, 'debit_note_id', 'id');
+    }
+
+    // Method untuk posting debit note dan auto create cashouts
+    public function postDebitNote(): bool
+    {
+        // Pastikan status masih active dan belum di-post
+        if ($this->status !== 'active') {
+            return false;
+        }
+
+        // Create cashouts berdasarkan debit_note_details
+        foreach ($this->debitNoteDetails as $detail) {
+            $this->cashouts()->create([
+                'insurance_id' => $detail->insurance_id,
+                'number' => $this->generateCashoutNumber(),
+                'date' => now()->toDateString(),
+                'due_date' => $this->due_date,
+                'currency_code' => $this->currency_code,
+                'exchange_rate' => $this->exchange_rate,
+                'amount' => $detail->amount,
+                'description' => "Cashout untuk Debit Note: {$this->number}",
+                'status' => 'pending',
+                'created_by' => 1, // Default user ID, bisa disesuaikan
+            ]);
+        }
+
+        return true;
+    }
+
+    // Helper method untuk generate nomor cashout
+    private function generateCashoutNumber(): string
+    {
+        $prefix = 'CO';
+        $date = now()->format('Ymd');
+        $sequence = Cashout::whereDate('created_at', now()->toDateString())->count() + 1;
+        
+        return "{$prefix}/{$date}/" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    // Summary amount of cashouts by debit note
+    public function getCashoutAmountAttribute(): float
+    {
+        return $this->cashouts->sum('amount');
+    }
+
+    // Check if debit note has been posted (has cashouts)
+    public function getIsPostedAttribute(): bool
+    {
+        return $this->cashouts()->exists();
     }
 }

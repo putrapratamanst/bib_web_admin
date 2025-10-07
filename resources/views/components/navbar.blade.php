@@ -56,6 +56,15 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.payment-allocations.index') }}">Payment Allocation</a>
                         </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('transaction.cashouts.index') }}">
+                                <i class="fas fa-money-bill-wave me-1"></i>
+                                Cashouts <span class="badge bg-success">new</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
@@ -81,6 +90,21 @@
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ route("report.piutang.index") }}">Report Piutang <span class="badge bg-danger">new</span></a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('report.cashout.index') }}">
+                                <i class="fas fa-money-bill-wave me-1"></i>
+                                Cashout Report <span class="badge bg-success">new</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('report.cashout.reconciliation') }}">
+                                <i class="fas fa-balance-scale me-1"></i>
+                                Cashout Reconciliation <span class="badge bg-success">new</span>
+                            </a>
                         </li>
                     </ul>
                 </li>

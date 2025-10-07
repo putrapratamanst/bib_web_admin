@@ -81,6 +81,23 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('transaction.debit-notes.index') }}" class="btn btn-secondary">Back</a>
+                
+                @if(!$debitNote->is_posted && $debitNote->status === 'active')
+                    <button type="button" class="btn btn-primary" onclick="postDebitNote()" id="btnPost">
+                        <i class="fas fa-paper-plane me-1"></i> Post Debit Note
+                    </button>
+                @else
+                    @if($debitNote->is_posted)
+                        <span class="badge bg-success ms-2">
+                            <i class="fas fa-check me-1"></i> Already Posted
+                        </span>
+                        @if($debitNote->cashouts->count() > 0)
+                            <a href="{{ route('transaction.cashouts.index') }}" class="btn btn-info btn-sm ms-2">
+                                <i class="fas fa-money-bill-wave me-1"></i> View Cashouts ({{ $debitNote->cashouts->count() }})
+                            </a>
+                        @endif
+                    @endif
+                @endif
             </div>
         </form>
     </div>
@@ -133,3 +150,46 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function postDebitNote() {
+        if (confirm('Are you sure you want to post this Debit Note? This will automatically create cashouts to insurance companies.')) {
+            $('#btnPost').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Posting...');
+            
+            $.ajax({
+                url: "{{ route('api.debit-notes.post', $debitNote->id) }}",
+                method: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success !== false) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                        $('#btnPost').prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i> Post Debit Note');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Failed to post Debit Note';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', errorMessage, 'error');
+                    $('#btnPost').prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i> Post Debit Note');
+                }
+            });
+        }
+    }
+</script>
+@endpush

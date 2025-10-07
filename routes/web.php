@@ -74,6 +74,12 @@ Route::prefix('transaction')->group(function () {
     Route::get('/payment-allocations/create/{cashbankID}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'create'])->name('transaction.payment-allocations.create');
     Route::get('/payment-allocations/{id}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'show'])->name('transaction.payment-allocations.show');
     Route::post('/payment-allocations/post/{id}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'post'])->name('transaction.payment-allocations.post');
+
+    // Cashouts
+    Route::get('/cashouts', [\App\Http\Controllers\Transaction\CashoutController::class, 'index'])->name('transaction.cashouts.index');
+    Route::get('/cashouts/{id}', [\App\Http\Controllers\Transaction\CashoutController::class, 'show'])->name('transaction.cashouts.show');
+    Route::post('/cashouts/{id}/mark-paid', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsPaid'])->name('transaction.cashouts.mark-paid');
+    Route::post('/cashouts/{id}/mark-cancelled', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsCancelled'])->name('transaction.cashouts.mark-cancelled');
 });
 
 
@@ -87,6 +93,8 @@ Route::prefix('report')->group(function () {
     Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
     Route::get('/console', [\App\Http\Controllers\Report\ConsoleReportController::class, 'index'])->name('report.console.index');
     Route::get('/piutang', [\App\Http\Controllers\Report\PiutangReportController::class, 'index'])->name('report.piutang.index');
+    Route::get('/cashout', [\App\Http\Controllers\Report\CashoutReportController::class, 'index'])->name('report.cashout.index');
+    Route::get('/cashout-reconciliation', [\App\Http\Controllers\Report\CashoutReportController::class, 'reconciliation'])->name('report.cashout.reconciliation');
 
     // Balance Sheet
     Route::get('/balance-sheet', [\App\Http\Controllers\Report\BalanceSheetController::class, 'index'])->name('report.balance-sheet.index');
