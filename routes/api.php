@@ -65,6 +65,10 @@ Route::get('/debit-note/datatables', [\App\Http\Controllers\Api\DebitNoteControl
 Route::get('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::class, 'show'])->name('api.debit-notes.show');
 Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteController::class, 'postDebitNote'])->name('api.debit-notes.post');
 
+// Debit Note Billing
+Route::get('/debit-note-billing/datatables', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'datatables'])->name('api.debit-note-billings.datatables');
+Route::post('/debit-note-billing/{id}/post-to-cashout', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'postToCashout'])->name('api.debit-note-billings.post-to-cashout');
+
 // Cashout
 Route::get('/cashout', [\App\Http\Controllers\Api\CashoutController::class, 'index'])->name('api.cashouts.index');
 Route::get('/cashout/datatables', [\App\Http\Controllers\Api\CashoutController::class, 'datatables'])->name('api.cashouts.datatables');

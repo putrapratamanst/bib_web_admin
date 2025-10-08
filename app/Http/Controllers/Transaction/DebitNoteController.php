@@ -17,7 +17,6 @@ class DebitNoteController extends Controller
     {
         $debitNote = DebitNote::with(['debitNoteDetails','debitNoteBillings'])
             ->findOrFail($id);
-
         return view('transaction.debitnote.show', [
             'debitNote' => $debitNote,
         ]);

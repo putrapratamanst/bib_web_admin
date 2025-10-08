@@ -119,26 +119,51 @@
                             <th>Due Date</th>
                             <th class="text-end">Amount</th>
                             <th>Status</th>
+                            <th>Posted to Cashout</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($debitNote->debitNoteBillings as $billing)
                         <tr>
                             <td>{{ $billing->billing_number }}</td>
-                            <td>{{ $billing->date }}</td>
-                            <td>{{ $billing->due_date }}</td>
-                            <td class="text-end">{{ $debitNote->currency_code }}{{ number_format($billing->amount, 2, ',', '.') }}</td>
+                            <td>{{ $billing->date_formatted }}</td>
+                            <td>{{ $billing->due_date_formatted }}</td>
+                            <td class="text-end">{{ $debitNote->currency_code }} {{ $billing->amount_formatted }}</td>
                             <td>
                                 @if($billing->status === 'unpaid')
                                 <span class="badge bg-danger">Unpaid</span>
-                                @else
+                                @elseif($billing->status === 'paid')
                                 <span class="badge bg-success">Paid</span>
+                                @else
+                                <span class="badge bg-warning">{{ ucfirst($billing->status) }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @php
+                                    $hasLinkedCashout = \App\Models\Cashout::where('debit_note_billing_id', $billing->id)->exists();
+                                @endphp
+                                @if($hasLinkedCashout)
+                                    <span class="badge bg-success">Yes</span>
+                                @else
+                                    <span class="badge bg-secondary">No</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if(!$hasLinkedCashout && $billing->status === 'paid')
+                                    <button class="btn btn-primary btn-sm" onclick="postBillingToCashout('{{ $billing->id }}')">
+                                        <i class="fas fa-paper-plane"></i> Post to Cashout
+                                    </button>
+                                @elseif($hasLinkedCashout)
+                                    <span class="badge bg-success">Posted</span>
+                                @else
+                                    <span class="badge bg-secondary">Not Ready</span>
                                 @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center">No billing found</td>
+                            <td colspan="7" class="text-center">No billing found</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -190,6 +215,74 @@
                 }
             });
         }
+    }
+
+    function postBillingToCashout(billingId) {
+        Swal.fire({
+            title: 'Post Billing to Cashout',
+            text: 'Are you sure you want to post this billing to cashout? This will create a cashout entry.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Post it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Disable button
+                $(`button[onclick="postBillingToCashout('${billingId}')"]`)
+                    .prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Posting...');
+                
+                $.ajax({
+                    url: `/api/debit-note-billing/${billingId}/post-to-cashout`,
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Posted Successfully!',
+                                html: `
+                                    <div class="text-start">
+                                        <p><strong>Message:</strong> ${response.message}</p>
+                                        ${response.data && response.data.cashout ? 
+                                            `<p><strong>Cashout Number:</strong> ${response.data.cashout.number}</p>
+                                             <p><strong>Amount:</strong> ${response.data.cashout.currency_code} ${parseFloat(response.data.cashout.amount).toLocaleString('id-ID', {minimumFractionDigits: 2})}</p>` 
+                                            : ''
+                                        }
+                                    </div>
+                                `,
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire('Error!', response.message, 'error');
+                            // Re-enable button
+                            $(`button[onclick="postBillingToCashout('${billingId}')"]`)
+                                .prop('disabled', false)
+                                .html('<i class="fas fa-paper-plane"></i> Post to Cashout');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Failed to post billing to cashout';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire('Error!', errorMessage, 'error');
+                        // Re-enable button
+                        $(`button[onclick="postBillingToCashout('${billingId}')"]`)
+                            .prop('disabled', false)
+                            .html('<i class="fas fa-paper-plane"></i> Post to Cashout');
+                    }
+                });
+            }
+        });
     }
 </script>
 @endpush

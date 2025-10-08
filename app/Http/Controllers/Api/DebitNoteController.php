@@ -43,8 +43,7 @@ class DebitNoteController extends Controller
     public function postDebitNote($id)
     {
         try {
-            $debitNote = DebitNote::with('debitNoteDetails')->findOrFail($id);
-            
+            $debitNote = DebitNote::with(['debitNoteBillings', 'contract'])->findOrFail($id);
             // Check if already posted
             if ($debitNote->is_posted) {
                 return response()->json([
@@ -52,10 +51,11 @@ class DebitNoteController extends Controller
                     'success' => false
                 ], 400);
             }
-            // Check if has debit note details
-            if ($debitNote->debitNoteDetails->isEmpty()) {
+        
+            // Check if status is active
+            if ($debitNote->status !== 'active') {
                 return response()->json([
-                    'message' => 'Debit Note belum memiliki detail insurance. Tambahkan detail terlebih dahulu.',
+                    'message' => 'Debit Note tidak aktif dan tidak dapat di-posting',
                     'success' => false
                 ], 400);
             }

@@ -69,6 +69,10 @@ Route::prefix('transaction')->group(function () {
 
     Route::get('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.debit-notes-billing.create');
     Route::post('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debitnotebillings.store');
+    
+    // Debit Note Billings List
+    Route::get('/debit-note-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'index'])->name('transaction.debit-note-billings.index');
+    Route::post('/debit-note-billings/{id}/post-to-cashout', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'postToCashout'])->name('transaction.debit-note-billings.post-to-cashout');
 
     Route::get('/payment-allocations', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'index'])->name('transaction.payment-allocations.index');
     Route::get('/payment-allocations/create/{cashbankID}', [\App\Http\Controllers\Transaction\PaymentAllocationController::class, 'create'])->name('transaction.payment-allocations.create');

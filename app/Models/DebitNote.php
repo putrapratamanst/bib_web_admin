@@ -165,19 +165,55 @@ class DebitNote extends Model
             return false;
         }
 
-        // Create cashouts berdasarkan debit_note_details
-        foreach ($this->debitNoteDetails as $detail) {
+        // Cek apakah installment = 0 atau tidak ada installment
+        if ($this->installment <= 1) {
+            // Buat satu cashout dengan total amount debit note
+            return $this->createSingleCashout();
+        } else {
+            // Buat cashout berdasarkan billing yang ada
+            return $this->createCashoutsFromBillings();
+        }
+    }
+
+    // Method untuk buat single cashout (tanpa installment)
+    private function createSingleCashout(): bool
+    {
+        $this->cashouts()->create([
+            'debit_note_billing_id' => null, // Tidak terkait billing spesifik
+            'insurance_id' => $this->contract->contact_id ?? null, // Ambil dari contract
+            'number' => $this->generateCashoutNumber(),
+            'date' => now()->toDateString(),
+            'due_date' => $this->due_date,
+            'currency_code' => $this->currency_code,
+            'exchange_rate' => $this->exchange_rate,
+            'amount' => $this->amount, // Ambil dari amount debit note
+            'installment_number' => 1,
+            'description' => "Cashout untuk Debit Note: {$this->number}",
+            'status' => 'pending',
+            'created_by' => auth()->id() ?? 1,
+        ]);
+
+        return true;
+    }
+
+    // Method untuk buat cashouts dari billings
+    private function createCashoutsFromBillings(): bool
+    {
+        // Loop semua billing yang ada
+        foreach ($this->debitNoteBillings as $index => $billing) {
             $this->cashouts()->create([
-                'insurance_id' => $detail->insurance_id,
+                'debit_note_billing_id' => $billing->id,
+                'insurance_id' => $this->contract->contact_id ?? null,
                 'number' => $this->generateCashoutNumber(),
                 'date' => now()->toDateString(),
-                'due_date' => $this->due_date,
+                'due_date' => $billing->due_date,
                 'currency_code' => $this->currency_code,
                 'exchange_rate' => $this->exchange_rate,
-                'amount' => $detail->amount,
-                'description' => "Cashout untuk Debit Note: {$this->number}",
+                'amount' => $billing->amount,
+                'installment_number' => $index + 1,
+                'description' => "Cashout untuk Debit Note: {$this->number} - Billing: {$billing->billing_number}",
                 'status' => 'pending',
-                'created_by' => 1, // Default user ID, bisa disesuaikan
+                'created_by' => auth()->id() ?? 1,
             ]);
         }
 

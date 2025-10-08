@@ -41,6 +41,21 @@ class DebitNoteBilling extends Model
         'amount_formatted',
     ];
 
+    public function getDateFormattedAttribute(): string
+    {
+        return $this->date ? $this->date->format('d-m-Y') : '';
+    }
+
+    public function getDueDateFormattedAttribute(): string
+    {
+        return $this->due_date ? $this->due_date->format('d-m-Y') : '';
+    }
+
+    public function getAmountFormattedAttribute(): string
+    {
+        return number_format($this->amount, 2, ',', '.');
+    }
+
     /**
      * Get the debit note that owns the billing.
      */

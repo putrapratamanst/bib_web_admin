@@ -16,6 +16,7 @@ class Cashout extends Model
 
     protected $fillable = [
         'debit_note_id',
+        'debit_note_billing_id', // Link ke billing spesifik
         'insurance_id',
         'number',
         'date',
@@ -23,6 +24,7 @@ class Cashout extends Model
         'currency_code',
         'exchange_rate',
         'amount',
+        'installment_number', // Tracking installment ke berapa
         'description',
         'status',
         'created_by',
@@ -68,6 +70,11 @@ class Cashout extends Model
     public function debitNote(): BelongsTo
     {
         return $this->belongsTo(DebitNote::class, 'debit_note_id', 'id');
+    }
+
+    public function debitNoteBilling(): BelongsTo
+    {
+        return $this->belongsTo(DebitNoteBilling::class, 'debit_note_billing_id', 'id');
     }
 
     public function insurance(): BelongsTo
