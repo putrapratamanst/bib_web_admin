@@ -48,6 +48,53 @@ class ContractController extends Controller
             ->make(true);
     }
 
+    public function select2(Request $request)
+    {
+        $search = $request->get('search', '');
+        $page = $request->get('page', 1);
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+
+        $query = Contract::with(['contact'])
+            ->where('status', 'active')
+            ->where(function($q) use ($search) {
+                if ($search) {
+                    $q->where('number', 'like', "%{$search}%")
+                      ->orWhere('policy_number', 'like', "%{$search}%")
+                      ->orWhereHas('contact', function($contactQuery) use ($search) {
+                          $contactQuery->where('name', 'like', "%{$search}%");
+                      });
+                }
+            })
+            ->orderBy('number');
+
+        $total = $query->count();
+        $contracts = $query->offset($offset)->limit($limit)->get();
+
+        $data = $contracts->map(function($contract) {
+            return [
+                'id' => $contract->id,
+                'text' => "{$contract->number} - {$contract->contact->display_name}"
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'more' => ($offset + $limit) < $total
+            ]
+        ]);
+    }
+
+    public function show($id)
+    {
+        $contract = Contract::with(['contact', 'contractType', 'contractDetails'])->findOrFail($id);
+        
+        return response()->json([
+            'data' => new ContractResource($contract)
+        ]);
+    }
+
     public function store(ContractStoreRequest $request)
     {
         try {

@@ -36,24 +36,42 @@ class ContactController extends Controller
 
     public function select2(Request $request)
     {
-        $search = $request->q;
-        $type = $request->type;
+        $search = $request->get('search', '');
+        $type = $request->get('type', '');
+        $page = $request->get('page', 1);
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
 
-        $contacts = Contact::where('display_name', 'like', "%$search%")
+        $query = Contact::query()
+            ->where(function($q) use ($search) {
+                if ($search) {
+                    $q->where('display_name', 'like', "%{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                }
+            })
             ->when($type, function ($query, $type) {
                 return $query->whereHas('contactTypes', function ($query) use ($type) {
                     $query->where('type', $type);
                 });
             })
-            ->orderBy('display_name', 'asc')
-            ->get();
+            ->orderBy('display_name');
 
-        $formattedContacts = $contacts->map(function ($d) {
-            return ['id' => $d->id, 'text' => $d->display_name];
+        $total = $query->count();
+        $contacts = $query->offset($offset)->limit($limit)->get();
+
+        $data = $contacts->map(function($contact) {
+            return [
+                'id' => $contact->id,
+                'text' => $contact->display_name
+            ];
         });
 
         return response()->json([
-            'items' => $formattedContacts
+            'data' => $data,
+            'pagination' => [
+                'more' => ($offset + $limit) < $total
+            ]
         ]);
     }
 

@@ -60,8 +60,10 @@ Route::prefix('transaction')->group(function () {
         '/debit-notes',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'index']
     )->name('transaction.debit-notes.index');
-    // Route::get('/debit-notes/create', 
-    // [\App\Http\Controllers\Transaction\DebitNoteController::class, 'create'])->name('transaction.debit-notes.create');
+    Route::get('/debit-notes/create', 
+    [\App\Http\Controllers\Transaction\DebitNoteController::class, 'create'])->name('transaction.debit-notes.create');
+    Route::post('/debit-notes', 
+    [\App\Http\Controllers\Transaction\DebitNoteController::class, 'store'])->name('transaction.debit-notes.store');
     Route::get(
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']

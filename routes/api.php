@@ -44,6 +44,8 @@ Route::post('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationC
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
+Route::get('/contract/select2', [\App\Http\Controllers\Api\ContractController::class, 'select2'])->name('api.contracts.select2');
+Route::get('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'show'])->name('api.contracts.show');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
 Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
@@ -62,6 +64,7 @@ Route::post('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::cla
 // Debit Note
 Route::get('/debit-note', [\App\Http\Controllers\Api\DebitNoteController::class, 'index'])->name('api.debit-notes.index');
 Route::get('/debit-note/datatables', [\App\Http\Controllers\Api\DebitNoteController::class, 'datatables'])->name('api.debit-notes.datatables');
+Route::post('/debit-note', [\App\Http\Controllers\Api\DebitNoteController::class, 'store'])->name('api.debit-notes.store');
 Route::get('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::class, 'show'])->name('api.debit-notes.show');
 Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteController::class, 'postDebitNote'])->name('api.debit-notes.post');
 

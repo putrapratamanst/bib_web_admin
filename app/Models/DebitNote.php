@@ -20,6 +20,7 @@ class DebitNote extends Model
 
     protected $fillable = [
         'contract_id',
+        'contact_id',
         'number',
         'date',
         'due_date',
@@ -28,6 +29,7 @@ class DebitNote extends Model
         'exchange_rate',
         'amount',
         'status',
+        'is_posted',
         'created_by',
         'updated_by',
     ];
@@ -50,6 +52,11 @@ class DebitNote extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id');
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'contact_id', 'id');
     }
 
     public function currency(): BelongsTo
