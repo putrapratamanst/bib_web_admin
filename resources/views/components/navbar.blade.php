@@ -92,6 +92,12 @@
                             <a class="dropdown-item" href="{{ route("report.piutang.index") }}">Report Piutang <span class="badge bg-danger">new</span></a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('report.debit-notes.index') }}">
+                                <i class="fas fa-file-invoice me-1"></i>
+                                Debit Note Report <span class="badge bg-primary">new</span>
+                            </a>
+                        </li>
+                        <li>
                             <hr class="dropdown-divider">
                         </li>
                         <li>

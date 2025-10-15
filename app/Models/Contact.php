@@ -51,4 +51,19 @@ class Contact extends Model
     {
         return $this->belongsTo(User::class, 'updated_by', 'id');
     }
+
+    public function debitNotes(): HasMany
+    {
+        return $this->hasMany(DebitNote::class, 'contact_id', 'id');
+    }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class, 'contact_id', 'id');
+    }
+
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class, 'contact_id', 'id');
+    }
 }

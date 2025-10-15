@@ -88,4 +88,7 @@ Route::prefix('report')->group(function () {
     Route::get('/cashout-reconciliation', [\App\Http\Controllers\Api\Report\CashoutReportController::class, 'reconciliation'])->name('api.report.cashout-reconciliation.index');
 
     Route::get('/balance-sheet', [\App\Http\Controllers\Api\Report\BalanceSheetController::class, 'index'])->name('api.report.balance-sheet.index');
+    
+    // Debit Note Report
+    Route::get('/debit-notes', [\App\Http\Controllers\Api\ReportController::class, 'debitNotes'])->name('api.reports.debit-notes');
 });
