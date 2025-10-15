@@ -88,7 +88,7 @@ class ContractController extends Controller
 
     public function show($id)
     {
-        $contract = Contract::with(['contact', 'contractType', 'contractDetails'])->findOrFail($id);
+        $contract = Contract::with(['contact', 'contractType', 'details', 'currency'])->findOrFail($id);
         
         return response()->json([
             'data' => new ContractResource($contract)

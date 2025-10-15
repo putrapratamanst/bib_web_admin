@@ -61,7 +61,7 @@ class DebitNoteController extends Controller
             'currency' => 'required|string|max:3',
             'exchange_rate' => 'required|numeric|min:0',
             'installment' => 'required|integer|max:12',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|min:0',
             // 'details' => 'required|array|min:1',
             // 'details.*.item_description' => 'required|string|max:255',
             // 'details.*.amount' => 'required|numeric|min:0',
@@ -76,7 +76,7 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
             //generate debit note number dengan format BIB/D24/08-2384
-            $newNumber = 'BIB/D24/' . date('m-Y') . '-' . str_pad(DebitNote::count() + 1, 4, '0', STR_PAD_LEFT);
+            $newNumber = 'BIB/D' . date('y') . '/' . str_pad(DebitNote::count() + 1, 4, '0', STR_PAD_LEFT);
             $request->merge(['debit_note_number' => $newNumber]);
             // Create Debit Note
             $debitNote = DebitNote::create([

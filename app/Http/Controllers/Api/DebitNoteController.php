@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DebitNoteResource;
 use App\Models\DebitNote;
+use App\Models\DebitNoteDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class DebitNoteController extends Controller
@@ -19,7 +22,7 @@ class DebitNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = DebitNote::query();
+        $query = DebitNote::query()->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
             ->addColumn('contract', function(DebitNote $b) {
@@ -29,6 +32,94 @@ class DebitNoteController extends Controller
                 return $b->is_posted ? 'Yes' : 'No';
             })
             ->make(true);
+    }
+
+    public function store(Request $request)
+    {
+        // Clean up comma-separated numbers
+        $cleanedData = $request->all();
+        if (isset($cleanedData['exchange_rate'])) {
+            $cleanedData['exchange_rate'] = str_replace(',', '', $cleanedData['exchange_rate']);
+        }
+        if (isset($cleanedData['amount'])) {
+            $cleanedData['amount'] = str_replace(',', '', $cleanedData['amount']);
+        }
+
+        // Replace request data with cleaned data
+        $request->merge($cleanedData);
+        
+        // Validation
+        $validator = Validator::make($request->all(), [
+            'contact_id' => 'required|exists:contacts,id',
+            'contract_id' => 'required|exists:contracts,id',
+            'date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:date',
+            'currency' => 'required|string|max:3',
+            'exchange_rate' => 'required|numeric|min:0',
+            'installment' => 'required|integer|max:12',
+            'amount' => 'required|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+                'success' => false
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            // Generate debit note number dengan format BIB/D24/08-2384
+            $newNumber = 'BIB/D' . date('y') . '/' . str_pad(DebitNote::count() + 1, 4, '0', STR_PAD_LEFT);
+            
+            // Create Debit Note
+            $debitNote = DebitNote::create([
+                'number' => $newNumber,
+                'contact_id' => $request->contact_id,
+                'contract_id' => $request->contract_id,
+                'date' => $request->date,
+                'due_date' => $request->due_date,
+                'currency_code' => $request->currency,
+                'exchange_rate' => $request->exchange_rate,
+                'amount' => $request->amount,
+                'description' => $request->description,
+                'status' => 'active',
+                'installment' => $request->installment,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Create Debit Note Details
+            if (isset($request->details) && is_array($request->details)) {
+                foreach ($request->details as $detail) {
+                    DebitNoteDetail::create([
+                        'debit_note_id' => $debitNote->id,
+                        'item_description' => $detail['item_description'],
+                        'amount' => $detail['amount'],
+                        'created_by' => 1,
+                        'updated_by' => 1,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Debit Note created successfully',
+                'success' => true,
+                'data' => new DebitNoteResource($debitNote->fresh())
+            ], 201);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'message' => 'Failed to create Debit Note: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
     }
 
     public function show($id)

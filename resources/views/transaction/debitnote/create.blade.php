@@ -133,7 +133,7 @@
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;" id="amount-currency-prefix">IDR</span>
-                                <input type="text" class="form-control text-end autonumeric @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount') }}" required>
+                                <input type="text" class="form-control autonumeric text-end @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount') }}" required>
                             </div>
                             @error('amount')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -243,68 +243,123 @@ $(document).ready(function() {
         }
     });
 
-    // Initialize AutoNumeric for currency fields
-    new AutoNumeric('#exchange_rate', {
-        allowDecimalPadding: false,
-        currencySymbol: '',
-        decimalCharacter: '.',
-        digitGroupSeparator: ',',
-        decimalPlaces: 0,
-        minimumValue: '0'
-    });
-
-    new AutoNumeric('#amount', {
-        allowDecimalPadding: false,
-        currencySymbol: '',
-        decimalCharacter: '.',
-        digitGroupSeparator: ',',
-        decimalPlaces: 2,
-        minimumValue: '0'
-    });
-
     // Handle contract selection change
-    $('#contract_id').on('change', function() {
-        const contractId = $(this).val();
+    $('#contract_id').on('select2:select', function(e) {
+        const contractId = e.params.data.id;
+        const contractText = e.params.data.text;
+        console.log('Contract selected:', contractId, contractText);
+        
         if (contractId) {
-            // Get contract details
-            $.get(`/api/contract/${contractId}`)
+            // Get contract details - use the correct API endpoint
+            const apiUrl = `/api/contract/${contractId}`;
+            console.log('Making API call to:', apiUrl);
+            
+            $.get(apiUrl)
                 .done(function(response) {
+                    console.log('API Response:', response);
                     if (response.data) {
                         const contract = response.data;
+                        console.log('Contract data:', contract);
                         
                         // Auto-select contact if available
-                        if (contract.contact_id) {
-                            // Create option for contact and select it
-                            const contactOption = new Option(contract.contact.display_name, contract.contact_id, true, true);
-                            $('#contact_id').append(contactOption).trigger('change');
+                        if (contract.contact && contract.contact.id) {
+                            // Clear existing options and add the selected contact
+                            $('#contact_id').empty().append(
+                                new Option(contract.contact.display_name || contract.contact.name, contract.contact.id, true, true)
+                            ).trigger('change.select2');
+                            console.log('Contact selected:', contract.contact.display_name || contract.contact.name);
                         }
                         
                         // Update currency if available
                         if (contract.currency_code) {
                             $('#currency').val(contract.currency_code).trigger('change');
+                            console.log('Currency set to:', contract.currency_code);
                         }
                         
-                        // Update exchange rate if available
-                        if (contract.exchange_rate) {
-                            AutoNumeric.getAutoNumericElement('#exchange_rate').set(contract.exchange_rate);
+                        // Update installment count if available (use installment_count from API)
+                        if (contract.installment_count !== undefined && contract.installment_count !== null) {
+                            $('#installment').val(contract.installment_count);
+                            console.log('Installment set to:', contract.installment_count);
+                        } else {
+                            console.log('Installment count not found in contract data');
                         }
                         
-                        // Update amount from contract total premium
-                        if (contract.amount) {
-                            AutoNumeric.getAutoNumericElement('#amount').set(contract.amount);
-                        }
+                        // Wait a bit for AutoNumeric to be ready, then update values
+                        setTimeout(function() {
+                            // Update exchange rate if available (convert string to number)
+                            if (contract.exchange_rate) {
+                                const exchangeRateValue = parseFloat(contract.exchange_rate);
+                                console.log('Trying to set exchange rate:', exchangeRateValue, 'from', contract.exchange_rate);
+                                try {
+                                    if ($('#exchange_rate').hasClass('autonumeric') && typeof $('#exchange_rate').autoNumeric === 'function') {
+                                        $('#exchange_rate').autoNumeric('set', exchangeRateValue);
+                                        console.log('Exchange rate set via AutoNumeric to:', exchangeRateValue);
+                                    } else {
+                                        $('#exchange_rate').val(exchangeRateValue);
+                                        console.log('Exchange rate set via val() to:', exchangeRateValue);
+                                    }
+                                } catch (error) {
+                                    console.warn('AutoNumeric not available for exchange_rate, using direct value:', error);
+                                    $('#exchange_rate').val(exchangeRateValue);
+                                    console.log('Exchange rate set via fallback to:', exchangeRateValue);
+                                }
+                            } else {
+                                console.log('Exchange rate not found in contract data');
+                            }
+                            
+                            // Update amount from contract total premium (convert string to number)
+                            if (contract.amount) {
+                                const amountValue = parseFloat(contract.amount);
+                                console.log('Trying to set amount:', amountValue, 'from', contract.amount);
+                                try {
+                                    if ($('#amount').hasClass('autonumeric') && typeof $('#amount').autoNumeric === 'function') {
+                                        $('#amount').autoNumeric('set', amountValue);
+                                        console.log('Amount set via AutoNumeric to:', amountValue);
+                                    } else {
+                                        $('#amount').val(amountValue);
+                                        console.log('Amount set via val() to:', amountValue);
+                                    }
+                                } catch (error) {
+                                    console.warn('AutoNumeric not available for amount, using direct value:', error);
+                                    $('#amount').val(amountValue);
+                                    console.log('Amount set via fallback to:', amountValue);
+                                }
+                            } else {
+                                console.log('Amount not found in contract data');
+                            }
+                        }, 200); // Increased timeout to ensure AutoNumeric is ready
                     }
                 })
-                .fail(function() {
-                    console.log('Failed to fetch contract details');
+                .fail(function(xhr) {
+                    console.log('Failed to fetch contract details:', xhr);
+                    console.log('Response text:', xhr.responseText);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to load contract details',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 });
-        } else {
-            // Clear fields when no contract selected
-            $('#contact_id').val(null).trigger('change');
-            $('#currency').val('').trigger('change');
-            AutoNumeric.getAutoNumericElement('#exchange_rate').set('1');
-            AutoNumeric.getAutoNumericElement('#amount').set('0');
         }
+    });
+
+    // Handle when contract is cleared
+    $('#contract_id').on('select2:clear', function() {
+        console.log('Contract cleared');
+        // Clear fields when no contract selected
+        $('#contact_id').val(null).trigger('change');
+        $('#currency').val('').trigger('change');
+        $('#installment').val('0');
+        setTimeout(function() {
+            try {
+                $('#exchange_rate').autoNumeric('set', '1');
+                $('#amount').autoNumeric('set', '0');
+            } catch (error) {
+                console.error('Error clearing AutoNumeric values:', error);
+                $('#exchange_rate').val('1');
+                $('#amount').val('0');
+            }
+        }, 100);
     });
 
     // Handle contact selection change
@@ -325,13 +380,32 @@ $(document).ready(function() {
         
         // Set default exchange rate based on currency
         if (currency === 'IDR') {
-            AutoNumeric.getAutoNumericElement('#exchange_rate').set('1');
+            try {
+                if ($('#exchange_rate').hasClass('autonumeric') && $('#exchange_rate').autoNumeric) {
+                    $('#exchange_rate').autoNumeric('set', '1');
+                } else {
+                    $('#exchange_rate').val('1');
+                }
+            } catch (error) {
+                $('#exchange_rate').val('1');
+            }
         } else {
             // You can set default exchange rates for other currencies here
             // For now, keep current value or set to 1
-            const currentRate = AutoNumeric.getAutoNumericElement('#exchange_rate').getNumber();
-            if (currentRate === 0 || currentRate === 1) {
-                AutoNumeric.getAutoNumericElement('#exchange_rate').set('1');
+            try {
+                if ($('#exchange_rate').hasClass('autonumeric') && $('#exchange_rate').autoNumeric) {
+                    const currentRate = $('#exchange_rate').autoNumeric('get');
+                    if (currentRate === 0 || currentRate === 1) {
+                        $('#exchange_rate').autoNumeric('set', '1');
+                    }
+                } else {
+                    const currentRate = parseFloat($('#exchange_rate').val()) || 0;
+                    if (currentRate === 0 || currentRate === 1) {
+                        $('#exchange_rate').val('1');
+                    }
+                }
+            } catch (error) {
+                $('#exchange_rate').val('1');
             }
         }
     });
@@ -348,13 +422,33 @@ $(document).ready(function() {
     });
 
     // Form submission
-        $("#formCreate").submit(function(e) {
+    $("#formCreate").submit(function(e) {
         e.preventDefault();
         
-        
         // Get numeric values from AutoNumeric fields
-        const exchangeRate = AutoNumeric.getAutoNumericElement('#exchange_rate').getNumber();
-        const amount = AutoNumeric.getAutoNumericElement('#amount').getNumber();
+        let exchangeRate, amount;
+        
+        try {
+            if ($('#exchange_rate').hasClass('autonumeric') && typeof $('#exchange_rate').autoNumeric === 'function') {
+                exchangeRate = $('#exchange_rate').autoNumeric('get');
+            } else {
+                exchangeRate = $('#exchange_rate').val();
+            }
+        } catch (error) {
+            exchangeRate = $('#exchange_rate').val();
+        }
+        
+        try {
+            if ($('#amount').hasClass('autonumeric') && typeof $('#amount').autoNumeric === 'function') {
+                amount = $('#amount').autoNumeric('get');
+            } else {
+                amount = $('#amount').val();
+            }
+        } catch (error) {
+            amount = $('#amount').val();
+        }
+        
+        console.log('Form submit - Exchange rate:', exchangeRate, 'Amount:', amount);
         
         // Create form data
         const formData = new FormData(this);
