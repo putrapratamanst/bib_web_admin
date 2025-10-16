@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CashBankStoreRequest;
 use App\Http\Resources\CashBankResource;
 use App\Models\CashBank;
+use App\Models\CashBankDetail;
+use App\Models\DebitNoteBilling;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -21,15 +23,13 @@ class CashBankController extends Controller
             })
             ->orderBy('date', 'desc')
             ->paginate(10);
-
         return CashBankResource::collection($cashBanks);
     }
 
     public function datatables()
     {
         $query = CashBank::with('contact', 'chartOfAccount')->orderBy('date', 'desc');
-
-        return DataTables::eloquent($query)
+            return DataTables::eloquent($query)
             ->addColumn('contact_name', function (CashBank $cashBank){
                 return $cashBank->contact->display_name;
             })
@@ -41,6 +41,23 @@ class CashBankController extends Controller
             ->make(true);
     }
 
+    public function show($id)
+    {
+        try {
+            $cashBank = CashBank::with(['contact', 'chartOfAccount', 'cashBankDetails.debitNote'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => new CashBankResource($cashBank)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cash Bank not found'
+            ], 404);
+        }
+    }
+
     public function store(CashBankStoreRequest $request)
     {
         try {
@@ -48,7 +65,8 @@ class CashBankController extends Controller
 
             $data['date'] = date('Y-m-d', strtotime($data['date']));
 
-            $cashBanks = CashBank::create([
+            // Create CashBank
+            $cashBank = CashBank::create([
                 'type' => $data['type'],
                 'number' => $data['number'],
                 'contact_id' => $data['contact_id'],
@@ -60,18 +78,31 @@ class CashBankController extends Controller
                 'status' => $data['status'],
                 // 'created_by' => auth()->id()
             ]);
+            
+            // Create CashBankDetail if reference (billing_id) is provided
+            if (!empty($data['reference'])) {
+                // Get DebitNote from DebitNoteBilling
+                $billing = DebitNoteBilling::find($data['reference']);
+                
+                if ($billing && $billing->debitNote) {
+                    CashBankDetail::create([
+                        'cash_bank_id' => $cashBank->id,
+                        'debit_note_id' => $billing->debit_note_id,
+                        'amount' => $data['amount'],
+                    ]);
+                }
+            }
 
             return response()->json([
                 'message' => 'Data has been created',
-                'data' => new CashBankResource($cashBanks)
+                'data' => new CashBankResource($cashBank->load('cashBankDetails.debitNote'))
             ], 201);
         }
         catch (\Exception $e) {
-            dd($e);
             return response()->json([
                 'errors' => [
                     'message' => [
-                        'Something went wrong' 
+                        'Something went wrong: ' . $e->getMessage()
                     ]
                 ]
             ], 500);

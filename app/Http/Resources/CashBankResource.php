@@ -22,6 +22,19 @@ class CashBankResource extends JsonResource
             'status' => $this->status,
             'created_by' => $this->createdBy ? $this->createdBy->name : null,
             'updated_by' => $this->updatedBy ? $this->updatedBy->name : null,
+            'details' => $this->whenLoaded('cashBankDetails', function () {
+                return $this->cashBankDetails->map(function ($detail) {
+                    return [
+                        'id' => $detail->id,
+                        'debit_note_id' => $detail->debit_note_id,
+                        'debit_note' => $detail->debitNote ? [
+                            'id' => $detail->debitNote->id,
+                            'number' => $detail->debitNote->number,
+                        ] : null,
+                        'amount' => $detail->amount,
+                    ];
+                });
+            }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

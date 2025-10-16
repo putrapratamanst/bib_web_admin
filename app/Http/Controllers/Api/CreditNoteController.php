@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreditNoteStoreRequest;
 use App\Http\Resources\CreditNoteResource;
 use App\Models\CreditNote;
+use App\Models\DebitNoteBilling;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -44,10 +45,11 @@ class CreditNoteController extends Controller
     public function store(CreditNoteStoreRequest $request)
     {
         try {
-            $data = $request->validated();
-
+            $request->validated();
+            $data = $request->all();
+            $contractID = DebitNoteBilling::find($data['billing_id'])->debitNote->contract_id ?? null;
             $creditNote = CreditNote::create([
-                'contract_id' => $data['contract_id'],
+                'contract_id' => $contractID,
                 'debit_note_id' => $data['debit_note_id'] ?? null,
                 'number' => $data['number'],
                 'date' => $data['date'],

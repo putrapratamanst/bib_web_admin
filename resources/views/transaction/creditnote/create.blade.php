@@ -98,7 +98,7 @@
             width: '100%',
             placeholder: '-- select billing --',
             ajax: {
-                url: "{{ route('api.billings.select2') }}",
+                url: "{{ route('api.debit-note-billings.select2') }}",
                 dataType: 'json',
                 delay: 500,
                 data: function (params) {
@@ -108,12 +108,7 @@
                 },
                 processResults: function (data) {
                     return {
-                        results: $.map(data.items, function(item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
+                        results: data.items
                     };
                 },
                 minimumInputLength: 2,

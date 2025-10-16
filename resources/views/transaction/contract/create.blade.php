@@ -251,17 +251,16 @@
                 delay: 500,
                 data: function(params) {
                     return {
-                        q: params.term,
+                        search: params.term,
+                        page: params.page || 1
                     };
                 },
                 processResults: function(data) {
                     return {
-                        results: $.map(data.items, function(item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
                     };
                 },
                 minimumInputLength: 2,
@@ -410,17 +409,16 @@
                 delay: 500,
                 data: function(params) {
                     return {
-                        q: params.term,
+                        search: params.term,
+                        page: params.page || 1
                     };
                 },
                 processResults: function(data) {
                     return {
-                        results: $.map(data.items, function(item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
                     };
                 },
                 minimumInputLength: 2,

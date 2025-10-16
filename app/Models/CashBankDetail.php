@@ -11,8 +11,6 @@ class CashBankDetail extends Model
 {
     use HasFactory;
 
-    use HasUuids;
-
     protected $fillable = [
         'cash_bank_id',
         'debit_note_id',

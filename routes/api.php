@@ -33,6 +33,7 @@ Route::put('/contact/{id}', [\App\Http\Controllers\Api\ContactController::class,
 // Cash Bank
 Route::get('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 'index'])->name('api.cash-banks.index');
 Route::get('/cash-bank/datatables', [\App\Http\Controllers\Api\CashBankController::class, 'datatables'])->name('api.cash-banks.datatables');
+Route::get('/cash-bank/{id}', [\App\Http\Controllers\Api\CashBankController::class, 'show'])->name('api.cash-banks.show');
 Route::post('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 'store'])->name('api.cash-banks.store');
 
 
@@ -70,6 +71,8 @@ Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteControl
 
 // Debit Note Billing
 Route::get('/debit-note-billing/datatables', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'datatables'])->name('api.debit-note-billings.datatables');
+Route::get('/debit-note-billing/select2', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'select2'])->name('api.debit-note-billings.select2');
+Route::get('/debit-note-billing/{id}', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'show'])->name('api.debit-note-billings.show');
 Route::post('/debit-note-billing/{id}/post-to-cashout', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'postToCashout'])->name('api.debit-note-billings.post-to-cashout');
 
 // Cashout

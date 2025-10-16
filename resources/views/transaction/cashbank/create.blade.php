@@ -54,8 +54,10 @@
                 <div class="row">
                     <div class="col-md-3">
                         <div class="mb-3">
-                            <label for="reference" class="form-label">Ref Number</label>
-                            <input type="text" name="reference" id="reference" class="form-control" required />
+                            <label for="reference" class="form-label">Ref Number (Billing)</label>
+                            <select name="reference" id="reference" class="form-control">
+                                <option value=""></option>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -88,11 +90,33 @@
 
 @push('scripts')
 <script>
-    $.ajaxSetup({
+        $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
+    
+    // Debug: Check if CSRF token exists
+    console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
+    
+    // Test API call
+    setTimeout(function() {
+        console.log('Testing API call...');
+        $.ajax({
+            url: "{{ route('api.contacts.select2') }}",
+            method: 'GET',
+            data: {
+                search: 'test',
+                page: 1
+            },
+            success: function(response) {
+                console.log('Direct API call successful:', response);
+            },
+            error: function(xhr, status, error) {
+                console.error('Direct API call failed:', status, error, xhr.responseText);
+            }
+        });
+    }, 1000);
 
     $(document).ready(function() {
         $('#type').select2({
@@ -111,17 +135,16 @@
                 delay: 500,
                 data: function (params) {
                     return {
-                        q: params.term,
+                        search: params.term,
+                        page: params.page || 1
                     };
                 },
                 processResults: function (data) {
                     return {
-                        results: $.map(data.items, function(item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
+                       results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
                     };
                 },
                 minimumInputLength: 2,
@@ -155,6 +178,28 @@
             },
         });
 
+        $('#reference').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select billing reference --',
+            ajax: {
+                url: "{{ route('api.debit-note-billings.select2') }}",
+                dataType: 'json',
+                delay: 500,
+                data: function (params) {
+                    return {
+                        q: params.term,
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.items
+                    };
+                },
+                minimumInputLength: 2,
+            },
+        });
+
         $('#type').on('change', function() {
             var type = $(this).val();
             var labelContact = $('#labelContact');
@@ -166,6 +211,37 @@
             } else if (type == 'pay') {
                 labelContact.html('To<sup class="text-danger">*</sup>');
                 labelChartOfAccount.html('Pay From<sup class="text-danger">*</sup>');
+            }
+        });
+
+        // Auto-populate data when billing reference is selected
+        $('#reference').on('select2:select', function(e) {
+            var billingId = e.params.data.id;
+            
+            if (billingId) {
+                // Get billing details via API
+                $.ajax({
+                    url: "{{ route('api.debit-note-billings.show', '') }}/" + billingId,
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.data) {
+                            var billing = response.data;
+                            
+                            // Auto-populate amount
+                            $('#amount').val(billing.amount);
+                            
+                            // Auto-populate contact if available
+                            if (billing.debit_note && billing.debit_note.contract && billing.debit_note.contract.contact) {
+                                var contact = billing.debit_note.contract.contact;
+                                var option = new Option(contact.display_name, contact.id, true, true);
+                                $('#contact_id').append(option).trigger('change');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to get billing details:', error);
+                    }
+                });
             }
         });
 

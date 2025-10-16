@@ -16,7 +16,7 @@ class CreditNoteStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contract_id' => 'required|exists:contracts,id',
+            'contract_id' => 'exists:contracts,id',
             'debit_note_id' => 'nullable|exists:debit_notes,id',
             'number' => 'required|unique:credit_notes,number',
             'date' => 'required|date',

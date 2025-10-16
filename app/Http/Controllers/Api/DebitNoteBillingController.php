@@ -42,6 +42,62 @@ class DebitNoteBillingController extends Controller
             ->make(true);
     }
 
+    public function select2(Request $request)
+    {
+        $search = $request->get('q', '');
+        
+        $billings = DebitNoteBilling::with(['debitNote', 'debitNote.contract'])
+            ->where(function($query) use ($search) {
+                if ($search) {
+                    $query->where('billing_number', 'like', "%{$search}%")
+                          ->orWhereHas('debitNote', function($q) use ($search) {
+                              $q->where('number', 'like', "%{$search}%");
+                          })
+                          ->orWhereHas('debitNote.contract', function($q) use ($search) {
+                              $q->where('number', 'like', "%{$search}%");
+                          });
+                }
+            })
+            ->orderBy('billing_number')
+            ->get();
+
+        $data = $billings->map(function($billing) {
+            $text = $billing->billing_number;
+            if ($billing->debitNote) {
+                $text .= ' - ' . $billing->debitNote->number;
+                if ($billing->debitNote->contract) {
+                    $text .= ' (' . $billing->debitNote->contract->number . ')';
+                }
+            }
+            
+            return [
+                'id' => $billing->id,
+                'text' => $text
+            ];
+        });
+
+        return response()->json([
+            'items' => $data
+        ]);
+    }
+
+    public function show($id)
+    {
+        try {
+            $billing = DebitNoteBilling::with(['debitNote.contract.contact'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $billing
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Billing not found'
+            ], 404);
+        }
+    }
+
     public function postToCashout($id)
     {
         try {
