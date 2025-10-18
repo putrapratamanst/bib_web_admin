@@ -119,7 +119,7 @@
                             <th>Due Date</th>
                             <th class="text-end">Amount</th>
                             <th>Status</th>
-                            <th>Posted to Cashout</th>
+                            <th>Posted Billing</th>
                             <th>Action</th>
                         </tr>
                     </thead>

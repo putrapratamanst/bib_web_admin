@@ -29,6 +29,9 @@ class ContractController extends Controller
             ->orderColumn('number', function ($query, $order) {
                 $query->orderBy('number', $order);
             })
+            ->order(function ($query) {
+                $query->orderBy('created_at', 'desc');
+            })
             ->addColumn('contract_type', function (Contract $c) {
                 return $c->contractType->name;
             })
@@ -42,7 +45,10 @@ class ContractController extends Controller
 
                 $searchValue = $request->get('search')['value'] ?? null;
                 if ($searchValue) {
-                    $query->where('policy_number', 'like', "%{$searchValue}%");
+                    $query->where(function($q) use ($searchValue) {
+                        $q->where('policy_number', 'like', "%{$searchValue}%")
+                          ->orWhere('number', 'like', "%{$searchValue}%");
+                    });
                 }
             })
             ->make(true);
@@ -57,21 +63,21 @@ class ContractController extends Controller
 
         $query = Contract::with(['contact'])
             ->where('status', 'active')
-            ->where(function($q) use ($search) {
+            ->where(function ($q) use ($search) {
                 if ($search) {
                     $q->where('number', 'like', "%{$search}%")
-                      ->orWhere('policy_number', 'like', "%{$search}%")
-                      ->orWhereHas('contact', function($contactQuery) use ($search) {
-                          $contactQuery->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhere('policy_number', 'like', "%{$search}%")
+                        ->orWhereHas('contact', function ($contactQuery) use ($search) {
+                            $contactQuery->where('name', 'like', "%{$search}%");
+                        });
                 }
             })
-            ->orderBy('number');
+            ->orderBy('created_at', 'desc');
 
         $total = $query->count();
         $contracts = $query->offset($offset)->limit($limit)->get();
 
-        $data = $contracts->map(function($contract) {
+        $data = $contracts->map(function ($contract) {
             return [
                 'id' => $contract->id,
                 'text' => "{$contract->number} - {$contract->contact->display_name}"
@@ -89,7 +95,7 @@ class ContractController extends Controller
     public function show($id)
     {
         $contract = Contract::with(['contact', 'contractType', 'details', 'currency'])->findOrFail($id);
-        
+
         return response()->json([
             'data' => new ContractResource($contract)
         ]);
