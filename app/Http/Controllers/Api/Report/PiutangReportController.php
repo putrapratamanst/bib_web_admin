@@ -16,6 +16,140 @@ class PiutangReportController extends Controller
     public function index(Request $request)
     {
         $as_of_date = $request->input('as_of_date') ?? now()->toDateString();
+        $from_date = $request->input('from_date') ?
+            Carbon::parse($request->input('from_date'))->format('Y-m-d') :
+            null;
+
+        $to_date = $request->input('to_date') ?
+            Carbon::parse($request->input('to_date'))->format('Y-m-d') :
+            null;
+        $sql = "SELECT 
+            a.id, 
+            a.number, 
+            a.DN, 
+            a.currency_code, 
+            a.billing_date,
+            a.due_date,
+            COALESCE(b.CN, 0) as CN, 
+            COALESCE(c.alloc, 0) as alloc 
+        FROM 
+            (
+                SELECT 
+                    id, 
+                    number, 
+                    SUM(amount) AS DN, 
+                    currency_code,
+                    date as billing_date,
+                    due_date
+                FROM 
+                    debit_notes 
+                WHERE 
+                     (
+                        (? IS NULL OR ? IS NULL)
+                        AND date <= ?
+                    )
+                    OR (
+                        ? IS NOT NULL 
+                        AND ? IS NOT NULL 
+                        AND date BETWEEN ? AND ?
+                    )
+                GROUP BY 
+                    id, 
+                    number, 
+                    currency_code,
+                    date,
+                    due_date
+            ) a 
+            LEFT JOIN (
+                SELECT 
+                    debit_note_id, 
+                    SUM(amount) AS CN 
+                FROM 
+                    credit_notes 
+                WHERE 
+                    date <= ?
+                GROUP BY 
+                    debit_note_id
+            ) b ON a.id = b.debit_note_id 
+            LEFT JOIN (
+                SELECT 
+                    debit_note_id, 
+                    SUM(allocation) AS alloc 
+                FROM 
+                    payment_allocations 
+                WHERE 
+                    created_at <= ?
+                GROUP BY 
+                    debit_note_id
+            ) c ON a.id = c.debit_note_id";
+
+        // Menyiapkan binding parameters untuk query utama
+        $mainQueryBindings = [
+            $from_date,              // ? IS NULL
+            $to_date,               // ? IS NULL
+            $as_of_date,           // date <= ?
+            $from_date,            // ? IS NOT NULL
+            $to_date,             // ? IS NOT NULL
+            $from_date,          // BETWEEN ? 
+            $to_date            // AND ?
+        ];
+
+        // Binding parameters untuk subquery credit notes dan payment allocations
+        $allBindings = array_merge(
+            $mainQueryBindings,
+            [$as_of_date],  // untuk credit notes where clause
+            [$as_of_date]   // untuk payment allocations where clause
+        );
+        Log::info("SQL Query:", [
+            'query' => vsprintf(str_replace('?', "'%s'", $sql), $allBindings)
+        ]);
+        $result = DB::select($sql, $allBindings);
+
+        // Transform hasil query ke format yang dibutuhkan
+        $formattedResults = [];
+        foreach ($result as $row) {
+            $amount = (float) $row->DN;
+            $creditNote = (float) $row->CN;
+            $allocation = (float) $row->alloc;
+
+            // Parse dates
+            $dueDate = $row->due_date ? Carbon::parse($row->due_date) : null;
+            $billingDate = $row->billing_date ? Carbon::parse($row->billing_date) : null;
+            $daysUntilDue = $dueDate ? $dueDate->diffInDays(Carbon::now(), false) : null;
+
+            $formattedResults[] = [
+                'billing_no' => $row->number,
+                'billing_date' => $billingDate ? $billingDate->toDateString() : null,
+                'due_date' => $dueDate ? $dueDate->toDateString() : null,
+                'days_until_due' => $daysUntilDue,
+                'is_overdue' => $daysUntilDue !== null ? $daysUntilDue < 0 : false,
+                'amount' => $amount,
+                'credit_note' => $creditNote,
+                'allocation' => $allocation,
+                'outstanding' => $amount - $creditNote - $allocation,
+                'currency_code' => $row->currency_code,
+                'row_type' => 'debit_note'
+            ];
+        }
+
+        $debitNotes = collect($formattedResults);
+
+        if ($request->input('format') == "json") {
+            return response()->json([
+                'report' => $debitNotes
+            ]);
+        } elseif ($request->input('format') == "excel") {
+            return Excel::download(new PiutangReportExport($debitNotes), 'Report_Piutang.xlsx');
+        } else {
+            return view('api.report.piutang', [
+                'report' => $debitNotes
+            ]);
+        }
+    }
+
+    public function indexOld(Request $request)
+    {
+        $as_of_date = $request->input('as_of_date') ?? now()->toDateString();
         $from_date  = $request->input('from_date');
         $to_date    = $request->input('to_date');
         $client_id  = $request->input('client_id');
