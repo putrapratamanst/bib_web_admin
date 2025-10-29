@@ -21,7 +21,7 @@ class CreditNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = CreditNote::query();
+        $query = CreditNote::query()->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
             ->addColumn('contract_number', function(CreditNote $b) {
@@ -39,7 +39,13 @@ class CreditNoteController extends Controller
                     ->join('contacts', 'contacts.id', '=', 'contracts.contact_id')
                     ->orderBy('contacts.display_name', $order);
             })
-            ->make(true);
+           ->make(true);
+    }
+
+    public function generateNumber()
+    {
+        $newNumber = 'BIB/C' . date('y') . '/' . str_pad(CreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
+        return response()->json(['number' => $newNumber]);
     }
 
     public function store(CreditNoteStoreRequest $request)

@@ -1,3 +1,2 @@
-di list of payment,
-yang udah posted (status approved) tidak usah muncul di list
-tapi saat ini dia langsung approved
+create credit note salah
+didepan billing yang disave malah nomor kontrak

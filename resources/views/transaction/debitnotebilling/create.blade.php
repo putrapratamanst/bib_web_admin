@@ -41,7 +41,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
-
+                
                 @if ($debitNote->installment > 0)
                     {{-- Looping sesuai jumlah installment --}}
                     @for ($i = 1; $i <= $debitNote->installment; $i++)
@@ -51,7 +51,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="billing_number_{{ $i }}" class="form-label">Billing Number <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control @error('billing_number.' . ($i-1)) is-invalid @enderror" name="billing_number[]" id="billing_number_{{ $i }}" value="{{ old('billing_number.' . ($i-1)) }}">
+                                    <input type="text" class="form-control @error('billing_number.' . ($i-1)) is-invalid @enderror" name="billing_number[]" id="billing_number_{{ $i }}" value="{{ old('billing_number.' . ($i-1), $debitNote->number . '-INST' . $i) }}">
                                     @error('billing_number.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

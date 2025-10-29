@@ -19,7 +19,7 @@ class ContractStoreRequest extends FormRequest
             'contract_status' => 'required|in:renewal,new',
             'contract_type_id' => 'required|exists:contract_types,id',
             'number' => 'nullable|max:100|unique:contracts,number',
-            'policy_number' => 'required|max:150',
+            // 'policy_number' => 'required|max:150',
             'contact_id' => 'required|exists:contacts,id',
             'period_start' => 'required|date',
             'period_end' => 'required|date',
