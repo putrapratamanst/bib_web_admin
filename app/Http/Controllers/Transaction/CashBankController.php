@@ -25,6 +25,9 @@ class CashBankController extends Controller
     public function show($id)
     {
         $cashBank = CashBankDetail::with('cashBank','debitNote')->where('cash_bank_id', $id)->first();
+        if (!$cashBank) {
+            return redirect()->back()->with('error', 'Cash Bank Detail not found.');
+        }
         return view('transaction.cashbank.show', [
             'cashBank' => $cashBank->cashBank ?? null,
             'debitNote' => $cashBank->debitNote ?? null

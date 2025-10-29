@@ -7,6 +7,7 @@ use App\Http\Requests\CashBankStoreRequest;
 use App\Http\Requests\PaymentAllocationStoreRequest;
 use App\Http\Resources\CashBankResource;
 use App\Models\CashBank;
+use App\Models\DebitNote;
 use App\Models\PaymentAllocation;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
@@ -68,23 +69,24 @@ class PaymentAllocationController extends Controller
                     return response()->json([
                         'errors' => [
                             'allocation' => [
-                                'Total allocation for Cash Bank  exceeds available amount.'
+                                'Total allocation for Cash Bank exceeds available amount.'
                             ]
                         ]
                     ], 400);
                 }
             // check if allocation for this debit note already exists for this cash bank
-                $existingAllocation = PaymentAllocation::where('cash_bank_id', $data['cash_bank_id'][$index] ?? null)
-                    ->where('debit_note_id', $debitNoteId)
-                    ->first();
-                if ($existingAllocation) {
-                    // update existing allocation
-                    $existingAllocation->allocation = $allocationAmount;
-                    $existingAllocation->status = $data['status'][$index] ?? 'draft';
-                    $existingAllocation->save();
-                    $allocations[] = $existingAllocation;
-                    continue;
-                }                
+                // $existingAllocation = PaymentAllocation::where('cash_bank_id', $data['cash_bank_id'][$index] ?? null)
+                //     ->where('debit_note_id', $debitNoteId)
+                //     ->first();
+                // if ($existingAllocation) {
+                //     // update existing allocation
+                //     $existingAllocation->allocation = $allocationAmount;
+                //     $existingAllocation->status = $data['status'][$index] ?? 'draft';
+                //     $existingAllocation->save();
+                //     $allocations[] = $existingAllocation;
+                //     continue;
+                // }                
+
 
                 $allocations[] = PaymentAllocation::create([
                     'cash_bank_id'  => $data['cash_bank_id'][$index] ?? null,

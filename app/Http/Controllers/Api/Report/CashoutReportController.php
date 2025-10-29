@@ -29,7 +29,7 @@ class CashoutReportController extends Controller
                 ]);
             })
             ->when($from_date && !$to_date, function ($q) use ($from_date) {
-                $q->where('date', '>=', Carbon::parse($from_date)->startOfDay());
+                $q->where('due_date', '>=', Carbon::parse($from_date)->startOfDay());
             })
             ->when(!$from_date && $to_date, function ($q) use ($to_date) {
                 $q->where('date', '<=', Carbon::parse($to_date)->endOfDay());
@@ -43,7 +43,7 @@ class CashoutReportController extends Controller
                 $q->where('status', $status);
             });
 
-        $cashouts = $query->get()->map(function ($cashout) {
+            $cashouts = $query->get()->map(function ($cashout) {
             return [
                 'cashout_number' => $cashout->number,
                 'cashout_date' => $cashout->date_formatted,
