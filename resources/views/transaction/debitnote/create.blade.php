@@ -410,14 +410,24 @@ $(document).ready(function() {
         }
     });
 
+    // Set initial due date and handle date change
+    function setDueDate(baseDate) {
+        const dueDate = new Date(baseDate);
+        dueDate.setDate(dueDate.getDate() + 10); // Add 10 days
+        const dueDateString = dueDate.toISOString().split('T')[0];
+        $('#due_date').val(dueDateString);
+    }
+
+    // Set initial due date if empty
+    if (!$('#due_date').val()) {
+        setDueDate(new Date());
+    }
+
     // Handle date change to auto-set due date
     $('#date').on('change', function() {
         const selectedDate = new Date($(this).val());
         if (selectedDate) {
-            // Add 30 days to the selected date for due date
-            selectedDate.setDate(selectedDate.getDate() + 30);
-            const dueDateString = selectedDate.toISOString().split('T')[0];
-            $('#due_date').val(dueDateString);
+            setDueDate(selectedDate);
         }
     });
 

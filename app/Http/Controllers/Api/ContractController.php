@@ -63,7 +63,7 @@ class ContractController extends Controller
 
         $query = Contract::with(['contact'])
             ->where('status', 'active')
-            ->where(function($q) use ($search) {
+            ->where(function ($q) use ($search) {
                 if ($search) {
                     $q->where('number', 'like', "%{$search}%")
                       ->orWhere('policy_number', 'like', "%{$search}%")
@@ -77,7 +77,7 @@ class ContractController extends Controller
         $total = $query->count();
         $contracts = $query->offset($offset)->limit($limit)->get();
 
-        $data = $contracts->map(function($contract) {
+        $data = $contracts->map(function ($contract) {
             return [
                 'id' => $contract->id,
                 'text' => "{$contract->number} - {$contract->contact->display_name}"
@@ -95,7 +95,7 @@ class ContractController extends Controller
     public function show($id)
     {
         $contract = Contract::with(['contact', 'contractType', 'details', 'currency'])->findOrFail($id);
-        
+
         return response()->json([
             'data' => new ContractResource($contract)
         ]);

@@ -54,9 +54,10 @@ class CreditNoteController extends Controller
             $request->validated();
             $data = $request->all();
             $contractID = DebitNoteBilling::find($data['billing_id'])->debitNote->contract_id ?? null;
+            $debitNoteID = DebitNoteBilling::find($data['billing_id'])->debitNote->id ?? null;
             $creditNote = CreditNote::create([
                 'contract_id' => $contractID,
-                'debit_note_id' => $data['debit_note_id'] ?? null,
+                'debit_note_id' => $debitNoteID,
                 'number' => $data['number'],
                 'date' => $data['date'],
                 'description' => $data['description'],

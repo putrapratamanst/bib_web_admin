@@ -23,6 +23,8 @@
             <tr>
                 <th>Billing No</th>
                 <th>Billing Date</th>
+                <th>Due Date</th>
+                <th>Days Until Due</th>
                 <th>Amount</th>
                 <th>Credit Note</th>
                 <th>Allocation</th>
@@ -32,8 +34,25 @@
         <tbody>
             @foreach($report as $row)
             <tr>
-                <td>{{ $row['billing_no'] }}</td>
+                <td>{{ $row['billing_number'] ?? $row['billing_no'] }}</td>
                 <td>{{ $row['billing_date'] }}</td>
+                <td>{{ $row['billing_due'] ?? $row['due_date'] }}</td>
+                <td>
+                    @php
+                        $days = $row['billing_days_until_due'] ?? $row['days_until_due'] ?? null;
+                        if ($days !== null) {
+                            if ($days < 0) {
+                                echo floor(abs($days)) . ' days overdue';
+                            } elseif ($days == 0) {
+                                echo 'Due today';
+                            } else {
+                                echo floor($days) . ' days left';
+                            }
+                        } else {
+                            echo 'N/A';
+                        }
+                    @endphp
+                </td>
                 <td style="text-align:right">{{ number_format($row['amount'], 2) }}</td>
                 <td style="text-align:right">{{ number_format($row['credit_note'], 2) }}</td>
                 <td style="text-align:right">{{ number_format($row['allocation'], 2) }}</td>
