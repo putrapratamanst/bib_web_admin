@@ -23,12 +23,12 @@ class ContractController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = Contract::query();
+        $query = Contract::with('contact')->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
-            ->orderColumn('number', function ($query, $order) {
-                $query->orderBy('number', $order);
-            })
+            // ->orderColumn('created_at', function ($query, $order) {
+            //     $query->orderBy('created_at', $order);
+            // })
             ->addColumn('contract_type', function (Contract $c) {
                 return $c->contractType->name;
             })
@@ -42,7 +42,13 @@ class ContractController extends Controller
 
                 $searchValue = $request->get('search')['value'] ?? null;
                 if ($searchValue) {
-                    $query->where('policy_number', 'like', "%{$searchValue}%");
+                    $query->where(function($q) use ($searchValue) {
+                        $q->where('number', 'like', "%{$searchValue}%")
+                          ->orWhere('policy_number', 'like', "%{$searchValue}%")
+                          ->orWhereHas('contact', function ($query) use ($searchValue) {
+                              $query->where('display_name', 'like', "%{$searchValue}%");
+                          });
+                    });
                 }
             })
             ->make(true);
@@ -62,11 +68,11 @@ class ContractController extends Controller
                     $q->where('number', 'like', "%{$search}%")
                       ->orWhere('policy_number', 'like', "%{$search}%")
                       ->orWhereHas('contact', function($contactQuery) use ($search) {
-                          $contactQuery->where('name', 'like', "%{$search}%");
+                          $contactQuery->where('display_name', 'like', "%{$search}%");
                       });
                 }
             })
-            ->orderBy('number');
+            ->orderBy('created_at', 'desc');
 
         $total = $query->count();
         $contracts = $query->offset($offset)->limit($limit)->get();
@@ -103,7 +109,7 @@ class ContractController extends Controller
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
                 'number' => $data['number'],
-                'policy_number' => $data['policy_number'],
+                'policy_number' => $data['policy_number'] ?? 0,
                 'contact_id' => $data['contact_id'],
                 'period_start' => $data['period_start'],
                 'period_end' => $data['period_end'],

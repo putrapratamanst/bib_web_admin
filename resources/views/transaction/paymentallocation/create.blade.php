@@ -37,7 +37,21 @@
                                     <td>{{ $detail->debitNote->number ?? '-' }}</td>
                                     <td>{{ $detail->debitNote->date ?? '-' }}</td>
                                     <td>{{ $detail->debitNote->due_date ?? '-' }}</td>
-                                    <td>{{ $detail->debitNote->currency_code }}{{ number_format($detail->debitNote->amount, 2, ',', '.') }}</td>
+                                    <td>
+                                        @php
+                                            $totalCreditNotes = $detail->debitNote->creditNotes->sum('amount') ?? 0;
+                                            $remainingAmount = $detail->debitNote->amount - $totalCreditNotes;
+                                        @endphp
+                                        {{ $detail->debitNote->currency_code }}
+                                        {{ number_format($remainingAmount, 2, ',', '.') }}
+                                        @if($totalCreditNotes > 0)
+                                            <br>
+                                            <small class="text-muted">
+                                                (Original: {{ number_format($detail->debitNote->amount, 2, ',', '.') }},
+                                                Credit Notes: {{ number_format($totalCreditNotes, 2, ',', '.') }})
+                                            </small>
+                                        @endif
+                                    </td>
                                     <td>
                                         <input type="hidden" name="debit_note_id[]" value="{{ $detail->debitNote->id }}">
                                         <input type="hidden" name="cash_bank_id[]" value="{{ $detail->cash_bank_id }}">

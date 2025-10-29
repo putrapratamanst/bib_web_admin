@@ -60,6 +60,7 @@ Route::post('/journal-entry', [\App\Http\Controllers\Api\JournalEntryController:
 // Credit Note
 Route::get('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::class, 'index'])->name('api.credit-notes.index');
 Route::get('/credit-note/datatables', [\App\Http\Controllers\Api\CreditNoteController::class, 'datatables'])->name('api.credit-notes.datatables');
+Route::get('/credit-note/generate-number', [\App\Http\Controllers\Api\CreditNoteController::class, 'generateNumber'])->name('api.credit-notes.generate-number');
 Route::post('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::class, 'store'])->name('api.credit-notes.store');
 
 // Debit Note

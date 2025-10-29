@@ -70,7 +70,10 @@
                     data: 'policy_number',
                     name: 'policy_number',
                     searchable: true,
-                    className: 'text-left'
+                    className: 'text-left',
+                    render: function(data, type, row) {
+                        return data == 0 ? '-' : data;
+                    }
                 },
                 {
                     data: 'contract_type',

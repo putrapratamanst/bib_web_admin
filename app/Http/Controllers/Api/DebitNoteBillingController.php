@@ -58,7 +58,7 @@ class DebitNoteBillingController extends Controller
                           });
                 }
             })
-            ->orderBy('billing_number')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $data = $billings->map(function($billing) {

@@ -47,13 +47,13 @@
                         return '<a href="{{ route('transaction.credit-notes.index') }}/' + row.id + '">' + data + '</a>';
                     }
                 },
-                { data: 'date_formatted', name: 'date_formatted' },
+                { data: 'date_formatted', name: 'date_formatted',searchable: false },
                 { 
                     data: 'contract_number', 
                     name: 'contract_number',
                     render: function(data, type, row) {
                         return '<a href="{{ route('transaction.contracts.index') }}/' + row.contract_id + '">' + data + '</a>';
-                    }
+                    },
                 },
                 { data: 'contact', name: 'contact' },
                 { data: 'currency_code', name: 'currency_code' },
@@ -62,6 +62,7 @@
                     name: 'amount_formatted', 
                     className: 'text-end',
                     orderable: false,
+                    searchable: false
                 },
                 { 
                     data: 'status', 

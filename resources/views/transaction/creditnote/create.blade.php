@@ -23,7 +23,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required>
+                            <input type="text" name="number" id="number" class="form-control" required readonly>
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -93,6 +93,10 @@
     });
 
     $(document).ready(function() {
+        // Get auto-generated number
+        $.get("{{ route('api.credit-notes.generate-number') }}", function(response) {
+            $("#number").val(response.number);
+        });
         $('#billing_id').select2({
             theme: 'bootstrap-5',
             width: '100%',

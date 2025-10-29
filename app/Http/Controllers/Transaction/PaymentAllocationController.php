@@ -18,8 +18,9 @@ class PaymentAllocationController extends Controller
     public function create($cashBankId = null)
     {
         $currentDate = date('d-m-Y');
-        $cashBank = CashBankDetail::with('cashBank','debitNote')
-        ->where('cash_bank_id', $cashBankId)->get();
+        $cashBank = CashBankDetail::with(['cashBank', 'debitNote' => function($query) {
+            $query->with('creditNotes'); // Load credit notes related to debit note
+        }])->where('cash_bank_id', $cashBankId)->get();
         $dataCashBank = CashBank::find($cashBankId);
         return view('transaction.paymentallocation.create', [
             'currentDate' => $currentDate,
