@@ -45,7 +45,6 @@ class CashBankController extends Controller
     {
         try {
             $cashBank = CashBank::with(['contact', 'chartOfAccount', 'cashBankDetails.debitNote'])->findOrFail($id);
-            
             return response()->json([
                 'success' => true,
                 'data' => new CashBankResource($cashBank)

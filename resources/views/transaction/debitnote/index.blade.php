@@ -50,12 +50,28 @@
                     }
                 },
                 { 
-                    data: 'date_formatted', 
-                    name: 'date_formatted' 
+                    data: 'date', 
+                    name: 'date', 
+                    render: function(data, type, row) {
+                        if (!data) return '';
+                        var date = new Date(data);
+                        var day = String(date.getDate()).padStart(2, '0');
+                        var month = String(date.getMonth() + 1).padStart(2, '0');
+                        var year = date.getFullYear();
+                        return day + '-' + month + '-' + year;
+                    }
                 },
                 { 
-                    data: 'due_date_formatted', 
-                    name: 'due_date_formatted' 
+                    data: 'due_date', 
+                    name: 'due_date',
+                    render: function(data, type, row) {
+                        if (!data) return '';
+                        var date = new Date(data);
+                        var day = String(date.getDate()).padStart(2, '0');
+                        var month = String(date.getMonth() + 1).padStart(2, '0');
+                        var year = date.getFullYear();
+                        return day + '-' + month + '-' + year;
+                    }
                 },
                 { 
                     data: 'contract', 
@@ -66,9 +82,15 @@
                     name: 'installment' 
                 },
                 { 
-                    data: 'amount_formatted', 
-                    name: 'amount_formatted', 
-                    className: 'text-end' 
+                    data: 'amount', 
+                    name: 'amount', 
+                    className: 'text-end',
+                    render: function(data, type, row) {
+                        return parseFloat(data).toLocaleString('de-DE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
                 },
                 { 
                     data: 'status', 

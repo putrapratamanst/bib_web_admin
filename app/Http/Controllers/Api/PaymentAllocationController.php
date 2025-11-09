@@ -7,6 +7,7 @@ use App\Http\Requests\CashBankStoreRequest;
 use App\Http\Requests\PaymentAllocationStoreRequest;
 use App\Http\Resources\CashBankResource;
 use App\Models\CashBank;
+use App\Models\DebitNote;
 use App\Models\PaymentAllocation;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
@@ -68,7 +69,7 @@ class PaymentAllocationController extends Controller
                     return response()->json([
                         'errors' => [
                             'allocation' => [
-                                'Total allocation for Cash Bank  exceeds available amount.'
+                                'Total allocation for Cash Bank exceeds available amount.'
                             ]
                         ]
                     ], 400);

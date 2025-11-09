@@ -31,7 +31,7 @@ class PiutangReportController extends Controller
             a.billing_date,
             a.due_date,
             COALESCE(b.CN, 0) as CN, 
-            COALESCE(c.alloc, 0) as alloc 
+            COALESCE(c.allocation, 0) as allocation 
         FROM 
             (
                 SELECT 
@@ -74,7 +74,7 @@ class PiutangReportController extends Controller
             LEFT JOIN (
                 SELECT 
                     debit_note_id, 
-                    SUM(allocation) AS alloc 
+                    SUM(allocation) AS allocation 
                 FROM 
                     payment_allocations 
                 WHERE 
@@ -108,9 +108,10 @@ class PiutangReportController extends Controller
         // Transform hasil query ke format yang dibutuhkan
         $formattedResults = [];
         foreach ($result as $row) {
+           
             $amount = (float) $row->DN;
             $creditNote = (float) $row->CN;
-            $allocation = (float) $row->alloc;
+            $allocation = (float) $row->allocation;
 
             // Parse dates
             $dueDate = $row->due_date ? Carbon::parse($row->due_date) : null;
