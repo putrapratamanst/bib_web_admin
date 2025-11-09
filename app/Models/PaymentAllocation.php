@@ -19,6 +19,7 @@ class PaymentAllocation extends Model
         'debit_note_id',
         'allocation',
         'status',
+        'debit_note_billing_id',
     ];
 
     protected $casts = [

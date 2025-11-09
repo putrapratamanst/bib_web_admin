@@ -73,7 +73,7 @@ class PaymentAllocationController extends Controller
                         ]
                     ], 400);
                 }
-            // check if allocation for this debit note already exists for this cash bank
+                // check if allocation for this debit note already exists for this cash bank
                 $existingAllocation = PaymentAllocation::where('cash_bank_id', $data['cash_bank_id'][$index] ?? null)
                     ->where('debit_note_id', $debitNoteId)
                     ->first();
@@ -84,7 +84,7 @@ class PaymentAllocationController extends Controller
                     $existingAllocation->save();
                     $allocations[] = $existingAllocation;
                     continue;
-                }                
+                }
 
                 $allocations[] = PaymentAllocation::create([
                     'cash_bank_id'  => $data['cash_bank_id'][$index] ?? null,
@@ -107,6 +107,62 @@ class PaymentAllocationController extends Controller
                         $e->getMessage() // untuk debugging
                     ]
                 ]
+            ], 500);
+        }
+    }
+
+
+    public function storeByCashBankID(Request $request, $cashbankID)
+    {
+        $request->merge(['cash_bank_id' => $cashbankID]);
+        try {
+            $request->validate([
+                'cash_bank_id' => 'required|exists:cash_banks,id',
+                'debit_note_billing_id' => 'required|exists:debit_note_billings,id',
+                'allocation' => 'required|numeric|min:0',
+            ]);
+
+            $cashBank = CashBank::findOrFail($request->cash_bank_id);
+
+            // Get debit_note_id from billing
+            $debitNoteBilling = \App\Models\DebitNoteBilling::with('debitNote')
+                ->findOrFail($request->debit_note_billing_id);
+            $debitNoteId = $debitNoteBilling->debit_note_id;
+
+            // Get total allocated amount for this cash bank
+            $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
+                ->sum('allocation');
+
+            // Check if allocation exceeds cash bank amount
+            if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
+                if ($totalAllocated + $request->allocation > $cashBank->amount) {
+                    return response()->json([
+                        'message' => sprintf(
+                            'Total allocation amount cannot exceed cash bank amount. Already allocated: %s, Available: %s',
+                            number_format($totalAllocated, 2, ',', '.'),
+                            number_format($cashBank->amount - $totalAllocated, 2, ',', '.')
+                        )
+                    ], 422);
+                }
+            }
+
+            $allocation = PaymentAllocation::create([
+                'cash_bank_id' => $request->cash_bank_id,
+                'debit_note_id' => $debitNoteId,
+                'allocation' => $request->allocation,
+                'status' => 'posted',
+                'debit_note_billing_id' => $request->debit_note_billing_id,
+                // 'created_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'message' => 'Allocation has been saved successfully',
+                'data' => $allocation
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while saving the allocation',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
