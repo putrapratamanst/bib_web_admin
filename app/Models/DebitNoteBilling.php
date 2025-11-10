@@ -39,7 +39,13 @@ class DebitNoteBilling extends Model
         'date_formatted',
         'due_date_formatted',
         'amount_formatted',
+        'amount_formatted_raw',
     ];
+
+    public function getAmountFormattedRawAttribute(): string 
+    {
+        return $this->getNetAmount();
+    }
 
     public function getDateFormattedAttribute(): string
     {
@@ -51,9 +57,15 @@ class DebitNoteBilling extends Model
         return $this->due_date ? $this->due_date->format('d-m-Y') : '';
     }
 
+    public function getNetAmount(): float
+    {
+        $creditNoteAmount = CreditNote::where('billing_id', $this->id)->sum('amount');
+        return floatval($this->amount) - floatval($creditNoteAmount);
+    }
+
     public function getAmountFormattedAttribute(): string
     {
-        return number_format($this->amount, 2, ',', '.');
+        return number_format($this->getNetAmount(), 2, ',', '.');
     }
 
     /**

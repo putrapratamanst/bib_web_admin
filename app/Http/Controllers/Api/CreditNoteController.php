@@ -24,13 +24,13 @@ class CreditNoteController extends Controller
         $query = CreditNote::query()->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
-            ->addColumn('contract_number', function(CreditNote $b) {
+            ->addColumn('contract_number', function (CreditNote $b) {
                 return $b->contract->number;
             })
-            ->addColumn('contract_id', function(CreditNote $b) {
+            ->addColumn('contract_id', function (CreditNote $b) {
                 return $b->contract->id;
             })
-            ->addColumn('contact', function(CreditNote $b) {
+            ->addColumn('contact', function (CreditNote $b) {
                 return $b->contract->contact->display_name;
             })
             ->orderColumn('contact', function ($query, $order) {
@@ -39,7 +39,7 @@ class CreditNoteController extends Controller
                     ->join('contacts', 'contacts.id', '=', 'contracts.contact_id')
                     ->orderBy('contacts.display_name', $order);
             })
-           ->make(true);
+            ->make(true);
     }
 
     public function generateNumber()
@@ -64,15 +64,15 @@ class CreditNoteController extends Controller
                 'currency_code' => $data['currency_code'],
                 'exchange_rate' => $data['exchange_rate'],
                 'amount' => $data['amount'],
-                'status' => $data['status']
+                'status' => $data['status'],
+                'billing_id' => $data['billing_id'],
             ]);
 
             return response()->json([
                 'message' => 'Data has been created',
                 'data' => new CreditNoteResource($creditNote)
             ], 201);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()
             ], 500);

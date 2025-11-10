@@ -129,6 +129,7 @@
                             <td>{{ $billing->billing_number }}</td>
                             <td>{{ $billing->date_formatted }}</td>
                             <td>{{ $billing->due_date_formatted }}</td>
+                            <!-- Amount sudah otomatis dikurangi credit notes melalui accessor di model -->
                             <td class="text-end">{{ $debitNote->currency_code }} {{ $billing->amount_formatted }}</td>
                             <td>
                                 @if($billing->status === 'unpaid')

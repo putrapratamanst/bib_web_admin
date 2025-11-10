@@ -29,6 +29,7 @@ class CreditNote extends Model
         'status',
         'created_by',
         'updated_by',
+        'billing_id',
     ];
 
     protected $appends = [

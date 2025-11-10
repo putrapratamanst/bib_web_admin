@@ -24,6 +24,7 @@ class CashoutController extends Controller
     public function datatables(Request $request)
     {
         $query = Cashout::with(['debitNote.contract.contact', 'insurance'])
+            ->orderBy('created_at', 'desc')
             ->select('cashouts.*');
 
         return DataTables::of($query)
