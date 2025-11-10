@@ -73,24 +73,9 @@ class CashBankController extends Controller
                 'chart_of_account_id' => $data['chart_of_account_id'],
                 'amount' => $data['amount'],
                 'description' => $data['description'],
-                'reference' => $data['reference'],
                 'status' => $data['status'],
                 // 'created_by' => auth()->id()
             ]);
-            
-            // Create CashBankDetail if reference (billing_id) is provided
-            if (!empty($data['reference'])) {
-                // Get DebitNote from DebitNoteBilling
-                $billing = DebitNoteBilling::find($data['reference']);
-                
-                if ($billing && $billing->debitNote) {
-                    CashBankDetail::create([
-                        'cash_bank_id' => $cashBank->id,
-                        'debit_note_id' => $billing->debit_note_id,
-                        'amount' => $data['amount'],
-                    ]);
-                }
-            }
 
             return response()->json([
                 'message' => 'Data has been created',

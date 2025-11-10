@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CashBank;
 use App\Models\CashBankDetail;
 use App\Models\Cashout;
+use App\Models\DebitNoteBilling;
 use App\Models\PaymentAllocation;
 use Illuminate\Http\Request;
 
@@ -32,11 +33,37 @@ class PaymentAllocationController extends Controller
 
     public function show($id)
     {
-        $cashBank = CashBankDetail::with('cashBank')->where('cash_bank_id', $id)->first();
-        $paymentAllocation = PaymentAllocation::with('debitNote')->where('cash_bank_id', $id)->get();
+        $cashBank = CashBank::with('contact')->where('id', $id)->first();
+        // Get all debit note billings for the contact
+        $debitNoteBillings = DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
+            $query->where('contact_id', $cashBank->contact_id);
+        })
+        ->with(['debitNote.contract', 'debitNote' => function($query) {
+            $query->select('id', 'number', 'currency_code', 'contact_id', 'contract_id');
+        }])
+        ->select([
+            'id',
+            'debit_note_id',
+            'billing_number',
+            'date',
+            'due_date',
+            'amount',
+            'status'
+        ])
+        ->get()
+        ->map(function($billing) {
+            // Calculate allocated amount from payment allocations
+            $allocated_amount = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                ->sum('allocation');
+            
+            $billing->allocated_amount = $allocated_amount;
+            $billing->remaining_amount = $billing->amount - $allocated_amount;
+            return $billing;
+        });
+
         return view('transaction.paymentallocation.show', [
-            'cashBank' => $cashBank->cashBank,
-            'paymentAllocations' => $paymentAllocation
+            'cashBank' => $cashBank,
+            'debitNoteBillings' => $debitNoteBillings
         ]);
     }
 
@@ -63,7 +90,7 @@ class PaymentAllocationController extends Controller
                 'amount' => $paymentAllocation->allocation * $contract->percentage / 100,
                 'description' => 'Cashout for Payment Allocation ID: ' . $paymentAllocation->id,
                 'status' => 'paid',
-                'created_by' => auth()->id() ?? 1,
+                'created_by' => 1, // TODO: Replace with proper auth user ID when authentication is implemented
 
             ]);
         }

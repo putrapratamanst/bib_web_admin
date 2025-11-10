@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DebitNoteBilling;
 use App\Models\Cashout;
+use App\Models\CreditNote;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -124,11 +125,17 @@ class DebitNoteBillingController extends Controller
             $detailContract = $billing->debitNote->contract;
             if ($detailContract->details) {
                 $listInsurance = $detailContract->details ?? [];
+                $bilAmount = $billing->amount;
                 foreach ($listInsurance as $insurance) {
-                    $share = $billing->amount * ($insurance->percentage / 100);
+                    $creditNote = CreditNote::where('billing_id', $billing->id)->first();
+                    if ($creditNote) {
+                        $bilAmount -= $creditNote->amount;
+                    }
+                    $share = $bilAmount * ($insurance->percentage / 100);
                     $brokerfee = $share * ($insurance->brokerage_fee / 100);
                     $engfee = $share * ($insurance->eng_fee / 100);
                     $amountForCashout = $share - $brokerfee - $engfee;
+
                     $cashout = Cashout::create([
                         'debit_note_id' => $billing->debit_note_id,
                         'debit_note_billing_id' => $billing->id,
@@ -144,6 +151,7 @@ class DebitNoteBillingController extends Controller
                         'status' => 'pending',
                         'created_by' => auth()->id() ?? 1,
                     ]);
+                    $bilAmount = $billing->amount;
                 }
             }
             //kurangin amount dengan installment asuransi dari contract

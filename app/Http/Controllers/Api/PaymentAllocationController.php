@@ -113,6 +113,70 @@ class PaymentAllocationController extends Controller
     }
 
 
+    public function storeAll(Request $request, $cashbankID)
+    {
+        try {
+            $cashBank = CashBank::findOrFail($cashbankID);
+            
+            // Get all available debit note billings for this contact
+            $debitNoteBillings = \App\Models\DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
+                $query->where('contact_id', $cashBank->contact_id);
+            })
+            ->with('debitNote')
+            ->get()
+            ->map(function($billing) {
+                // Calculate allocated amount
+                $allocated_amount = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                    ->sum('allocation');
+                $billing->allocated_amount = $allocated_amount;
+                $billing->remaining_amount = $billing->amount - $allocated_amount;
+                return $billing;
+            })
+            ->filter(function($billing) {
+                return $billing->remaining_amount > 0;
+            })
+            ->sortBy('due_date');
+
+            // Get total allocated amount for this cash bank
+            $totalAllocated = PaymentAllocation::where('cash_bank_id', $cashbankID)
+                ->sum('allocation');
+
+            $availableAmount = $cashBank->amount - $totalAllocated;
+            $allocations = [];
+
+            // Allocate to each billing until we run out of money
+            foreach ($debitNoteBillings as $billing) {
+                if ($availableAmount <= 0) break;
+
+                $allocationAmount = min($availableAmount, $billing->remaining_amount);
+                
+                if ($allocationAmount > 0) {
+                    $allocation = PaymentAllocation::create([
+                        'cash_bank_id' => $cashbankID,
+                        'debit_note_id' => $billing->debit_note_id,
+                        'debit_note_billing_id' => $billing->id,
+                        'allocation' => $allocationAmount,
+                        'status' => 'posted'
+                    ]);
+
+                    $allocations[] = $allocation;
+                    $availableAmount -= $allocationAmount;
+                }
+            }
+
+            return response()->json([
+                'message' => 'All available amounts have been allocated successfully',
+                'data' => $allocations
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while allocating payments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function storeByCashBankID(Request $request, $cashbankID)
     {
         $request->merge(['cash_bank_id' => $cashbankID]);

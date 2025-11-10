@@ -5,11 +5,6 @@
     <div class="card">
         <div class="card-header">
             List of Payment &amp; Allocation
-            <div class="float-end">
-                <a href="{{ route('transaction.cash-banks.create') }}" class="btn btn-primary btn-sm">
-                    Add New
-                </a>
-            </div>
         </div>
         <div class="card-body">
             <table class="table table-new table-hover table-striped table-bordered" id="contact-table">

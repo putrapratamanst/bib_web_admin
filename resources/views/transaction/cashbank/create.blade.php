@@ -4,8 +4,8 @@
 <div class="container">
     <div class="card">
         <div class="card-header">
-            Add New Contact
-        </div>        
+            Add New Cash Bank
+        </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <input type="hidden" name="status" value="approved" />
             <div class="card-body">
@@ -44,22 +44,23 @@
                             <input type="text" name="number" id="number" class="form-control" required />
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="mb-3">
-                            <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>
-                            <input type="text" name="date" id="date" class="form-control datepicker" value="{{ $currentDate }}" required />
-                        </div>
-                    </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-3">
+                    <!-- <div class="col-md-3">
                         <div class="mb-3">
                             <label for="reference" class="form-label">Ref Number (Billing)</label>
                             <select name="reference" id="reference" class="form-control">
                                 <option value=""></option>
                             </select>
                         </div>
+                    </div> -->
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>
+                            <input type="text" name="date" id="date" class="form-control datepicker" value="{{ $currentDate }}" required />
+                        </div>
                     </div>
+
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
@@ -90,15 +91,15 @@
 
 @push('scripts')
 <script>
-        $.ajaxSetup({
+    $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    
+
     // Debug: Check if CSRF token exists
     console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
-    
+
     // Test API call
     setTimeout(function() {
         console.log('Testing API call...');
@@ -133,15 +134,15 @@
                 url: "{{ route('api.contacts.select2') }}",
                 dataType: 'json',
                 delay: 500,
-                data: function (params) {
+                data: function(params) {
                     return {
                         search: params.term,
                         page: params.page || 1
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
-                       results: data.data,
+                        results: data.data,
                         pagination: {
                             more: data.pagination.more
                         }
@@ -159,12 +160,12 @@
                 url: "{{ route('api.chart-of-accounts.select2') }}?c=3",
                 dataType: 'json',
                 delay: 500,
-                data: function (params) {
+                data: function(params) {
                     return {
                         q: params.term,
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: $.map(data.items, function(item) {
                             return {
@@ -186,12 +187,12 @@
                 url: "{{ route('api.debit-note-billings.select2') }}",
                 dataType: 'json',
                 delay: 500,
-                data: function (params) {
+                data: function(params) {
                     return {
                         q: params.term,
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: data.items
                     };
@@ -217,7 +218,7 @@
         // Auto-populate data when billing reference is selected
         $('#reference').on('select2:select', function(e) {
             var billingId = e.params.data.id;
-            
+
             if (billingId) {
                 // Get billing details via API
                 $.ajax({
@@ -226,10 +227,10 @@
                     success: function(response) {
                         if (response.data) {
                             var billing = response.data;
-                            
+
                             // Auto-populate amount
                             $('#amount').val(billing.amount);
-                            
+
                             // Auto-populate contact if available
                             if (billing.debit_note && billing.debit_note.contract && billing.debit_note.contract.contact) {
                                 var contact = billing.debit_note.contract.contact;
