@@ -133,7 +133,9 @@ class ContractController extends Controller
                     $contract->details()->create([
                         'insurance_id' => $detail['insurance_id'],
                         'description' => $detail['description'],
-                        'percentage' => $detail['percentage']
+                        'percentage' => $detail['percentage'],
+                        'brokerage_fee' => $detail['brokerage_fee'],
+                        'eng_fee' => $detail['eng_fee'],
                     ]);
                 }
             }
