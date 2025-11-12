@@ -6,7 +6,7 @@
         <div class="card-header">
             Cash & Bank Detail
             <div class="float-end">
-                <a href="{{ route('transaction.cash-banks.index') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('transaction.payment-allocations.index') }}" class="btn btn-secondary btn-sm">
                     Back
                 </a>
             </div>
@@ -68,9 +68,10 @@
                 </div>
                 <div class="card-body">
                     @php
-                    $totalAllocated = $debitNoteBillings->sum('allocated_amount');
+                    // Total allocated from THIS cash bank (include allocations even for billings we filtered out)
+                    $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
-                    @endphp
+                        @endphp
                     @if($debitNoteBillings->isEmpty())
                     <div class="alert alert-warning">
                         No related debit note billings found.
@@ -151,7 +152,7 @@
                                             Save
                                         </button>
                                     </div>
-                                    @if($totalAllocated <= 0)
+                                    @if($totalAvailable <= 0)
                                         <small class="text-muted d-block mt-1">Fully allocated</small>
                                     @endif
                                 </td>

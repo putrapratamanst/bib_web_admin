@@ -8,6 +8,7 @@ use App\Models\CashBankDetail;
 use App\Models\Cashout;
 use App\Models\DebitNoteBilling;
 use App\Models\PaymentAllocation;
+use App\Models\CreditNote;
 use Illuminate\Http\Request;
 
 class PaymentAllocationController extends Controller
@@ -52,16 +53,40 @@ class PaymentAllocationController extends Controller
         ])
         ->get()
         ->map(function($billing) use ($cashBank){
-            // Calculate allocated amount from payment allocations
-            $allocated_amount = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+            // Calculate allocated amount for this billing across ALL cash banks
+            $total_allocated = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                ->sum('allocation');
+            // Calculate allocated amount from this cash bank specifically
+            $allocated_on_this_cashbank = PaymentAllocation::where('debit_note_billing_id', $billing->id)
                 ->where('cash_bank_id', $cashBank->id)
                 ->sum('allocation');
-            
-            $billing->allocated_amount = $allocated_amount;
-            $billing->remaining_amount = $billing->amount - $allocated_amount;
+
+            // Calculate total credit note amount applied to this billing (reduce outstanding)
+            $credit_note = CreditNote::where('billing_id', $billing->id);
+            $credit_note_amount = $credit_note->sum('amount');
+
+            // Net amount after credit notes
+            $net_amount = floatval($billing->amount) - floatval($credit_note_amount);
+
+            // Expose both amounts to the view: total allocated and allocated for this cash bank
+            $billing->total_allocated = $total_allocated;
+            $billing->allocated_amount = $allocated_on_this_cashbank;
+
+            // Expose credit note and net amount to the view for clarity
+            $billing->credit_note_amount = $credit_note_amount;
+            $billing->amount = $net_amount;
+
+            // Remaining amount is net amount minus total allocations (across all cash banks)
+            // Clamp to 0 to avoid negative values from rounding or over-allocation
+            $billing->remaining_amount = max(0, round($net_amount - $total_allocated, 2));
             return $billing;
-        });
-        
+        })
+        // Only include billings that still have remaining amount (i.e., not fully allocated)
+        ->filter(function($billing) {
+            return ($billing->remaining_amount ?? 0) > 0;
+        })
+        ->values();
+
         return view('transaction.paymentallocation.show', [
             'cashBank' => $cashBank,
             'debitNoteBillings' => $debitNoteBillings

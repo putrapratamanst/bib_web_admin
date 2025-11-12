@@ -23,7 +23,7 @@ class PaymentAllocationController extends Controller
             ->orWhereHas('contact', function ($query) use ($q) {
                 $query->where('display_name', 'like', "%$q%");
             })
-            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return CashBankResource::collection($cashBanks);
@@ -33,7 +33,7 @@ class PaymentAllocationController extends Controller
     {
         $query = CashBank::with('contact', 'chartOfAccount')
             // ->where('status', '!=', 'approved') // Filter out approved status
-            ->orderBy('date', 'desc');
+            ->orderBy('created_at', 'desc');
 
         return DataTables::eloquent($query)
             ->addColumn('contact_name', function (CashBank $cashBank) {

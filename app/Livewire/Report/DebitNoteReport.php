@@ -199,11 +199,23 @@ class DebitNoteReport extends Component
 
         foreach ($debitNotes as $dn) {
             $creditNotesAmount = $dn->creditNotes->sum('amount');
-            $paymentAllocationsAmount = $dn->paymentAllocations->sum('amount');
+
+            // Group allocations by billing id so we can decide which billing rows are fully paid
+            $allocationsByBilling = $dn->paymentAllocations->groupBy('debit_note_billing_id')
+                ->map(function ($group) {
+                    return $group->sum('allocation');
+                });
 
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
                     $amount = $billing->amount ?? 0;
+
+                    $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
+
+                    // If billing is fully allocated (allocation equals billing amount), skip it
+                    if (round($amount - $paymentForBilling, 2) == 0) {
+                        continue;
+                    }
 
                     // Count this billing row
                     $totals['total_records']++;
@@ -222,6 +234,13 @@ class DebitNoteReport extends Component
                 }
             } else {
                 $amount = $dn->amount ?? 0;
+                $totalAllocation = $dn->paymentAllocations->sum('allocation');
+
+                // If the debit note amount is fully allocated, skip it
+                if (round($amount - $totalAllocation, 2) == 0) {
+                    continue;
+                }
+
                 $totals['total_records']++;
 
                 if (($dn->currency_code ?? 'IDR') === 'IDR') {
