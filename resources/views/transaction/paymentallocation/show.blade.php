@@ -90,13 +90,13 @@
                                 <strong>Available for Allocation:</strong>
                                 {{ $cashBank->currency_code }} {{ number_format($totalAvailable, 2, ',', '.') }}
                             </div>
-                            <div class="col-md-3 text-end">
+                            <!-- <div class="col-md-3 text-end">
                                 @if($totalAvailable > 0)
                                 <button type="button" class="btn btn-primary btn-sm" id="allocateAll">
                                     Auto Allocate All
                                 </button>
                                 @endif
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     @if($cashBank->debitNote)

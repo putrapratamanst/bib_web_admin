@@ -51,16 +51,17 @@ class PaymentAllocationController extends Controller
             'status'
         ])
         ->get()
-        ->map(function($billing) {
+        ->map(function($billing) use ($cashBank){
             // Calculate allocated amount from payment allocations
             $allocated_amount = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                ->where('cash_bank_id', $cashBank->id)
                 ->sum('allocation');
             
             $billing->allocated_amount = $allocated_amount;
             $billing->remaining_amount = $billing->amount - $allocated_amount;
             return $billing;
         });
-
+        
         return view('transaction.paymentallocation.show', [
             'cashBank' => $cashBank,
             'debitNoteBillings' => $debitNoteBillings
