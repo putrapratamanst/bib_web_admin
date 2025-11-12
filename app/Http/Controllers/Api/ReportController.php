@@ -96,8 +96,8 @@ class ReportController extends Controller
             $outstandingAmount = $debitNote->amount - $creditNotesAmount - $paymentAllocationsAmount;
 
             // Convert to IDR if currency is not IDR
-            $amountInIdr = $debitNote->currency_code === 'IDR' 
-                ? $debitNote->amount 
+            $amountInIdr = $debitNote->currency_code === 'IDR'
+                ? $debitNote->amount
                 : $debitNote->amount * $debitNote->exchange_rate;
 
             return [

@@ -198,15 +198,11 @@
                                 $creditNotesAmount = $row->credit_notes_amount;
                                 $paymentAllocationsAmount = $row->payment_allocations_amount;
 
-                                $proportion = 0;
-                                if ($billing && $debitNote->amount > 0) {
-                                    $proportion = $amount / $debitNote->amount;
-                                }
-
-                                $creditApplied = $billing ? round($creditNotesAmount * $proportion, 2) : $creditNotesAmount;
-                                $paymentApplied = $billing ? round($paymentAllocationsAmount * $proportion, 2) : $paymentAllocationsAmount;
-
-                                $outstandingAmount = $amount - $creditApplied - $paymentApplied;
+       
+                                $creditApplied = $creditNotesAmount;
+                                $paymentApplied =  $paymentAllocationsAmount;
+                                
+                                $outstandingAmount = $amount - $creditApplied;
                             @endphp
                             <tr>
                                 <td>

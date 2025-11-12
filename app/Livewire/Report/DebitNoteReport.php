@@ -91,27 +91,37 @@ class DebitNoteReport extends Component
         $rows = new Collection();
         foreach ($debitNotes as $dn) {
             $creditNotesAmount = $dn->creditNotes->sum('amount');
-            $paymentAllocationsAmount = $dn->paymentAllocations->sum('amount');
+
+            // Group allocations by billing id so we can attribute allocations to each billing row
+            // key = debit_note_billing_id, value = sum of allocation
+            $allocationsByBilling = $dn->paymentAllocations->groupBy('debit_note_billing_id')
+                ->map(function ($group) {
+                    return $group->sum('allocation');
+                });
 
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
+                    $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
+
                     $rows->push((object)[
                         'debit_note' => $dn,
                         'billing' => $billing,
                         'credit_notes_amount' => $creditNotesAmount,
-                        'payment_allocations_amount' => $paymentAllocationsAmount,
+                        'payment_allocations_amount' => $paymentForBilling,
                     ]);
                 }
             } else {
+                // No billing rows: treat allocation as total allocated on the debit note (unlinked allocations)
+                $totalAllocation = $dn->paymentAllocations->sum('allocation');
+
                 $rows->push((object)[
                     'debit_note' => $dn,
                     'billing' => null,
                     'credit_notes_amount' => $creditNotesAmount,
-                    'payment_allocations_amount' => $paymentAllocationsAmount,
+                    'payment_allocations_amount' => $totalAllocation,
                 ]);
             }
         }
-
         // Manual pagination for the flattened rows
         $perPage = 50;
         $page = $this->page ?: 1;
@@ -122,14 +132,14 @@ class DebitNoteReport extends Component
             'query' => request()->query(),
         ]);
 
-    // Calculate totals for the current filter
-    $totals = $this->calculateTotals();
+        // Calculate totals for the current filter
+        $totals = $this->calculateTotals();
 
         // Get contacts for filter dropdown - restrict to contacts matching current filters
         $contacts = Contact::whereHas('debitNotes', function ($q) {
-                $q->when($this->date_from, function ($q) {
-                    $q->whereDate('date', '>=', $this->date_from);
-                })
+            $q->when($this->date_from, function ($q) {
+                $q->whereDate('date', '>=', $this->date_from);
+            })
                 ->when($this->date_to, function ($q) {
                     $q->whereDate('date', '<=', $this->date_to);
                 })
@@ -143,8 +153,9 @@ class DebitNoteReport extends Component
                     $q->where('is_posted', $this->is_posted);
                 });
         })
-        ->orderBy('display_name')
-        ->get();
+            ->orderBy('display_name')
+            ->get();
+
 
         return view('livewire.report.debit-note-report', [
             'debitNotes' => $debitNotes,
@@ -244,7 +255,7 @@ class DebitNoteReport extends Component
         ];
 
         $url = route('api.reports.debit-notes') . '?' . http_build_query($params);
-        
+
         $this->dispatch('downloadFile', ['url' => $url]);
     }
 }
