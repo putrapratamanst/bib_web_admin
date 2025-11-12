@@ -62,24 +62,34 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
 
         foreach ($debitNotes as $dn) {
             $creditNotesAmount = $dn->creditNotes->sum('amount');
-            $paymentAllocationsAmount = $dn->paymentAllocations->sum('amount');
+
+            // Group allocations by billing id so we can attribute allocations to each billing row
+            // key = debit_note_billing_id, value = sum of allocation
+            $allocationsByBilling = $dn->paymentAllocations->groupBy('debit_note_billing_id')
+                ->map(function ($group) {
+                    return $group->sum('allocation');
+                });
 
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
+                    $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
+
                     $rows->push((object)[
                         'debit_note' => $dn,
                         'billing' => $billing,
                         'credit_notes_amount' => $creditNotesAmount,
-                        'payment_allocations_amount' => $paymentAllocationsAmount,
+                        'payment_allocations_amount' => $paymentForBilling,
                     ]);
                 }
             } else {
-                // Fallback to a single row representing the whole debit note (keeps existing behaviour)
+                // No billing rows: treat allocation as total allocated on the debit note (unlinked allocations)
+                $totalAllocation = $dn->paymentAllocations->sum('allocation');
+
                 $rows->push((object)[
                     'debit_note' => $dn,
                     'billing' => null,
                     'credit_notes_amount' => $creditNotesAmount,
-                    'payment_allocations_amount' => $paymentAllocationsAmount,
+                    'payment_allocations_amount' => $totalAllocation,
                 ]);
             }
         }
@@ -123,15 +133,14 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
         $creditNotesAmount = $row->credit_notes_amount;
         $paymentAllocationsAmount = $row->payment_allocations_amount;
 
-        $proportion = 0;
-        if ($billing && $debitNote->amount > 0) {
-            $proportion = $amount / $debitNote->amount;
-        }
+        $creditNotesAmount = $row->credit_notes_amount;
+        $paymentAllocationsAmount = $row->payment_allocations_amount;
 
-        $creditApplied = $billing ? round($creditNotesAmount * $proportion, 2) : $creditNotesAmount;
-        $paymentApplied = $billing ? round($paymentAllocationsAmount * $proportion, 2) : $paymentAllocationsAmount;
 
-        $outstandingAmount = $amount - $creditApplied - $paymentApplied;
+        $creditApplied = $creditNotesAmount;
+        $paymentApplied =  $paymentAllocationsAmount;
+
+        $outstandingAmount = $amount - $creditApplied;
 
         // Convert to IDR if currency is not IDR
         $amountInIdr = $debitNote->currency_code === 'IDR'
@@ -188,9 +197,9 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
             ]
         ]);
 
-    // Add borders to all data
-    $lastRow = $sheet->getHighestRow();
-    $sheet->getStyle('A1:Q' . $lastRow)->applyFromArray([
+        // Add borders to all data
+        $lastRow = $sheet->getHighestRow();
+        $sheet->getStyle('A1:Q' . $lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
@@ -199,10 +208,10 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
             ]
         ]);
 
-    // Right align numeric columns:
-    // Exchange Rate (H), Amount (I), Amount(IDR) (J) and Outstanding (N), Credit (O), Payment (P)
-    $sheet->getStyle('H2:J' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-    $sheet->getStyle('N2:P' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        // Right align numeric columns:
+        // Exchange Rate (H), Amount (I), Amount(IDR) (J) and Outstanding (N), Credit (O), Payment (P)
+        $sheet->getStyle('H2:J' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('N2:P' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
         return [];
     }
@@ -213,7 +222,7 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
         if ($this->dateFrom && $this->dateTo) {
             $period = ' (' . Carbon::parse($this->dateFrom)->format('d/m/Y') . ' - ' . Carbon::parse($this->dateTo)->format('d/m/Y') . ')';
         }
-        
+
         return 'Debit Note Report' . $period;
     }
 }
