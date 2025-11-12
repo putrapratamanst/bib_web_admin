@@ -1,2 +1,14 @@
-create credit note salah
+credit note salah
 didepan billing yang disave malah nomor kontrak
+
+
+Amount debitnote yang ada di cashbank berkurang  jika ada credit note
+Policy Number tidak required
+List select contact hanya menampilkan type client
+Fix search 
+Auto Generate Number Debit Note billing
+
+Not Yet:
+trigger cash out setelah save payment alocation (lunas)
+keluarin list debit notes di cashbank
+tambahkan kotak untuk alokasi

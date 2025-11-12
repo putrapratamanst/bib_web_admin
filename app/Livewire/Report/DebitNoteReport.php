@@ -4,6 +4,8 @@ namespace App\Livewire\Report;
 
 use App\Models\DebitNote;
 use App\Models\Contact;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -18,6 +20,7 @@ class DebitNoteReport extends Component
     public $status = '';
     public $currency_code = '';
     public $is_posted = '';
+    public $page = 1;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -60,7 +63,7 @@ class DebitNoteReport extends Component
 
     public function render()
     {
-        $query = DebitNote::with(['contact', 'contract', 'creditNotes', 'paymentAllocations'])
+        $query = DebitNote::with(['contact', 'contract', 'creditNotes', 'paymentAllocations', 'billings'])
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -82,15 +85,66 @@ class DebitNoteReport extends Component
             ->orderBy('date', 'desc')
             ->orderBy('number', 'desc');
 
-        $debitNotes = $query->paginate(50);
+        // Get matching debit notes and flatten to billing rows
+        $debitNotes = $query->get();
 
-        // Calculate totals for the current filter
-        $totals = $this->calculateTotals();
+        $rows = new Collection();
+        foreach ($debitNotes as $dn) {
+            $creditNotesAmount = $dn->creditNotes->sum('amount');
+            $paymentAllocationsAmount = $dn->paymentAllocations->sum('amount');
 
-        // Get contacts for filter dropdown - using whereHas instead of direct relationship
-        $contacts = Contact::whereHas('debitNotes')
-            ->orderBy('display_name')
-            ->get();
+            if ($dn->relationLoaded('billings') && $dn->billings->count()) {
+                foreach ($dn->billings as $billing) {
+                    $rows->push((object)[
+                        'debit_note' => $dn,
+                        'billing' => $billing,
+                        'credit_notes_amount' => $creditNotesAmount,
+                        'payment_allocations_amount' => $paymentAllocationsAmount,
+                    ]);
+                }
+            } else {
+                $rows->push((object)[
+                    'debit_note' => $dn,
+                    'billing' => null,
+                    'credit_notes_amount' => $creditNotesAmount,
+                    'payment_allocations_amount' => $paymentAllocationsAmount,
+                ]);
+            }
+        }
+
+        // Manual pagination for the flattened rows
+        $perPage = 50;
+        $page = $this->page ?: 1;
+        $total = $rows->count();
+        $pagedData = $rows->forPage($page, $perPage)->values();
+        $debitNotes = new LengthAwarePaginator($pagedData, $total, $perPage, $page, [
+            'path' => request()->url(),
+            'query' => request()->query(),
+        ]);
+
+    // Calculate totals for the current filter
+    $totals = $this->calculateTotals();
+
+        // Get contacts for filter dropdown - restrict to contacts matching current filters
+        $contacts = Contact::whereHas('debitNotes', function ($q) {
+                $q->when($this->date_from, function ($q) {
+                    $q->whereDate('date', '>=', $this->date_from);
+                })
+                ->when($this->date_to, function ($q) {
+                    $q->whereDate('date', '<=', $this->date_to);
+                })
+                ->when($this->status, function ($q) {
+                    $q->where('status', $this->status);
+                })
+                ->when($this->currency_code, function ($q) {
+                    $q->where('currency_code', $this->currency_code);
+                })
+                ->when($this->is_posted !== '', function ($q) {
+                    $q->where('is_posted', $this->is_posted);
+                });
+        })
+        ->orderBy('display_name')
+        ->get();
 
         return view('livewire.report.debit-note-report', [
             'debitNotes' => $debitNotes,
@@ -101,7 +155,8 @@ class DebitNoteReport extends Component
 
     private function calculateTotals()
     {
-        $query = DebitNote::query()
+        // Build same base query used in render, but eager load relations required for per-billing totals
+        $query = DebitNote::with(['billings', 'creditNotes', 'paymentAllocations'])
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -121,13 +176,59 @@ class DebitNoteReport extends Component
                 $q->where('is_posted', $this->is_posted);
             });
 
-        return [
-            'total_records' => $query->count(),
-            'total_amount_idr' => $query->where('currency_code', 'IDR')->sum('amount'),
-            'total_amount_usd' => $query->where('currency_code', 'USD')->sum('amount'),
-            'total_posted' => $query->where('is_posted', true)->count(),
-            'total_unposted' => $query->where('is_posted', false)->count(),
+        $debitNotes = $query->get();
+
+        $totals = [
+            'total_records' => 0,
+            'total_amount_idr' => 0,
+            'total_amount_usd' => 0,
+            'total_posted' => 0,
+            'total_unposted' => 0,
         ];
+
+        foreach ($debitNotes as $dn) {
+            $creditNotesAmount = $dn->creditNotes->sum('amount');
+            $paymentAllocationsAmount = $dn->paymentAllocations->sum('amount');
+
+            if ($dn->relationLoaded('billings') && $dn->billings->count()) {
+                foreach ($dn->billings as $billing) {
+                    $amount = $billing->amount ?? 0;
+
+                    // Count this billing row
+                    $totals['total_records']++;
+
+                    if (($dn->currency_code ?? 'IDR') === 'IDR') {
+                        $totals['total_amount_idr'] += $amount;
+                    } else {
+                        $totals['total_amount_usd'] += $amount;
+                    }
+
+                    if ($dn->is_posted) {
+                        $totals['total_posted']++;
+                    } else {
+                        $totals['total_unposted']++;
+                    }
+                }
+            } else {
+                $amount = $dn->amount ?? 0;
+                $totals['total_records']++;
+
+                if (($dn->currency_code ?? 'IDR') === 'IDR') {
+                    $totals['total_amount_idr'] += $amount;
+                } else {
+                    $totals['total_amount_usd'] += $amount;
+                }
+
+                if ($dn->is_posted) {
+                    $totals['total_posted']++;
+                } else {
+                    $totals['total_unposted']++;
+                }
+            }
+        }
+
+        // Ensure numeric formatting (no rounding here, presentation will format)
+        return $totals;
     }
 
     public function exportExcel()

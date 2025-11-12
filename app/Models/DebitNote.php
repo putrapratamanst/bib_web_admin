@@ -248,4 +248,9 @@ class DebitNote extends Model
     {
         return $this->cashouts()->exists();
     }
+
+    public function billings(): HasMany
+    {
+        return $this->hasMany(DebitNoteBilling::class, 'debit_note_id', 'id');
+    }
 }

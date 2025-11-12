@@ -173,6 +173,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>DN Number</th>
+                            <th>Billing Number</th>
                             <th>Contract</th>
                             <th>Contact</th>
                             <th>Date</th>
@@ -186,17 +187,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($debitNotes as $debitNote)
+                        @forelse($debitNotes as $row)
                             @php
-                                $creditNotesAmount = $debitNote->creditNotes->sum('amount');
-                                $paymentAllocationsAmount = $debitNote->paymentAllocations->sum('amount');
-                                $outstandingAmount = $debitNote->amount - $creditNotesAmount - $paymentAllocationsAmount;
+                                $debitNote = $row->debit_note;
+                                $billing = $row->billing;
+
+                                // Use billing amount if available, otherwise debit note amount
+                                $amount = $billing ? $billing->amount : $debitNote->amount;
+
+                                $creditNotesAmount = $row->credit_notes_amount;
+                                $paymentAllocationsAmount = $row->payment_allocations_amount;
+
+                                $proportion = 0;
+                                if ($billing && $debitNote->amount > 0) {
+                                    $proportion = $amount / $debitNote->amount;
+                                }
+
+                                $creditApplied = $billing ? round($creditNotesAmount * $proportion, 2) : $creditNotesAmount;
+                                $paymentApplied = $billing ? round($paymentAllocationsAmount * $proportion, 2) : $paymentAllocationsAmount;
+
+                                $outstandingAmount = $amount - $creditApplied - $paymentApplied;
                             @endphp
                             <tr>
                                 <td>
                                     <strong>{{ $debitNote->number }}</strong>
                                     @if($debitNote->installment > 0)
                                         <br><small class="text-muted">Installment: {{ $debitNote->installment }}</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($billing)
+                                        {{ $billing->billing_number ?? $billing->id }}
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
@@ -213,10 +236,10 @@
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $debitNote->date ? \Carbon\Carbon::parse($debitNote->date)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $billing && $billing->date ? \Carbon\Carbon::parse($billing->date)->format('d/m/Y') : ($debitNote->date ? \Carbon\Carbon::parse($debitNote->date)->format('d/m/Y') : '-') }}</td>
                                 <td>
-                                    {{ $debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') : '-' }}
-                                    @if($debitNote->due_date && \Carbon\Carbon::parse($debitNote->due_date)->isPast())
+                                    {{ $billing && $billing->due_date ? \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') : ($debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') : '-') }}
+                                    @if(($billing && $billing->due_date && \Carbon\Carbon::parse($billing->due_date)->isPast()) || ($debitNote->due_date && \Carbon\Carbon::parse($debitNote->due_date)->isPast()))
                                         <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Overdue</small>
                                     @endif
                                 </td>
@@ -227,19 +250,19 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <strong>{{ $debitNote->currency_code }} {{ number_format($debitNote->amount, 2, ',', '.') }}</strong>
+                                    <strong>{{ $debitNote->currency_code }} {{ number_format($amount, 2, ',', '.') }}</strong>
                                     @if($debitNote->currency_code !== 'IDR')
-                                        <br><small class="text-muted">IDR {{ number_format($debitNote->amount * $debitNote->exchange_rate, 2, ',', '.') }}</small>
+                                        <br><small class="text-muted">IDR {{ number_format($amount * $debitNote->exchange_rate, 2, ',', '.') }}</small>
                                     @endif
                                 </td>
                                 <td class="text-end">
                                     <strong class="{{ $outstandingAmount > 0 ? 'text-danger' : 'text-success' }}">
                                         {{ $debitNote->currency_code }} {{ number_format($outstandingAmount, 2, ',', '.') }}
                                     </strong>
-                                    @if($creditNotesAmount > 0 || $paymentAllocationsAmount > 0)
+                                    @if($creditApplied > 0 || $paymentApplied > 0)
                                         <br><small class="text-muted">
-                                            CN: {{ number_format($creditNotesAmount, 2, ',', '.') }} | 
-                                            PA: {{ number_format($paymentAllocationsAmount, 2, ',', '.') }}
+                                            CN: {{ number_format($creditApplied, 2, ',', '.') }} | 
+                                            PA: {{ number_format($paymentApplied, 2, ',', '.') }}
                                         </small>
                                     @endif
                                 </td>
@@ -264,7 +287,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center py-4">
+                                <td colspan="12" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
                                         <p>No debit notes found for the selected criteria.</p>
