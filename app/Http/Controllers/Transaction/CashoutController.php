@@ -16,7 +16,8 @@ class CashoutController extends Controller
     public function show($id)
     {
         $cashout = Cashout::with([
-            'debitNote.contract.contact', 
+            'debitNote.contract.contact',
+            'debitNote.contract.details.insurance',
             'insurance', 
             'createdBy', 
             'updatedBy'

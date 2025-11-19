@@ -147,6 +147,88 @@
                     @endif
                 </div>
             </div>
+
+            @if($cashout->debitNote && $cashout->debitNote->contract)
+            <hr class="my-4">
+            
+            <h6 class="text-muted mb-3">Cashout Breakdown</h6>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Premi</th>
+                            <th>Share 25%</th>
+                            <th>Basos</th>
+                            <th>Diskon</th>
+                            <th>Komisi</th>
+                            <th>PPh</th>
+                            <th>Polis+stamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $contract = $cashout->debitNote->contract;
+                            $contractDetail = $contract->details->where('insurance_id', $cashout->insurance_id)->first();
+                            
+                            // Gross Premium dari contract
+                            $grossPremium = $contract->gross_premium;
+                            
+                            // Percentage share untuk insurance ini (dari contract detail)
+                            $percentage = $contractDetail ? $contractDetail->percentage : 0;
+                            
+                            // Share 25% = gross premium * percentage / 100
+                            $share25 = $grossPremium * ($percentage / 100);
+                            
+                            // Brokerage fee (Basos) = share * brokerage_fee%
+                            $brokerageFeePercent = $contractDetail ? $contractDetail->brokerage_fee : 0;
+                            $basos = $share25 * ($brokerageFeePercent / 100);
+                            
+                            // Diskon amount
+                            $discountAmount = $contract->discount_amount;
+                            $discountShare = $discountAmount * ($percentage / 100);
+                            
+                            // Komisi = brokerage fee (same as basos in this case)
+                            $komisi = $basos;
+                            
+                            // PPh = 2% of komisi (or from eng_fee if available)
+                            $engFeePercent = $contractDetail ? $contractDetail->eng_fee : 2;
+                            $pph = $komisi * ($engFeePercent / 100);
+                            
+                            // Polis + stamp
+                            $polisStamp = $contract->stamp_fee * ($percentage / 100);
+                        @endphp
+                        <tr>
+                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($grossPremium, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ number_format($percentage, 2, ',', '.') }}%
+                                <br>
+                                <small class="text-muted">{{ $contract->currency_code }} {{ number_format($share25, 2, ',', '.') }}</small>
+                            </td>
+                            <td class="text-end">
+                                {{ number_format($brokerageFeePercent, 2, ',', '.') }}%
+                                <br>
+                                <small class="text-muted">{{ $contract->currency_code }} {{ number_format($basos, 2, ',', '.') }}</small>
+                            </td>
+                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($discountShare, 2, ',', '.') }}</td>
+                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($komisi, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ number_format($engFeePercent, 2, ',', '.') }}%
+                                <br>
+                                <small class="text-muted">{{ $contract->currency_code }} {{ number_format($pph, 2, ',', '.') }}</small>
+                            </td>
+                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($polisStamp, 2, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-secondary">
+                        <tr>
+                            <th colspan="6" class="text-end">Total Cashout Amount:</th>
+                            <th class="text-end text-primary">{{ $cashout->currency_code }} {{ $cashout->amount_formatted }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            @endif
         </div>
         <div class="card-footer">
             <a href="{{ route('transaction.cashouts.index') }}" class="btn btn-secondary">

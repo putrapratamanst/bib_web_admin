@@ -81,22 +81,13 @@
             </div>
             <div class="card-footer">
                 <a href="{{ route('transaction.debit-notes.index') }}" class="btn btn-secondary">Back</a>
-                
+
                 @if(!$debitNote->is_posted && $debitNote->status === 'active')
-                    <button type="button" class="btn btn-primary" onclick="postDebitNote()" id="btnPost">
-                        <i class="fas fa-paper-plane me-1"></i> Post Debit Note
-                    </button>
-                @else
-                    @if($debitNote->is_posted)
-                        <span class="badge bg-success ms-2">
-                            <i class="fas fa-check me-1"></i> Already Posted
-                        </span>
-                        @if($debitNote->cashouts->count() > 0)
-                            <a href="{{ route('transaction.cashouts.index') }}" class="btn btn-info btn-sm ms-2">
-                                <i class="fas fa-money-bill-wave me-1"></i> View Cashouts ({{ $debitNote->cashouts->count() }})
-                            </a>
-                        @endif
-                    @endif
+                @if ($debitNote->installment == 0)
+                <button type="button" class="btn btn-primary" onclick="postDebitNote()" id="btnPost">
+                    <i class="fas fa-paper-plane me-1"></i> Post Debit Note
+                </button>
+                @endif
                 @endif
             </div>
         </form>
@@ -106,8 +97,8 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>List Billing</span>
             @if ($debitNote->debitNoteBillings->count() < $debitNote->installment)
-            <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
-            @endif
+                <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
+                @endif
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -118,9 +109,6 @@
                             <th>Date</th>
                             <th>Due Date</th>
                             <th class="text-end">Amount</th>
-                            <th>Status</th>
-                            <th>Posted Billing</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -131,38 +119,8 @@
                             <td>{{ $billing->due_date_formatted }}</td>
                             <!-- Amount sudah otomatis dikurangi credit notes melalui accessor di model -->
                             <td class="text-end">{{ $debitNote->currency_code }} {{ $billing->amount_formatted }}</td>
-                            <td>
-                                @if($billing->status === 'unpaid')
-                                <span class="badge bg-danger">Unpaid</span>
-                                @elseif($billing->status === 'paid')
-                                <span class="badge bg-success">Paid</span>
-                                @else
-                                <span class="badge bg-warning">{{ ucfirst($billing->status) }}</span>
-                                @endif
-                            </td>
-                            <td>
-                                @php
-                                    $hasLinkedCashout = \App\Models\Cashout::where('debit_note_billing_id', $billing->id)->exists();
-                                @endphp
-                                @if($hasLinkedCashout)
-                                    <span class="badge bg-success">Yes</span>
-                                @else
-                                    <span class="badge bg-secondary">No</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if(!$hasLinkedCashout && $billing->status === 'paid')
-                                    <button class="btn btn-primary btn-sm" onclick="postBillingToCashout('{{ $billing->id }}')">
-                                        <i class="fas fa-paper-plane"></i> Post to Cashout
-                                    </button>
-                                @elseif($hasLinkedCashout)
-                                    <span class="badge bg-success">Posted</span>
-                                @else
-                                    <span class="badge bg-secondary">Not Ready</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
+
+                            @empty
                         <tr>
                             <td colspan="7" class="text-center">No billing found</td>
                         </tr>
@@ -182,7 +140,7 @@
     function postDebitNote() {
         if (confirm('Are you sure you want to post this Debit Note? This will automatically create cashouts to insurance companies.')) {
             $('#btnPost').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Posting...');
-            
+
             $.ajax({
                 url: "{{ route('api.debit-notes.post', $debitNote->id) }}",
                 method: "POST",
@@ -234,7 +192,7 @@
                 $(`button[onclick="postBillingToCashout('${billingId}')"]`)
                     .prop('disabled', true)
                     .html('<i class="fas fa-spinner fa-spin"></i> Posting...');
-                
+
                 $.ajax({
                     url: `/api/debit-note-billing/${billingId}/post-to-cashout`,
                     method: "POST",
