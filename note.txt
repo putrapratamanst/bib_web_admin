@@ -12,3 +12,30 @@ Not Yet:
 trigger cash out setelah save payment alocation (lunas)
 keluarin list debit notes di cashbank
 tambahkan kotak untuk alokasi
+
+
+
+
+13nov
+===
+di cn 1 jt
+
+benerin outstandingnya  report debit note
+
+
+alokasi nya aneh
+yg harusnya gak muncul malah muncul
+
+trigger cashout pindah ke alokasi
+
+available harus 0 di payment allocation 
+jadi selalu dicek apakah allocated uda 0
+baru send to cashout
+
+
+di payment allocation, yg uda di CN 1 jt 
+tapi masih nampil amount 6jt, harusnya 5jt
+
+pindahkan cashout di debit note ke payment allocation
+
+Ketika pay, maka munculkan list cashout di allocation
