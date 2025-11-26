@@ -280,6 +280,68 @@ class PaymentAllocationController extends Controller
         }
     }
 
+    public function storeByCashBankIDForCashout(Request $request, $cashbankID)
+    {
+        $request->merge(['cash_bank_id' => $cashbankID]);
+        try {
+            $request->validate([
+                'cash_bank_id' => 'required|exists:cash_banks,id',
+                'cashout_id' => 'required|exists:cashouts,id',
+                'allocation' => 'required|numeric|min:0',
+            ]);
+
+            $cashBank = CashBank::findOrFail($request->cash_bank_id);
+
+            // Get total allocated amount for this cash bank
+            $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
+                ->sum('allocation');
+
+            // Check if allocation exceeds cash bank amount
+            if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
+                if ($totalAllocated + $request->allocation > $cashBank->amount) {
+                    return response()->json([
+                        'message' => sprintf(
+                            'Total allocation amount cannot exceed cash bank amount. Already allocated: %s, Available: %s',
+                            number_format($totalAllocated, 2, ',', '.'),
+                            number_format($cashBank->amount - $totalAllocated, 2, ',', '.')
+                        )
+                    ], 422);
+                }
+            }
+
+            // Type pay - handle cashout
+            $cashout = Cashout::with('insurance')
+                ->findOrFail($request->cashout_id);
+
+            $allocation = PaymentAllocation::create([
+                'cash_bank_id' => $request->cash_bank_id,
+                'debit_note_id' => $cashout->debit_note_id,
+                'allocation' => $request->allocation,
+                'status' => 'posted',
+                'cashout_id' => $request->cashout_id,
+            ]);
+
+            // Update cashout status to paid if fully allocated
+            $totalCashoutAllocated = PaymentAllocation::where('cashout_id', $cashout->id)
+                ->sum('allocation');
+            
+            if ($totalCashoutAllocated >= $cashout->amount) {
+                $cashout->status = 'paid';
+                $cashout->save();
+            }
+
+            return response()->json([
+                'message' => 'Cashout allocation has been saved successfully',
+                'data' => $allocation
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while saving the cashout allocation',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function generateCashoutNumber(): string
     {
         $prefix = 'CSH';

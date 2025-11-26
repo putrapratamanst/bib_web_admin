@@ -43,6 +43,7 @@ Route::get('/payment-allocation/datatables', [\App\Http\Controllers\Api\PaymentA
 Route::post('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'store'])->name('api.payment-allocations.store');
 Route::post('/payment-allocation/{cashbankID}', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankID'])->name('api.payment-allocations.storeByCashBankID');
 Route::post('/payment-allocation/{cashbankID}/store-all', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeAll'])->name('api.payment-allocations.storeAll');
+Route::post('/payment-allocation/{cashbankID}/cashout', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankIDForCashout'])->name('api.payment-allocations.storeByCashBankIDForCashout');
 
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');

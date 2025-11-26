@@ -35,62 +35,98 @@ class PaymentAllocationController extends Controller
     public function show($id)
     {
         $cashBank = CashBank::with('contact')->where('id', $id)->first();
-        // Get all debit note billings for the contact
-        $debitNoteBillings = DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
-            $query->where('contact_id', $cashBank->contact_id);
-        })
-        ->with(['debitNote.contract', 'debitNote' => function($query) {
-            $query->select('id', 'number', 'currency_code', 'contact_id', 'contract_id');
-        }])
-        ->select([
-            'id',
-            'debit_note_id',
-            'billing_number',
-            'date',
-            'due_date',
-            'amount',
-            'status'
-        ])
-        ->get()
-        ->map(function($billing) use ($cashBank){
-            // Calculate allocated amount for this billing across ALL cash banks
-            $total_allocated = PaymentAllocation::where('debit_note_billing_id', $billing->id)
-                ->sum('allocation');
-            // Calculate allocated amount from this cash bank specifically
-            $allocated_on_this_cashbank = PaymentAllocation::where('debit_note_billing_id', $billing->id)
-                ->where('cash_bank_id', $cashBank->id)
-                ->sum('allocation');
+        
+        // Check if type is 'receive' or 'pay'
+        if ($cashBank->type === 'receive') {
+            // Get all debit note billings for the contact
+            $debitNoteBillings = DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
+                $query->where('contact_id', $cashBank->contact_id);
+            })
+            ->with(['debitNote.contract', 'debitNote' => function($query) {
+                $query->select('id', 'number', 'currency_code', 'contact_id', 'contract_id');
+            }])
+            ->select([
+                'id',
+                'debit_note_id',
+                'billing_number',
+                'date',
+                'due_date',
+                'amount',
+                'status'
+            ])
+            ->get()
+            ->map(function($billing) use ($cashBank){
+                // Calculate allocated amount for this billing across ALL cash banks
+                $total_allocated = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                    ->sum('allocation');
+                // Calculate allocated amount from this cash bank specifically
+                $allocated_on_this_cashbank = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                    ->where('cash_bank_id', $cashBank->id)
+                    ->sum('allocation');
 
-            // Calculate total credit note amount applied to this billing (reduce outstanding)
-            $credit_note = CreditNote::where('billing_id', $billing->id);
-            $credit_note_amount = $credit_note->sum('amount');
+                // Calculate total credit note amount applied to this billing (reduce outstanding)
+                $credit_note = CreditNote::where('billing_id', $billing->id);
+                $credit_note_amount = $credit_note->sum('amount');
 
-            // Net amount after credit notes
-            $net_amount = floatval($billing->amount) - floatval($credit_note_amount);
+                // Net amount after credit notes
+                $net_amount = floatval($billing->amount) - floatval($credit_note_amount);
 
-            // Expose both amounts to the view: total allocated and allocated for this cash bank
-            $billing->total_allocated = $total_allocated;
-            $billing->allocated_amount = $allocated_on_this_cashbank;
+                // Expose both amounts to the view: total allocated and allocated for this cash bank
+                $billing->total_allocated = $total_allocated;
+                $billing->allocated_amount = $allocated_on_this_cashbank;
 
-            // Expose credit note and net amount to the view for clarity
-            $billing->credit_note_amount = $credit_note_amount;
-            $billing->amount = $net_amount;
+                // Expose credit note and net amount to the view for clarity
+                $billing->credit_note_amount = $credit_note_amount;
+                $billing->amount = $net_amount;
 
-            // Remaining amount is net amount minus total allocations (across all cash banks)
-            // Clamp to 0 to avoid negative values from rounding or over-allocation
-            $billing->remaining_amount = max(0, round($net_amount - $total_allocated, 2));
-            return $billing;
-        })
-        // Only include billings that still have remaining amount (i.e., not fully allocated)
-        ->filter(function($billing) {
-            return ($billing->remaining_amount ?? 0) > 0;
-        })
-        ->values();
+                // Remaining amount is net amount minus total allocations (across all cash banks)
+                // Clamp to 0 to avoid negative values from rounding or over-allocation
+                $billing->remaining_amount = max(0, round($net_amount - $total_allocated, 2));
+                return $billing;
+            })
+            // Only include billings that still have remaining amount (i.e., not fully allocated)
+            ->filter(function($billing) {
+                return ($billing->remaining_amount ?? 0) > 0;
+            })
+            ->values();
 
-        return view('transaction.paymentallocation.show', [
-            'cashBank' => $cashBank,
-            'debitNoteBillings' => $debitNoteBillings
-        ]);
+            return view('transaction.paymentallocation.show', [
+                'cashBank' => $cashBank,
+                'debitNoteBillings' => $debitNoteBillings,
+                'cashouts' => collect([])
+            ]);
+        } else {
+            // Type is 'pay' - get cashouts
+            $cashouts = Cashout::with(['insurance', 'debitNote', 'debitNoteBilling'])
+                ->where('status', 'pending')
+                ->get()
+                ->map(function($cashout) use ($cashBank) {
+                    // Calculate allocated amount for this cashout across ALL cash banks
+                    $total_allocated = PaymentAllocation::where('cashout_id', $cashout->id)
+                        ->sum('allocation');
+                    // Calculate allocated amount from this cash bank specifically
+                    $allocated_on_this_cashbank = PaymentAllocation::where('cashout_id', $cashout->id)
+                        ->where('cash_bank_id', $cashBank->id)
+                        ->sum('allocation');
+
+                    $cashout->total_allocated = $total_allocated;
+                    $cashout->allocated_amount = $allocated_on_this_cashbank;
+                    $cashout->remaining_amount = max(0, round($cashout->amount - $total_allocated, 2));
+                    
+                    return $cashout;
+                })
+                // Only include cashouts that still have remaining amount
+                ->filter(function($cashout) {
+                    return ($cashout->remaining_amount ?? 0) > 0;
+                })
+                ->values();
+
+            return view('transaction.paymentallocation.show', [
+                'cashBank' => $cashBank,
+                'debitNoteBillings' => collect([]),
+                'cashouts' => $cashouts
+            ]);
+        }
     }
 
     public function post(Request $request, $id)
