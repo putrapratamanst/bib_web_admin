@@ -16,9 +16,10 @@ class DebitNoteReport extends Component
 
     public $date_from;
     public $date_to;
+    public $as_of_date;
     public $contact_id = '';
     public $status = '';
-    public $currency_code = '';
+    public $contract_type_id = '';
     public $is_posted = '';
     public $page = 1;
 
@@ -26,9 +27,10 @@ class DebitNoteReport extends Component
 
     public function mount()
     {
-        // Set default date range to current month
-        $this->date_from = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $this->date_to = Carbon::now()->endOfMonth()->format('Y-m-d');
+        // Set default as_of_date to today, date_from and date_to are empty
+        $this->date_from = null;
+        $this->date_to = null;
+        $this->as_of_date = Carbon::now()->format('Y-m-d');
     }
 
     public function updatingDateFrom()
@@ -37,6 +39,11 @@ class DebitNoteReport extends Component
     }
 
     public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingAsOfDate()
     {
         $this->resetPage();
     }
@@ -51,7 +58,7 @@ class DebitNoteReport extends Component
         $this->resetPage();
     }
 
-    public function updatingCurrencyCode()
+    public function updatingContractTypeId()
     {
         $this->resetPage();
     }
@@ -63,7 +70,7 @@ class DebitNoteReport extends Component
 
     public function render()
     {
-        $query = DebitNote::with(['contact', 'contract', 'creditNotes', 'paymentAllocations', 'billings'])
+        $query = DebitNote::with(['contact', 'contract.contractType', 'creditNotes', 'paymentAllocations', 'billings'])
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -76,14 +83,17 @@ class DebitNoteReport extends Component
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
             })
-            ->when($this->currency_code, function ($q) {
-                $q->where('currency_code', $this->currency_code);
+            ->when($this->contract_type_id, function ($q) {
+                $q->whereHas('contract', function ($q) {
+                    $q->where('contract_type_id', $this->contract_type_id);
+                });
             })
             ->when($this->is_posted !== '', function ($q) {
                 $q->where('is_posted', $this->is_posted);
             })
             ->orderBy('date', 'desc')
-            ->orderBy('number', 'desc');
+            ->orderBy('number', 'desc')
+            ->limit(1000); // Limit to 1000 debit notes to prevent performance issues
 
         // Get matching debit notes and flatten to billing rows
         $debitNotes = $query->get();
@@ -146,8 +156,10 @@ class DebitNoteReport extends Component
                 ->when($this->status, function ($q) {
                     $q->where('status', $this->status);
                 })
-                ->when($this->currency_code, function ($q) {
-                    $q->where('currency_code', $this->currency_code);
+                ->when($this->contract_type_id, function ($q) {
+                    $q->whereHas('contract', function ($q) {
+                        $q->where('contract_type_id', $this->contract_type_id);
+                    });
                 })
                 ->when($this->is_posted !== '', function ($q) {
                     $q->where('is_posted', $this->is_posted);
@@ -156,11 +168,14 @@ class DebitNoteReport extends Component
             ->orderBy('display_name')
             ->get();
 
+        // Get contract types for filter dropdown
+        $contractTypes = \App\Models\ContractType::orderBy('name')->get();
 
         return view('livewire.report.debit-note-report', [
             'debitNotes' => $debitNotes,
             'totals' => $totals,
-            'contacts' => $contacts
+            'contacts' => $contacts,
+            'contractTypes' => $contractTypes
         ]);
     }
 
@@ -180,8 +195,10 @@ class DebitNoteReport extends Component
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
             })
-            ->when($this->currency_code, function ($q) {
-                $q->where('currency_code', $this->currency_code);
+            ->when($this->contract_type_id, function ($q) {
+                $q->whereHas('contract', function ($q) {
+                    $q->where('contract_type_id', $this->contract_type_id);
+                });
             })
             ->when($this->is_posted !== '', function ($q) {
                 $q->where('is_posted', $this->is_posted);
@@ -209,16 +226,13 @@ class DebitNoteReport extends Component
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
                     $amount = $billing->amount ?? 0;
-
                     $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
 
-                    // If billing is fully allocated (allocation equals billing amount), skip it
-                    if (round($amount - $paymentForBilling, 2) == 0) {
-                        continue;
-                    }
-
-                    // Count this billing row
+                    // Count all billing rows (same as displayed in table)
                     $totals['total_records']++;
+
+                    // Calculate outstanding for this billing
+                    $outstanding = $amount - $creditNotesAmount - $paymentForBilling;
 
                     if (($dn->currency_code ?? 'IDR') === 'IDR') {
                         $totals['total_amount_idr'] += $amount;
@@ -236,11 +250,7 @@ class DebitNoteReport extends Component
                 $amount = $dn->amount ?? 0;
                 $totalAllocation = $dn->paymentAllocations->sum('allocation');
 
-                // If the debit note amount is fully allocated, skip it
-                if (round($amount - $totalAllocation, 2) == 0) {
-                    continue;
-                }
-
+                // Count all debit notes without billings (same as displayed in table)
                 $totals['total_records']++;
 
                 if (($dn->currency_code ?? 'IDR') === 'IDR') {
@@ -266,9 +276,10 @@ class DebitNoteReport extends Component
         $params = [
             'date_from' => $this->date_from,
             'date_to' => $this->date_to,
+            'as_of_date' => $this->as_of_date,
             'contact_id' => $this->contact_id,
             'status' => $this->status,
-            'currency_code' => $this->currency_code,
+            'contract_type_id' => $this->contract_type_id,
             'is_posted' => $this->is_posted,
             'format' => 'excel'
         ];

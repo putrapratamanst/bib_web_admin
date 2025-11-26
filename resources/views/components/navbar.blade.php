@@ -106,12 +106,6 @@
                                 Cashout Report <span class="badge bg-success">new</span>
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('report.cashout.reconciliation') }}">
-                                <i class="fas fa-balance-scale me-1"></i>
-                                Cashout Reconciliation <span class="badge bg-success">new</span>
-                            </a>
-                        </li>
                     </ul>
                 </li>
             </ul>

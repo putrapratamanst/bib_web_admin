@@ -20,7 +20,7 @@ class CashoutReportController extends Controller
         $insurance_id = $request->input('insurance_id');
         $status = $request->input('status');
 
-        $query = Cashout::with(['debitNote.contract.contact', 'insurance'])
+        $query = Cashout::with(['debitNote.contract.contact', 'debitNote.contract.contractType', 'insurance'])
             // Filter by date range
             ->when($from_date && $to_date, function ($q) use ($from_date, $to_date) {
                 $q->whereBetween('date', [
@@ -45,11 +45,14 @@ class CashoutReportController extends Controller
 
             $cashouts = $query->get()->map(function ($cashout) {
             return [
+                'id' => $cashout->id,
                 'cashout_number' => $cashout->number,
                 'cashout_date' => $cashout->date_formatted,
                 'due_date' => $cashout->due_date_formatted,
                 'debit_note_number' => $cashout->debitNote->number,
                 'contract_number' => $cashout->debitNote->contract->number,
+                'policy_number' => $cashout->debitNote->contract->policy_number ?? '-',
+                'contract_type' => $cashout->debitNote->contract->contractType->name ?? '-',
                 'client_name' => $cashout->debitNote->contract->contact->display_name,
                 'insurance_name' => $cashout->insurance->display_name,
                 'currency_code' => $cashout->currency_code,

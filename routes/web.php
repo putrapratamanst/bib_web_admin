@@ -99,7 +99,7 @@ Route::prefix('report')->group(function () {
     Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
     Route::get('/console', [\App\Http\Controllers\Report\ConsoleReportController::class, 'index'])->name('report.console.index');
     Route::get('/piutang', [\App\Http\Controllers\Report\PiutangReportController::class, 'index'])->name('report.piutang.index');
-    Route::get('/cashout', [\App\Http\Controllers\Report\CashoutReportController::class, 'index'])->name('report.cashout.index');
+    Route::get('/cashout', function() { return view('report.cashout'); })->name('report.cashout.index');
     Route::get('/cashout-reconciliation', [\App\Http\Controllers\Report\CashoutReportController::class, 'reconciliation'])->name('report.cashout.reconciliation');
 
     // Balance Sheet

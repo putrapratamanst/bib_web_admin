@@ -46,11 +46,18 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="currency_code" class="form-label">Currency</label>
-                                <select wire:model.live="currency_code" class="form-select" id="currency_code">
-                                    <option value="">All Currencies</option>
-                                    <option value="IDR">IDR</option>
-                                    <option value="USD">USD</option>
+                                <label for="as_of_date" class="form-label">As of Date</label>
+                                <input type="date" wire:model.live="as_of_date" class="form-control" id="as_of_date">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="contract_type_id" class="form-label">Type Insurance</label>
+                                <select wire:model.live="contract_type_id" class="form-select" id="contract_type_id">
+                                    <option value="">All Types</option>
+                                    @foreach($contractTypes as $type)
+                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -64,7 +71,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-flex gap-2">
@@ -174,14 +181,15 @@
                         <tr>
                             <th>DN Number</th>
                             <th>Billing Number</th>
-                            <th>Contract</th>
+                            <th>Contract Number </th>
+                            <th>Policy Number </th>
                             <th>Contact</th>
                             <th>Date</th>
                             <th>Due Date</th>
-                            <th>Currency</th>
+                            <th>Days Overdue</th>
                             <th>Amount</th>
                             <th>Outstanding</th>
-                            <th>Status</th>
+                            <!-- <th>Status</th> -->
                             <th>Posted</th>
                             <th>Actions</th>
                         </tr>
@@ -226,6 +234,13 @@
                                     @endif
                                 </td>
                                 <td>
+                                    @if($debitNote->contract)
+                                        {{ $debitNote->contract->policy_number }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @if($debitNote->contact)
                                         {{ $debitNote->contact->display_name }}
                                     @else
@@ -235,14 +250,22 @@
                                 <td>{{ $billing && $billing->date ? \Carbon\Carbon::parse($billing->date)->format('d/m/Y') : ($debitNote->date ? \Carbon\Carbon::parse($debitNote->date)->format('d/m/Y') : '-') }}</td>
                                 <td>
                                     {{ $billing && $billing->due_date ? \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') : ($debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') : '-') }}
-                                    @if(($billing && $billing->due_date && \Carbon\Carbon::parse($billing->due_date)->isPast()) || ($debitNote->due_date && \Carbon\Carbon::parse($debitNote->due_date)->isPast()))
-                                        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Overdue</small>
-                                    @endif
                                 </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ $debitNote->currency_code }}</span>
-                                    @if($debitNote->currency_code !== 'IDR')
-                                        <br><small class="text-muted">Rate: {{ number_format($debitNote->exchange_rate, 2, ',', '.') }}</small>
+                                <td class="text-center">
+                                    @php
+                                        $dueDate = $billing && $billing->due_date ? \Carbon\Carbon::parse($billing->due_date) : ($debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date) : null);
+                                        $daysOverdue = $dueDate ? (int)now()->diffInDays($dueDate, false) : null;
+                                    @endphp
+                                    @if($daysOverdue !== null)
+                                        @if($daysOverdue < 0)
+                                            <span class="badge bg-danger">{{ abs($daysOverdue) }} hari lewat</span>
+                                        @elseif($daysOverdue == 0)
+                                            <span class="badge bg-warning text-dark">Jatuh tempo hari ini</span>
+                                        @else
+                                            <span class="badge bg-success">{{ $daysOverdue }} hari lagi</span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
@@ -262,11 +285,11 @@
                                         </small>
                                     @endif
                                 </td>
-                                <td>
+                                <!-- <td>
                                     <span class="badge bg-{{ $debitNote->status === 'active' ? 'success' : 'secondary' }}">
                                         {{ ucfirst($debitNote->status) }}
                                     </span>
-                                </td>
+                                </td> -->
                                 <td>
                                     <span class="badge bg-{{ $debitNote->is_posted ? 'success' : 'warning' }}">
                                         {{ $debitNote->is_posted ? 'Yes' : 'No' }}
@@ -283,7 +306,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12" class="text-center py-4">
+                                <td colspan="13" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
                                         <p>No debit notes found for the selected criteria.</p>
