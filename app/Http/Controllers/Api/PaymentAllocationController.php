@@ -200,7 +200,7 @@ class PaymentAllocationController extends Controller
             $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
                 ->sum('allocation');
 
-            // Check if allocation exceeds cash bank amount
+                // Check if allocation exceeds cash bank amount
             if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
                 if ($totalAllocated + $request->allocation > $cashBank->amount) {
                     return response()->json([
@@ -224,7 +224,8 @@ class PaymentAllocationController extends Controller
 
             // lakukan cashout disini
             $detailContract = $billing->debitNote->contract;
-            if ($detailContract->details) {
+            if ($totalAllocated == 0) {
+                            if ($detailContract->details) {
                 $listInsurance = $detailContract->details ?? [];
                 $bilAmount = $billing->amount;
                 foreach ($listInsurance as $insurance) {
@@ -264,6 +265,7 @@ class PaymentAllocationController extends Controller
                     // sepertinya cashout saya tidak save , bantu cek
                     $bilAmount = $billing->amount;
                 }
+            }
             }
 
             return response()->json([
