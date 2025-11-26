@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Exports\DebitNoteReportExport;
+use App\Exports\AccountStatementExport;
 use App\Models\DebitNote;
+use App\Models\AccountStatement;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -148,6 +150,71 @@ class ReportController extends Controller
                 'status' => $status,
                 'currency_code' => $currencyCode,
                 'is_posted' => $isPosted,
+            ]
+        ]);
+    }
+
+    public function accountStatement(Request $request)
+    {
+        $chartOfAccountId = $request->get('chart_of_account_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $format = $request->get('format', 'json');
+
+        if (!$chartOfAccountId) {
+            return response()->json([
+                'error' => 'chart_of_account_id is required'
+            ], 400);
+        }
+
+        if ($format === 'excel') {
+            // Generate filename with timestamp
+            $timestamp = Carbon::now()->format('Y-m-d_His');
+            $filename = "account_statement_{$timestamp}.xlsx";
+
+            // Export to Excel
+            return Excel::download(
+                new AccountStatementExport($chartOfAccountId, $dateFrom, $dateTo),
+                $filename
+            );
+        }
+
+        // Return JSON data
+        $statement = AccountStatement::buildStatement($chartOfAccountId, $dateFrom, $dateTo);
+
+        // Transform transactions for JSON response
+        $transformedTransactions = $statement['transactions']->map(function ($transaction) {
+            return [
+                'date' => $transaction->date,
+                'date_formatted' => Carbon::parse($transaction->date)->format('d/m/Y'),
+                'transaction_type' => $transaction->transaction_type,
+                'reference' => $transaction->reference,
+                'description' => $transaction->description,
+                'debit' => $transaction->debit,
+                'debit_formatted' => number_format($transaction->debit, 2, ',', '.'),
+                'credit' => $transaction->credit,
+                'credit_formatted' => number_format($transaction->credit, 2, ',', '.'),
+                'balance' => $transaction->balance,
+                'balance_formatted' => number_format($transaction->balance, 2, ',', '.'),
+            ];
+        });
+
+        return response()->json([
+            'data' => $transformedTransactions,
+            'summary' => [
+                'opening_balance' => $statement['opening_balance'],
+                'opening_balance_formatted' => number_format($statement['opening_balance'], 2, ',', '.'),
+                'closing_balance' => $statement['closing_balance'],
+                'closing_balance_formatted' => number_format($statement['closing_balance'], 2, ',', '.'),
+                'total_debit' => $statement['total_debit'],
+                'total_debit_formatted' => number_format($statement['total_debit'], 2, ',', '.'),
+                'total_credit' => $statement['total_credit'],
+                'total_credit_formatted' => number_format($statement['total_credit'], 2, ',', '.'),
+            ],
+            'filters' => [
+                'chart_of_account_id' => $chartOfAccountId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
             ]
         ]);
     }

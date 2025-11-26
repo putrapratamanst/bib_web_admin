@@ -107,4 +107,7 @@ Route::prefix('report')->group(function () {
     
     // Debit Note Report
     Route::get('/debit-notes', [\App\Http\Controllers\Report\ReportController::class, 'debitNotes'])->name('report.debit-notes.index');
+    
+    // Account Statement Report
+    Route::get('/account-statement', [\App\Http\Controllers\Report\AccountStatementController::class, 'index'])->name('report.account-statement.index');
 });
