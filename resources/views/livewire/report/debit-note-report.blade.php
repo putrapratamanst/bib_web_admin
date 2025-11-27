@@ -210,7 +210,7 @@
                                 $creditApplied = $creditNotesAmount;
                                 $paymentApplied =  $paymentAllocationsAmount;
                                 
-                                $outstandingAmount = $amount - $creditApplied;
+                                $outstandingAmount = $amount - $creditApplied - $paymentApplied;
                             @endphp
                             <tr>
                                 <td>

@@ -10,4 +10,9 @@ class ReportController extends Controller
     {
         return view('report.debit-notes');
     }
+
+    public function cashouts()
+    {
+        return view('report.cashouts');
+    }
 }

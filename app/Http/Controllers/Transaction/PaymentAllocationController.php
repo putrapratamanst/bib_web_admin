@@ -99,6 +99,7 @@ class PaymentAllocationController extends Controller
             // Type is 'pay' - get cashouts
             $cashouts = Cashout::with(['insurance', 'debitNote', 'debitNoteBilling'])
                 ->where('status', 'pending')
+                ->orderBy('date', 'desc')
                 ->get()
                 ->map(function($cashout) use ($cashBank) {
                     // Calculate allocated amount for this cashout across ALL cash banks

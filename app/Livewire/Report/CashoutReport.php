@@ -18,6 +18,7 @@ class CashoutReport extends Component
     public $insurance_id = '';
     public $contract_type_id = '';
     public $status = '';
+    public $currency_code = '';
 
     protected $paginationTheme = 'bootstrap';
 
@@ -53,9 +54,14 @@ class CashoutReport extends Component
         $this->resetPage();
     }
 
+    public function updatingCurrencyCode()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $query = Cashout::with(['debitNote.contract.contact', 'debitNote.contract.contractType', 'insurance'])
+        $query = Cashout::with(['debitNote.contract.contact', 'debitNote.contract.contractType', 'debitNoteBilling', 'insurance'])
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -72,6 +78,9 @@ class CashoutReport extends Component
             })
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
+            })
+            ->when($this->currency_code, function ($q) {
+                $q->where('currency_code', $this->currency_code);
             })
             ->orderBy('date', 'desc')
             ->orderBy('number', 'desc');
@@ -101,7 +110,7 @@ class CashoutReport extends Component
 
     private function calculateTotals()
     {
-        $query = Cashout::with(['debitNote.contract'])
+        $query = Cashout::query()
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -118,34 +127,34 @@ class CashoutReport extends Component
             })
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
+            })
+            ->when($this->currency_code, function ($q) {
+                $q->where('currency_code', $this->currency_code);
             });
 
-        $cashouts = $query->get();
-
         return [
-            'total_records' => $cashouts->count(),
-            'total_amount' => $cashouts->sum('amount'),
-            'pending_count' => $cashouts->where('status', 'pending')->count(),
-            'pending_amount' => $cashouts->where('status', 'pending')->sum('amount'),
-            'paid_count' => $cashouts->where('status', 'paid')->count(),
-            'paid_amount' => $cashouts->where('status', 'paid')->sum('amount'),
-            'cancelled_count' => $cashouts->where('status', 'cancelled')->count(),
-            'cancelled_amount' => $cashouts->where('status', 'cancelled')->sum('amount'),
+            'total_records' => $query->count(),
+            'total_amount_idr' => $query->where('currency_code', 'IDR')->sum('amount'),
+            'total_amount_usd' => $query->where('currency_code', 'USD')->sum('amount'),
+            'pending_count' => $query->where('status', 'pending')->count(),
+            'paid_count' => $query->where('status', 'paid')->count(),
+            'cancelled_count' => $query->where('status', 'cancelled')->count(),
         ];
     }
 
     public function exportExcel()
     {
         $params = [
-            'from_date' => $this->date_from,
-            'to_date' => $this->date_to,
+            'date_from' => $this->date_from,
+            'date_to' => $this->date_to,
             'insurance_id' => $this->insurance_id,
             'contract_type_id' => $this->contract_type_id,
             'status' => $this->status,
+            'currency_code' => $this->currency_code,
             'format' => 'excel'
         ];
 
-        $url = route('api.report.cashout.index') . '?' . http_build_query($params);
+        $url = route('api.reports.cashouts') . '?' . http_build_query($params);
 
         $this->dispatch('downloadFile', ['url' => $url]);
     }
