@@ -5,8 +5,16 @@
 @section('content')
 <div class="container">
     <div class="card">
-        <div class="card-header">
-            Detail Contract
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Detail Contract</span>
+            @php
+                $badgeClass = match($contract->approval_status) {
+                    'approved' => 'bg-success',
+                    'rejected' => 'bg-danger',
+                    default => 'bg-warning'
+                };
+            @endphp
+            <span class="badge {{ $badgeClass }}">{{ ucfirst($contract->approval_status) }}</span>
         </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
@@ -158,6 +166,29 @@
                     </div>
                 </div>
 
+                @if($contract->approval_status === 'approved')
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-success">
+                            <strong>Approved by:</strong> {{ $contract->approvedBy->name ?? 'N/A' }}<br>
+                            <strong>Approved at:</strong> {{ $contract->approved_at ? $contract->approved_at->format('d M Y H:i') : 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                @if($contract->approval_status === 'rejected' && $contract->rejection_reason)
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-danger">
+                            <strong>Rejected by:</strong> {{ $contract->approvedBy->name ?? 'N/A' }}<br>
+                            <strong>Rejected at:</strong> {{ $contract->approved_at ? $contract->approved_at->format('d M Y H:i') : 'N/A' }}<br>
+                            <strong>Reason:</strong> {{ $contract->rejection_reason }}
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <table id="tableDetails" class="table table-sm table-bordered table-hover">
                     <thead>
                         <tr>
@@ -189,10 +220,110 @@
                 </table>
 
             </div>
-            <div class="card-footer">
-                <a href="{{ route('transaction.contracts.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ route('transaction.contracts.index') }}" class="btn btn-outline-secondary">Back</a>
+                
+                @auth
+                    @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                    <div>
+                        <a href="{{ route('transaction.contracts.edit', $contract->id) }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                    </div>
+                    @endif
+
+                    @if(auth()->user()->role === 'approver' && $contract->approval_status === 'pending')
+                    <div>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle"></i> Reject
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnApprove">
+                            <i class="bi bi-check-circle"></i> Approve
+                        </button>
+                    </div>
+                    @endif
+                @endauth
             </div>
         </form>
     </div>
 </div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Reject Contract</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formReject">
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Rejection Reason<sup class="text-danger">*</sup></label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="btnRejectConfirm">Reject Contract</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Approve Contract
+        $('#btnApprove').on('click', function() {
+            if (confirm('Are you sure you want to approve this contract?')) {
+                $.ajax({
+                    url: '/api/contracts/{{ $contract->id }}/approve',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON?.message || 'Failed to approve contract');
+                    }
+                });
+            }
+        });
+
+        // Reject Contract
+        $('#btnRejectConfirm').on('click', function() {
+            const reason = $('#rejection_reason').val().trim();
+            
+            if (!reason) {
+                alert('Please provide a rejection reason');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/contracts/{{ $contract->id }}/reject',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    rejection_reason: reason
+                },
+                success: function(response) {
+                    alert(response.message);
+                    $('#rejectModal').modal('hide');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || 'Failed to reject contract');
+                }
+            });
+        });
+    });
+</script>
+@endpush
 @endsection

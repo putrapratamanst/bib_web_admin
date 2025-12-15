@@ -33,6 +33,10 @@ class Contract extends Model
         'memo',
         'status',
         'covered_item',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
         'created_by',
         'updated_by',
     ];
@@ -40,6 +44,7 @@ class Contract extends Model
     protected $casts = [
         'period_start' => 'date',
         'period_end' => 'date',
+        'approved_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -148,6 +153,11 @@ class Contract extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by', 'id');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'id');
     }
 
     public function details(): HasMany

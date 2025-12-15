@@ -124,6 +124,7 @@ class ContractController extends Controller
                 'memo' => $data['memo'],
                 'status' => 'active',
                 'covered_item' => $data['covered_item'],
+                'approval_status' => 'pending',
                 // 'created_by' => auth()->id()
             ]);
 
@@ -214,5 +215,151 @@ class ContractController extends Controller
         }
 
         return response()->json(['message' => 'Property units successfully saved.']);
+    }
+
+    public function update(ContractStoreRequest $request, $id)
+    {
+        try {
+            $contract = Contract::findOrFail($id);
+
+            // Check if user is admin
+            if (auth()->user()->role !== 'admin') {
+                return response()->json([
+                    'message' => 'Unauthorized. Only admins can update contracts.'
+                ], 403);
+            }
+
+            // Check if contract is pending or rejected
+            if (!in_array($contract->approval_status, ['pending', 'rejected'])) {
+                return response()->json([
+                    'message' => 'Cannot update approved contracts.'
+                ], 403);
+            }
+
+            $data = $request->validated();
+            
+            $contract->update([
+                'contract_status' => $data['contract_status'],
+                'contract_type_id' => $data['contract_type_id'],
+                'number' => $data['number'],
+                'policy_number' => $data['policy_number'] ?? 0,
+                'contact_id' => $data['contact_id'],
+                'period_start' => $data['period_start'],
+                'period_end' => $data['period_end'],
+                'currency_code' => $data['currency_code'],
+                'exchange_rate' => $data['exchange_rate'],
+                'coverage_amount' => $data['coverage_amount'],
+                'gross_premium' => $data['gross_premium'],
+                'discount' => $data['discount'],
+                'stamp_fee' => $data['stamp_fee'],
+                'amount' => $data['amount'],
+                'installment_count' => $data['installment_count'],
+                'memo' => $data['memo'],
+                'covered_item' => $data['covered_item'],
+                'approval_status' => 'pending', // Reset to pending when updated
+            ]);
+
+            // Delete existing details and recreate
+            $contract->details()->delete();
+            
+            if (!empty($data['details'])) {
+                foreach ($data['details'] as $detail) {
+                    $contract->details()->create([
+                        'insurance_id' => $detail['insurance_id'],
+                        'description' => $detail['description'],
+                        'percentage' => $detail['percentage'],
+                        'brokerage_fee' => $detail['brokerage_fee'],
+                        'eng_fee' => $detail['eng_fee'],
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'message' => 'Contract updated successfully',
+                'data' => new ContractResource($contract)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function approve(Request $request, $id)
+    {
+        try {
+            $contract = Contract::findOrFail($id);
+
+            // Check if user is approver
+            if (auth()->user()->role !== 'approver') {
+                return response()->json([
+                    'message' => 'Unauthorized. Only approvers can approve contracts.'
+                ], 403);
+            }
+
+            // Check if already approved
+            if ($contract->approval_status === 'approved') {
+                return response()->json([
+                    'message' => 'Contract already approved.'
+                ], 400);
+            }
+
+            $contract->update([
+                'approval_status' => 'approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'rejection_reason' => null,
+            ]);
+
+            return response()->json([
+                'message' => 'Contract approved successfully.',
+                'data' => new ContractResource($contract)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reject(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'rejection_reason' => 'required|string|max:1000'
+            ]);
+
+            $contract = Contract::findOrFail($id);
+
+            // Check if user is approver
+            if (auth()->user()->role !== 'approver') {
+                return response()->json([
+                    'message' => 'Unauthorized. Only approvers can reject contracts.'
+                ], 403);
+            }
+
+            // Check if already approved
+            if ($contract->approval_status === 'approved') {
+                return response()->json([
+                    'message' => 'Cannot reject an already approved contract.'
+                ], 400);
+            }
+
+            $contract->update([
+                'approval_status' => 'rejected',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'rejection_reason' => $request->rejection_reason,
+            ]);
+
+            return response()->json([
+                'message' => 'Contract rejected successfully.',
+                'data' => new ContractResource($contract)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -5,11 +5,18 @@ use App\Http\Controllers\CashFlowController;
 use App\Http\Controllers\ProfitAndLossController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// Authentication Routes
+Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login']);
+Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
-Route::prefix('master')->group(function () {
+// Protected Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return view('home');
+    })->name('home');
+
+    Route::prefix('master')->group(function () {
     // Chart of Account
     Route::get('/chart-of-accounts', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'index'])->name('master.chart-of-accounts.index');
     Route::get('/chart-of-accounts/create', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'create'])->name('master.chart-of-accounts.create');
@@ -34,6 +41,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/contracts', [\App\Http\Controllers\Transaction\ContractController::class, 'index'])->name('transaction.contracts.index');
     Route::get('/contracts/create', [\App\Http\Controllers\Transaction\ContractController::class, 'create'])->name('transaction.contracts.create');
     Route::get('/contracts/{id}', [\App\Http\Controllers\Transaction\ContractController::class, 'show'])->name('transaction.contracts.show');
+    Route::get('/contracts/{id}/edit', [\App\Http\Controllers\Transaction\ContractController::class, 'edit'])->name('transaction.contracts.edit');
     Route::get('/contracts/add-unit/automobile/{id} ', [\App\Http\Controllers\Transaction\ContractController::class, 'showAddUnit'])->name('transaction.contracts.show-add-unit');
     Route::get('/contracts/add-unit/property/{id} ', [\App\Http\Controllers\Transaction\ContractController::class, 'showAddProperty'])->name('transaction.contracts.show-add-property');
 
@@ -114,3 +122,5 @@ Route::prefix('report')->group(function () {
     // Account Statement Report
     Route::get('/account-statement', [\App\Http\Controllers\Report\AccountStatementController::class, 'index'])->name('report.account-statement.index');
 });
+
+}); // End of auth middleware group

@@ -7,8 +7,10 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/account-category', [\App\Http\Controllers\Api\AccountCategoryController::class, 'index'])->name('api.account-categories.index');
-Route::get('/account-category/select2', [\App\Http\Controllers\Api\AccountCategoryController::class, 'select2'])->name('api.account-categories.select2');
+// Protected API Routes
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/account-category', [\App\Http\Controllers\Api\AccountCategoryController::class, 'index'])->name('api.account-categories.index');
+    Route::get('/account-category/select2', [\App\Http\Controllers\Api\AccountCategoryController::class, 'select2'])->name('api.account-categories.select2');
 
 
 Route::get('/chart-of-account', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'index'])->name('api.chart-of-accounts.index');
@@ -51,6 +53,9 @@ Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController
 Route::get('/contract/select2', [\App\Http\Controllers\Api\ContractController::class, 'select2'])->name('api.contracts.select2');
 Route::get('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'show'])->name('api.contracts.show');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
+Route::put('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'update'])->name('api.contracts.update');
+Route::post('/contracts/{id}/approve', [\App\Http\Controllers\Api\ContractController::class, 'approve'])->name('api.contracts.approve');
+Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractController::class, 'reject'])->name('api.contracts.reject');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
 Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
 
@@ -105,3 +110,5 @@ Route::prefix('report')->group(function () {
     // Account Statement Report
     Route::get('/account-statement', [\App\Http\Controllers\Api\ReportController::class, 'accountStatement'])->name('api.reports.account-statement');
 });
+
+}); // End of auth middleware group

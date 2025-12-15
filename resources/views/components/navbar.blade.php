@@ -114,6 +114,35 @@
                         </li>
                     </ul>
                 </li>
+
+                @auth
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle"></i> {{ auth()->user()->name }}
+                        <!-- @if(auth()->user()->role)
+                            <span class="badge bg-{{ auth()->user()->role === 'admin' ? 'primary' : 'success' }} ms-1">
+                                {{ ucfirst(auth()->user()->role) }}
+                            </span>
+                        @endif -->
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <span class="dropdown-item-text">
+                                <small class="text-muted">{{ auth()->user()->email }}</small>
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+                @endauth
             </ul>
         </div>
     </div>
