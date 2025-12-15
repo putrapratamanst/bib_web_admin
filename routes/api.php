@@ -43,6 +43,7 @@ Route::get('/payment-allocation/datatables', [\App\Http\Controllers\Api\PaymentA
 Route::post('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'store'])->name('api.payment-allocations.store');
 Route::post('/payment-allocation/{cashbankID}', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankID'])->name('api.payment-allocations.storeByCashBankID');
 Route::post('/payment-allocation/{cashbankID}/store-all', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeAll'])->name('api.payment-allocations.storeAll');
+Route::post('/payment-allocation/{cashbankID}/cashout', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankIDForCashout'])->name('api.payment-allocations.storeByCashBankIDForCashout');
 
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
@@ -97,4 +98,10 @@ Route::prefix('report')->group(function () {
     
     // Debit Note Report
     Route::get('/debit-notes', [\App\Http\Controllers\Api\ReportController::class, 'debitNotes'])->name('api.reports.debit-notes');
+    
+    // Cashout Report
+    Route::get('/cashouts', [\App\Http\Controllers\Api\ReportController::class, 'cashouts'])->name('api.reports.cashouts');
+    
+    // Account Statement Report
+    Route::get('/account-statement', [\App\Http\Controllers\Api\ReportController::class, 'accountStatement'])->name('api.reports.account-statement');
 });

@@ -187,14 +187,14 @@ class DebitNoteBillingController extends Controller
         }
     }
 
-    private function generateCashoutNumber(): string
-    {
-        $prefix = 'CSH';
-        $date = now()->format('Ym');
-        $sequence = Cashout::whereRaw('DATE_FORMAT(created_at, "%Y%m") = ?', [$date])->count() + 1;
+        private function generateCashoutNumber(): string
+        {
+            $prefix = 'CSH';
+            $date = now()->format('Ym');
+            $sequence = Cashout::whereRaw('DATE_FORMAT(created_at, "%Y%m") = ?', [$date])->count() + 1;
 
-        return "{$prefix}-{$date}-" . str_pad($sequence, 6, '0', STR_PAD_LEFT);
-    }
+            return "{$prefix}-{$date}-" . str_pad($sequence, 6, '0', STR_PAD_LEFT);
+        }
 
     private function getInstallmentNumber(DebitNoteBilling $billing): int
     {

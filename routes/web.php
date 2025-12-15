@@ -99,7 +99,7 @@ Route::prefix('report')->group(function () {
     Route::get('/download-cash-flow', [CashFlowController::class, 'downloadCashFlow'])->name('report.cashflow.download');
     Route::get('/console', [\App\Http\Controllers\Report\ConsoleReportController::class, 'index'])->name('report.console.index');
     Route::get('/piutang', [\App\Http\Controllers\Report\PiutangReportController::class, 'index'])->name('report.piutang.index');
-    Route::get('/cashout', [\App\Http\Controllers\Report\CashoutReportController::class, 'index'])->name('report.cashout.index');
+    Route::get('/cashout', function() { return view('report.cashout'); })->name('report.cashout.index');
     Route::get('/cashout-reconciliation', [\App\Http\Controllers\Report\CashoutReportController::class, 'reconciliation'])->name('report.cashout.reconciliation');
 
     // Balance Sheet
@@ -107,4 +107,10 @@ Route::prefix('report')->group(function () {
     
     // Debit Note Report
     Route::get('/debit-notes', [\App\Http\Controllers\Report\ReportController::class, 'debitNotes'])->name('report.debit-notes.index');
+    
+    // Cashout Report
+    Route::get('/cashouts', [\App\Http\Controllers\Report\ReportController::class, 'cashouts'])->name('report.cashouts.index');
+    
+    // Account Statement Report
+    Route::get('/account-statement', [\App\Http\Controllers\Report\AccountStatementController::class, 'index'])->name('report.account-statement.index');
 });

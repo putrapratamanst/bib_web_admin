@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Exports\DebitNoteReportExport;
+use App\Exports\CashoutReportExport;
+use App\Exports\AccountStatementExport;
 use App\Models\DebitNote;
+use App\Models\Cashout;
+use App\Models\AccountStatement;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -148,6 +152,211 @@ class ReportController extends Controller
                 'status' => $status,
                 'currency_code' => $currencyCode,
                 'is_posted' => $isPosted,
+            ]
+        ]);
+    }
+
+    public function cashouts(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $insuranceId = $request->get('insurance_id');
+        $status = $request->get('status');
+        $currencyCode = $request->get('currency_code');
+        $contractTypeId = $request->get('contract_type_id');
+        $format = $request->get('format', 'json');
+
+        // Build query
+        $query = Cashout::with(['debitNote.contract.contact', 'debitNote.contract.contractType', 'debitNoteBilling', 'insurance'])
+            ->when($dateFrom, function ($q) use ($dateFrom) {
+                $q->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($q) use ($dateTo) {
+                $q->whereDate('date', '<=', $dateTo);
+            })
+            ->when($insuranceId, function ($q) use ($insuranceId) {
+                $q->where('insurance_id', $insuranceId);
+            })
+            ->when($status, function ($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->when($currencyCode, function ($q) use ($currencyCode) {
+                $q->where('currency_code', $currencyCode);
+            })
+            ->when($contractTypeId, function ($q) use ($contractTypeId) {
+                $q->whereHas('debitNote.contract', function ($q) use ($contractTypeId) {
+                    $q->where('contract_type_id', $contractTypeId);
+                });
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('number', 'desc');
+
+        if ($format === 'excel') {
+            // Generate filename with timestamp
+            $timestamp = Carbon::now()->format('Y-m-d_His');
+            $filename = "cashout_report_{$timestamp}.xlsx";
+
+            // Export to Excel
+            return Excel::download(
+                new CashoutReportExport($dateFrom, $dateTo, $insuranceId, $status, $currencyCode, $contractTypeId),
+                $filename
+            );
+        }
+
+        // Return JSON data
+        $cashouts = $query->paginate($request->get('per_page', 50));
+
+        // Calculate totals
+        $totalsQuery = Cashout::query()
+            ->when($dateFrom, function ($q) use ($dateFrom) {
+                $q->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($q) use ($dateTo) {
+                $q->whereDate('date', '<=', $dateTo);
+            })
+            ->when($insuranceId, function ($q) use ($insuranceId) {
+                $q->where('insurance_id', $insuranceId);
+            })
+            ->when($status, function ($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->when($currencyCode, function ($q) use ($currencyCode) {
+                $q->where('currency_code', $currencyCode);
+            })
+            ->when($contractTypeId, function ($q) use ($contractTypeId) {
+                $q->whereHas('debitNote.contract', function ($q) use ($contractTypeId) {
+                    $q->where('contract_type_id', $contractTypeId);
+                });
+            });
+
+        $totals = [
+            'total_records' => $totalsQuery->count(),
+            'total_amount_idr' => $totalsQuery->where('currency_code', 'IDR')->sum('amount'),
+            'total_amount_usd' => $totalsQuery->where('currency_code', 'USD')->sum('amount'),
+            'total_pending' => $totalsQuery->where('status', 'pending')->count(),
+            'total_paid' => $totalsQuery->where('status', 'paid')->count(),
+            'total_cancelled' => $totalsQuery->where('status', 'cancelled')->count(),
+        ];
+
+        // Transform data for JSON response
+        $transformedData = $cashouts->map(function ($cashout) {
+            // Convert to IDR if currency is not IDR
+            $amountInIdr = $cashout->currency_code === 'IDR'
+                ? $cashout->amount
+                : $cashout->amount * $cashout->exchange_rate;
+
+            return [
+                'id' => $cashout->id,
+                'number' => $cashout->number,
+                'billing_number' => $cashout->debitNoteBilling ? $cashout->debitNoteBilling->billing_number : null,
+                'debit_note_number' => $cashout->debitNote ? $cashout->debitNote->number : null,
+                'contract_number' => $cashout->debitNote && $cashout->debitNote->contract ? $cashout->debitNote->contract->number : null,
+                'policy_number' => $cashout->debitNote && $cashout->debitNote->contract ? $cashout->debitNote->contract->policy_number : null,
+                'contract_type' => $cashout->debitNote && $cashout->debitNote->contract && $cashout->debitNote->contract->contractType ? $cashout->debitNote->contract->contractType->name : null,
+                'client_name' => $cashout->debitNote && $cashout->debitNote->contract && $cashout->debitNote->contract->contact ? $cashout->debitNote->contract->contact->display_name : null,
+                'insurance_name' => $cashout->insurance ? $cashout->insurance->display_name : null,
+                'date' => $cashout->date,
+                'date_formatted' => $cashout->date ? Carbon::parse($cashout->date)->format('d/m/Y') : null,
+                'due_date' => $cashout->due_date,
+                'due_date_formatted' => $cashout->due_date ? Carbon::parse($cashout->due_date)->format('d/m/Y') : null,
+                'currency_code' => $cashout->currency_code,
+                'exchange_rate' => $cashout->exchange_rate,
+                'exchange_rate_formatted' => number_format($cashout->exchange_rate, 2, ',', '.'),
+                'amount' => $cashout->amount,
+                'amount_formatted' => number_format($cashout->amount, 2, ',', '.'),
+                'amount_idr' => $amountInIdr,
+                'amount_idr_formatted' => number_format($amountInIdr, 2, ',', '.'),
+                'installment_number' => $cashout->installment_number,
+                'status' => $cashout->status,
+                'description' => $cashout->description,
+                'created_at' => $cashout->created_at,
+                'created_at_formatted' => $cashout->created_at ? $cashout->created_at->format('d/m/Y H:i') : null,
+            ];
+        });
+
+        return response()->json([
+            'data' => $transformedData,
+            'meta' => [
+                'current_page' => $cashouts->currentPage(),
+                'from' => $cashouts->firstItem(),
+                'last_page' => $cashouts->lastPage(),
+                'per_page' => $cashouts->perPage(),
+                'to' => $cashouts->lastItem(),
+                'total' => $cashouts->total(),
+            ],
+            'totals' => $totals,
+            'filters' => [
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'insurance_id' => $insuranceId,
+                'status' => $status,
+                'currency_code' => $currencyCode,
+                'contract_type_id' => $contractTypeId,
+            ]
+        ]);
+    }
+
+    public function accountStatement(Request $request)
+    {
+        $chartOfAccountId = $request->get('chart_of_account_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $format = $request->get('format', 'json');
+
+        if (!$chartOfAccountId) {
+            return response()->json([
+                'error' => 'chart_of_account_id is required'
+            ], 400);
+        }
+
+        if ($format === 'excel') {
+            // Generate filename with timestamp
+            $timestamp = Carbon::now()->format('Y-m-d_His');
+            $filename = "account_statement_{$timestamp}.xlsx";
+
+            // Export to Excel
+            return Excel::download(
+                new AccountStatementExport($chartOfAccountId, $dateFrom, $dateTo),
+                $filename
+            );
+        }
+
+        // Return JSON data
+        $statement = AccountStatement::buildStatement($chartOfAccountId, $dateFrom, $dateTo);
+
+        // Transform transactions for JSON response
+        $transformedTransactions = $statement['transactions']->map(function ($transaction) {
+            return [
+                'date' => $transaction->date,
+                'date_formatted' => Carbon::parse($transaction->date)->format('d/m/Y'),
+                'transaction_type' => $transaction->transaction_type,
+                'reference' => $transaction->reference,
+                'description' => $transaction->description,
+                'debit' => $transaction->debit,
+                'debit_formatted' => number_format($transaction->debit, 2, ',', '.'),
+                'credit' => $transaction->credit,
+                'credit_formatted' => number_format($transaction->credit, 2, ',', '.'),
+                'balance' => $transaction->balance,
+                'balance_formatted' => number_format($transaction->balance, 2, ',', '.'),
+            ];
+        });
+
+        return response()->json([
+            'data' => $transformedTransactions,
+            'summary' => [
+                'opening_balance' => $statement['opening_balance'],
+                'opening_balance_formatted' => number_format($statement['opening_balance'], 2, ',', '.'),
+                'closing_balance' => $statement['closing_balance'],
+                'closing_balance_formatted' => number_format($statement['closing_balance'], 2, ',', '.'),
+                'total_debit' => $statement['total_debit'],
+                'total_debit_formatted' => number_format($statement['total_debit'], 2, ',', '.'),
+                'total_credit' => $statement['total_credit'],
+                'total_credit_formatted' => number_format($statement['total_credit'], 2, ',', '.'),
+            ],
+            'filters' => [
+                'chart_of_account_id' => $chartOfAccountId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
             ]
         ]);
     }

@@ -20,6 +20,7 @@ class PaymentAllocation extends Model
         'allocation',
         'status',
         'debit_note_billing_id',
+        'cashout_id',
     ];
 
     protected $casts = [
@@ -34,5 +35,10 @@ class PaymentAllocation extends Model
     public function debitNote(): BelongsTo
     {
         return $this->belongsTo(DebitNote::class, 'debit_note_id', 'id');
+    }
+
+    public function cashout(): BelongsTo
+    {
+        return $this->belongsTo(Cashout::class, 'cashout_id', 'id');
     }
 }

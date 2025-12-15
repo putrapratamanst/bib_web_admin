@@ -64,19 +64,33 @@
             </table>
             <div class="card mt-4">
                 <div class="card-header">
-                    Related Debit Note Billings
+                    @if($cashBank->type == 'receive')
+                        Related Debit Note Billings
+                    @else
+                        Related Cashouts
+                    @endif
                 </div>
                 <div class="card-body">
                     @php
                     // Total allocated from THIS cash bank (include allocations even for billings we filtered out)
                     $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
-                        @endphp
-                    @if($debitNoteBillings->isEmpty())
-                    <div class="alert alert-warning">
-                        No related debit note billings found.
-                    </div>
+                    @endphp
+                    
+                    @if($cashBank->type == 'receive')
+                        @if($debitNoteBillings->isEmpty())
+                        <div class="alert alert-warning">
+                            No related debit note billings found.
+                        </div>
+                        @endif
+                    @else
+                        @if($cashouts->isEmpty())
+                        <div class="alert alert-warning">
+                            No pending cashouts found.
+                        </div>
+                        @endif
                     @endif
+                    
                     <div class="alert alert-info mb-3">
                         <div class="row">
                             <div class="col-md-3">
@@ -91,75 +105,131 @@
                                 <strong>Available for Allocation:</strong>
                                 {{ $cashBank->currency_code }} {{ number_format($totalAvailable, 2, ',', '.') }}
                             </div>
-                            <!-- <div class="col-md-3 text-end">
-                                @if($totalAvailable > 0)
-                                <button type="button" class="btn btn-primary btn-sm" id="allocateAll">
-                                    Auto Allocate All
-                                </button>
-                                @endif
-                            </div> -->
                         </div>
                     </div>
-                    @if($cashBank->debitNote)
-                    <p class="text-muted">No related debit notes.</p>
+                    
+                    @if($cashBank->type == 'receive')
+                        <!-- Debit Note Billings Table -->
+                        @if(!$debitNoteBillings->isEmpty())
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Debit Note Number</th>
+                                    <th>Number</th>
+                                    <th>Date</th>
+                                    <th>Due Date</th>
+                                    <th>Contract</th>
+                                    <th>Installment</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Status Alokasi</th>
+                                    <th>New Allocation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($debitNoteBillings as $debitNoteBilling)
+                                <tr>
+                                    <td>{{ $debitNoteBilling->debitNote->number }}</td>
+                                    <td>{{ $debitNoteBilling->billing_number }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($debitNoteBilling->date)->format('d M Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($debitNoteBilling->due_date)->format('d M Y') }}</td>
+                                    <td>{{ $debitNoteBilling->debitNote->contract->number ?? '-' }}</td>
+                                    <td>{{ str_replace('INST', '', substr(strrchr($debitNoteBilling->billing_number, "-"), 1)) }}</td>
+                                    <td class="text-end">{{ $debitNoteBilling->debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNoteBilling->amount, 2, ',', '.') }}</td>
+                                    <td class="text-end">
+                                        <div>Allocated: {{ number_format($debitNoteBilling->allocated_amount, 2, ',', '.') }}</div>
+                                        <div class="text-muted">Available: {{ number_format($debitNoteBilling->remaining_amount, 2, ',', '.') }}</div>
+                                    </td>
+                                    <td>
+                                        @php
+                                        $maxAllocation = min($totalAvailable, $debitNoteBilling->remaining_amount);
+                                        @endphp
+                                        <div class="input-group">
+                                            <input type="number"
+                                                name="allocation[{{ $debitNoteBilling->id }}]"
+                                                class="form-control form-control-sm allocation-input"
+                                                value="{{ $maxAllocation }}"
+                                                max="{{ $maxAllocation }}"
+                                                data-cashbank-amount="{{ $totalAvailable }}"
+                                                data-billing-amount="{{ $debitNoteBilling->remaining_amount }}"
+                                                step="0.01"
+                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                            <button type="button"
+                                                class="btn btn-primary btn-sm save-allocation"
+                                                data-billing-id="{{ $debitNoteBilling->id }}"
+                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                                Save
+                                            </button>
+                                        </div>
+                                        @if($totalAvailable <= 0)
+                                            <small class="text-muted d-block mt-1">Fully allocated</small>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
                     @else
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Debit Note Number</th>
-                                <th>Number</th>
-                                <th>Date</th>
-                                <th>Due Date</th>
-                                <th>Contract</th>
-                                <th>Installment</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-end">Status Alokasi</th>
-                                <th>New Allocation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($debitNoteBillings as $debitNoteBilling)
-                            <tr>
-                                <td>{{ $debitNoteBilling->debitNote->number }}</td>
-                                <td>{{ $debitNoteBilling->billing_number }}</td>
-                                <td>{{ \Carbon\Carbon::parse($debitNoteBilling->date)->format('d M Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($debitNoteBilling->due_date)->format('d M Y') }}</td>
-                                <td>{{ $debitNoteBilling->debitNote->contract->number ?? '-' }}</td>
-                                <td>{{ str_replace('INST', '', substr(strrchr($debitNoteBilling->billing_number, "-"), 1)) }}</td>
-                                <td class="text-end">{{ $debitNoteBilling->debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNoteBilling->amount, 2, ',', '.') }}</td>
-                                <td class="text-end">
-                                    <div>Allocated: {{ number_format($debitNoteBilling->allocated_amount, 2, ',', '.') }}</div>
-                                    <div class="text-muted">Available: {{ number_format($debitNoteBilling->remaining_amount, 2, ',', '.') }}</div>
-                                </td>
-                                <td>
-                                    @php
-                                    $maxAllocation = min($totalAvailable, $debitNoteBilling->remaining_amount);
-                                    @endphp
-                                    <div class="input-group">
-                                        <input type="number"
-                                            name="allocation[{{ $debitNoteBilling->id }}]"
-                                            class="form-control form-control-sm allocation-input"
-                                            value="{{ $maxAllocation }}"
-                                            max="{{ $maxAllocation }}"
-                                            data-cashbank-amount="{{ $totalAvailable }}"
-                                            data-billing-amount="{{ $debitNoteBilling->remaining_amount }}"
-                                            step="0.01"
-                                            {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                        <button type="button"
-                                            class="btn btn-primary btn-sm save-allocation"
-                                            data-billing-id="{{ $debitNoteBilling->id }}"
-                                            {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                            Save
-                                        </button>
-                                    </div>
-                                    @if($totalAvailable <= 0)
-                                        <small class="text-muted d-block mt-1">Fully allocated</small>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                        <!-- Cashouts Table -->
+                        @if(!$cashouts->isEmpty())
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cashout Number</th>
+                                    <th>Insurance</th>
+                                    <th>Date</th>
+                                    <th>Due Date</th>
+                                    <th>Debit Note</th>
+                                    <th>Installment</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Status Alokasi</th>
+                                    <th>New Allocation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($cashouts as $cashout)
+                                <tr>
+                                    <td>{{ $cashout->number }}</td>
+                                    <td>{{ $cashout->insurance->display_name ?? '-' }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($cashout->date)->format('d M Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($cashout->due_date)->format('d M Y') }}</td>
+                                    <td>{{ $cashout->debitNote->number ?? '-' }}</td>
+                                    <td>{{ $cashout->installment_number ?? '-' }}</td>
+                                    <td class="text-end">{{ $cashout->currency_code ?? 'IDR' }} {{ number_format($cashout->amount, 2, ',', '.') }}</td>
+                                    <td class="text-end">
+                                        <div>Allocated: {{ number_format($cashout->allocated_amount, 2, ',', '.') }}</div>
+                                        <div class="text-muted">Available: {{ number_format($cashout->remaining_amount, 2, ',', '.') }}</div>
+                                    </td>
+                                    <td>
+                                        @php
+                                        $maxAllocation = min($totalAvailable, $cashout->remaining_amount);
+                                        @endphp
+                                        <div class="input-group">
+                                            <input type="number"
+                                                name="allocation[{{ $cashout->id }}]"
+                                                class="form-control form-control-sm allocation-input-cashout"
+                                                value="{{ $maxAllocation }}"
+                                                max="{{ $maxAllocation }}"
+                                                data-cashbank-amount="{{ $totalAvailable }}"
+                                                data-cashout-amount="{{ $cashout->remaining_amount }}"
+                                                step="0.01"
+                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                            <button type="button"
+                                                class="btn btn-primary btn-sm save-allocation-cashout"
+                                                data-cashout-id="{{ $cashout->id }}"
+                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                                Save
+                                            </button>
+                                        </div>
+                                        @if($totalAvailable <= 0)
+                                            <small class="text-muted d-block mt-1">Fully allocated</small>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -209,6 +279,7 @@
             });
         });
 
+        // Save allocation for debit note billing (type receive)
         $('.save-allocation').on('click', function() {
             const billingId = $(this).data('billing-id');
             const allocation = $(this).closest('.input-group').find('.allocation-input').val();
@@ -244,7 +315,43 @@
             });
         });
 
-        // Validate allocation input
+        // Save allocation for cashout (type pay)
+        $('.save-allocation-cashout').on('click', function() {
+            const cashoutId = $(this).data('cashout-id');
+            const allocation = $(this).closest('.input-group').find('.allocation-input-cashout').val();
+
+            $.ajax({
+                url: "{{ route('api.payment-allocations.storeByCashBankIDForCashout', ['cashbankID' => $cashBank->id]) }}",
+                method: 'POST',
+                data: {
+                    cashout_id: cashoutId,
+                    allocation: allocation,
+                    cash_bank_id: "{{ $cashBank->id }}"
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Cashout allocation saved successfully'
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    let errorMessage = 'An error occurred while saving the cashout allocation';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage
+                    });
+                }
+            });
+        });
+
+        // Validate allocation input for billing
         $('.allocation-input').on('input', function() {
             const totalAvailable = parseFloat($(this).data('cashbank-amount')); // now this is totalAvailable
             const billingAvailable = parseFloat($(this).data('billing-amount')); // remaining_amount
@@ -257,6 +364,33 @@
                     maximumFractionDigits: 2
                 });
                 if (totalAvailable < billingAvailable) {
+                    message += '\nSisa cash bank yang tersedia: ' + totalAvailable.toLocaleString('id-ID', {
+                        maximumFractionDigits: 2
+                    });
+                }
+                Swal.fire({
+                    icon: 'warning',
+                    text: message
+                });
+            }
+            if (currentValue < 0) {
+                $(this).val(0);
+            }
+        });
+
+        // Validate allocation input for cashout
+        $('.allocation-input-cashout').on('input', function() {
+            const totalAvailable = parseFloat($(this).data('cashbank-amount'));
+            const cashoutAvailable = parseFloat($(this).data('cashout-amount'));
+            const currentValue = parseFloat($(this).val());
+            const maxAmount = Math.min(totalAvailable, cashoutAvailable);
+
+            if (currentValue > maxAmount) {
+                $(this).val(maxAmount);
+                let message = 'Maksimum alokasi yang tersedia adalah ' + maxAmount.toLocaleString('id-ID', {
+                    maximumFractionDigits: 2
+                });
+                if (totalAvailable < cashoutAvailable) {
                     message += '\nSisa cash bank yang tersedia: ' + totalAvailable.toLocaleString('id-ID', {
                         maximumFractionDigits: 2
                     });

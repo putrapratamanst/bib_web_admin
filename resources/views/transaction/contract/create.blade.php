@@ -195,7 +195,11 @@
                                 <select id="insurance_id_0" name="insurance_id[]" class="form-select" data-placeholder="-- select insurance --"></select>
                             </td>
                             <td>
-                                <input id="description_0" type="text" class="form-control" name="description[]">
+                                <select id="description_0" name="description[]" class="form-select" required>
+                                    <option value="">-- select type --</option>
+                                    <option value="Leader">Leader</option>
+                                    <option value="Member">Member</option>
+                                </select>
                             </td>
                             <td>
                                 <input id="percentage_0" type="text" class="form-control" name="percentage[]">
@@ -278,7 +282,7 @@
             var details = [];
             $('#tableDetails tbody tr').each(function() {
                 var insuranceId = $(this).find('select[name="insurance_id[]"]').val();
-                var description = $(this).find('input[name="description[]"]').val();
+                var description = $(this).find('select[name="description[]"]').val();
                 var percentage = $(this).find('input[name="percentage[]"]').val();
                 var brokerageFee = $(this).find('input[name="brokerage_fee[]"]').val();
                 var engFee = $(this).find('input[name="eng_fee[]"]').val();
@@ -354,8 +358,13 @@
                     <td>
                         <select id="insurance_id_` + rowNumber + `" name="insurance_id[]" class="form-select" data-placeholder="-- select insurance --"></select>
                     </td>
+                    
                     <td>
-                        <input id="description_` + rowNumber + `" type="text" class="form-control" name="description[]">
+                    <select id="description_` + rowNumber + `" name="description[]" class="form-select" required>
+                            <option value="">-- select type --</option>
+                            <option value="Leader">Leader</option>
+                            <option value="Member">Member</option>
+                        </select>
                     </td>
                     <td>
                         <input id="percentage_` + rowNumber + `" type="text" class="form-control" name="percentage[]">

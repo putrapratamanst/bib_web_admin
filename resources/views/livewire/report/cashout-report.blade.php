@@ -1,10 +1,10 @@
 <div>
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>Debit Note Report
+                        <i class="fas fa-chart-bar me-2"></i>Cashout Report
                     </h5>
                 </div>
                 <div class="card-body">
@@ -23,11 +23,11 @@
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="contact_id" class="form-label">Contact</label>
-                                <select wire:model.live="contact_id" class="form-select" id="contact_id">
-                                    <option value="">All Contacts</option>
-                                    @foreach($contacts as $contact)
-                                        <option value="{{ $contact->id }}">{{ $contact->display_name }}</option>
+                                <label for="insurance_id" class="form-label">Insurance Company</label>
+                                <select wire:model.live="insurance_id" class="form-select" id="insurance_id">
+                                    <option value="">All Insurance Companies</option>
+                                    @foreach($insurances as $insurance)
+                                        <option value="{{ $insurance->id }}">{{ $insurance->display_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -37,19 +37,14 @@
                                 <label for="status" class="form-label">Status</label>
                                 <select wire:model.live="status" class="form-select" id="status">
                                     <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="cancelled">Cancelled</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="as_of_date" class="form-label">As of Date</label>
-                                <input type="date" wire:model.live="as_of_date" class="form-control" id="as_of_date">
-                            </div>
-                        </div>
                         <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="contract_type_id" class="form-label">Type Insurance</label>
@@ -63,15 +58,15 @@
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label for="is_posted" class="form-label">Posted Status</label>
-                                <select wire:model.live="is_posted" class="form-select" id="is_posted">
-                                    <option value="">All</option>
-                                    <option value="1">Posted</option>
-                                    <option value="0">Not Posted</option>
+                                <label for="currency_code" class="form-label">Currency</label>
+                                <select wire:model.live="currency_code" class="form-select" id="currency_code">
+                                    <option value="">All Currencies</option>
+                                    <option value="IDR">IDR</option>
+                                    <option value="USD">USD</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-flex gap-2">
@@ -137,13 +132,28 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="card-title">Posted</h6>
-                            <h4 class="mb-0">{{ number_format($totals['total_posted']) }}</h4>
+                            <h6 class="card-title">Pending</h6>
+                            <h4 class="mb-0">{{ number_format($totals['pending_count']) }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Paid</h6>
+                            <h4 class="mb-0">{{ number_format($totals['paid_count']) }}</h4>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-check-circle fa-2x opacity-75"></i>
@@ -152,16 +162,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card bg-danger text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="card-title">Not Posted</h6>
-                            <h4 class="mb-0">{{ number_format($totals['total_unposted']) }}</h4>
+                            <h6 class="card-title">Cancelled</h6>
+                            <h4 class="mb-0">{{ number_format($totals['cancelled_count']) }}</h4>
                         </div>
                         <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                            <i class="fas fa-times-circle fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -172,88 +182,84 @@
     <!-- Data Table -->
     <div class="card">
         <div class="card-header">
-            <h6 class="card-title mb-0">Debit Note Details</h6>
+            <h6 class="card-title mb-0">Cashout Details</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>DN Number</th>
+                            <th>Cashout Number</th>
                             <th>Billing Number</th>
-                            <th>Contract Number </th>
-                            <th>Policy Number </th>
-                            <th>Contact</th>
+                            <th>DN Number</th>
+                            <th>Contract Number</th>
+                            <th>Policy Number</th>
+                            <th>Client</th>
+                            <th>Insurance Company</th>
                             <th>Date</th>
                             <th>Due Date</th>
                             <th>Days Overdue</th>
                             <th>Amount</th>
-                            <th>Outstanding</th>
-                            <!-- <th>Status</th> -->
-                            <th>Posted</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($debitNotes as $row)
-                            @php
-                                $debitNote = $row->debit_note;
-                                $billing = $row->billing;
-
-                                // Use billing amount if available, otherwise debit note amount
-                                $amount = $billing ? $billing->amount : $debitNote->amount;
-
-                                $creditNotesAmount = $row->credit_notes_amount;
-                                $paymentAllocationsAmount = $row->payment_allocations_amount;
-
-       
-                                $creditApplied = $creditNotesAmount;
-                                $paymentApplied =  $paymentAllocationsAmount;
-                                
-                                $outstandingAmount = $amount - $creditApplied - $paymentApplied;
-                            @endphp
+                        @forelse($cashouts as $cashout)
                             <tr>
                                 <td>
-                                    <strong>{{ $debitNote->number }}</strong>
-                                    @if($debitNote->installment > 0)
-                                        <br><small class="text-muted">Installment: {{ $debitNote->installment }}</small>
+                                    <strong>{{ $cashout->number }}</strong>
+                                    @if($cashout->installment_number)
+                                        <br><small class="text-muted">Installment: {{ $cashout->installment_number }}</small>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($billing)
-                                        {{ $billing->billing_number ?? $billing->id }}
+                                    @if($cashout->debitNoteBilling)
+                                        {{ $cashout->debitNoteBilling->billing_number ?? $cashout->debitNoteBilling->id }}
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($debitNote->contract)
-                                        {{ $debitNote->contract->number }}
+                                    @if($cashout->debitNote)
+                                        {{ $cashout->debitNote->number }}
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($debitNote->contract)
-                                        {{ $debitNote->contract->policy_number }}
+                                    @if($cashout->debitNote && $cashout->debitNote->contract)
+                                        {{ $cashout->debitNote->contract->number }}
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($debitNote->contact)
-                                        {{ $debitNote->contact->display_name }}
+                                    @if($cashout->debitNote && $cashout->debitNote->contract)
+                                        {{ $cashout->debitNote->contract->policy_number ?? '-' }}
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $billing && $billing->date ? \Carbon\Carbon::parse($billing->date)->format('d/m/Y') : ($debitNote->date ? \Carbon\Carbon::parse($debitNote->date)->format('d/m/Y') : '-') }}</td>
                                 <td>
-                                    {{ $billing && $billing->due_date ? \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') : ($debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') : '-') }}
+                                    @if($cashout->debitNote && $cashout->debitNote->contract && $cashout->debitNote->contract->contact)
+                                        {{ $cashout->debitNote->contract->contact->display_name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
+                                <td>
+                                    @if($cashout->insurance)
+                                        {{ $cashout->insurance->display_name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>{{ $cashout->date ? \Carbon\Carbon::parse($cashout->date)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $cashout->due_date ? \Carbon\Carbon::parse($cashout->due_date)->format('d/m/Y') : '-' }}</td>
                                 <td class="text-center">
                                     @php
-                                        $dueDate = $billing && $billing->due_date ? \Carbon\Carbon::parse($billing->due_date) : ($debitNote->due_date ? \Carbon\Carbon::parse($debitNote->due_date) : null);
+                                        $dueDate = $cashout->due_date ? \Carbon\Carbon::parse($cashout->due_date) : null;
                                         $daysOverdue = $dueDate ? (int)now()->diffInDays($dueDate, false) : null;
                                     @endphp
                                     @if($daysOverdue !== null)
@@ -269,35 +275,25 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <strong>{{ $debitNote->currency_code }} {{ number_format($amount, 2, ',', '.') }}</strong>
-                                    @if($debitNote->currency_code !== 'IDR')
-                                        <br><small class="text-muted">IDR {{ number_format($amount * $debitNote->exchange_rate, 2, ',', '.') }}</small>
+                                    <strong>{{ $cashout->currency_code }} {{ number_format($cashout->amount, 2, ',', '.') }}</strong>
+                                    @if($cashout->currency_code !== 'IDR')
+                                        <br><small class="text-muted">IDR {{ number_format($cashout->amount * $cashout->exchange_rate, 2, ',', '.') }}</small>
                                     @endif
                                 </td>
-                                <td class="text-end">
-                                    <strong class="{{ $outstandingAmount > 0 ? 'text-danger' : 'text-success' }}">
-                                        {{ $debitNote->currency_code }} {{ number_format($outstandingAmount, 2, ',', '.') }}
-                                    </strong>
-                                    @if($creditApplied > 0 || $paymentApplied > 0)
-                                        <br><small class="text-muted">
-                                            CN: {{ number_format($creditApplied, 2, ',', '.') }} | 
-                                            PA: {{ number_format($paymentApplied, 2, ',', '.') }}
-                                        </small>
-                                    @endif
-                                </td>
-                                <!-- <td>
-                                    <span class="badge bg-{{ $debitNote->status === 'active' ? 'success' : 'secondary' }}">
-                                        {{ ucfirst($debitNote->status) }}
-                                    </span>
-                                </td> -->
                                 <td>
-                                    <span class="badge bg-{{ $debitNote->is_posted ? 'success' : 'warning' }}">
-                                        {{ $debitNote->is_posted ? 'Yes' : 'No' }}
-                                    </span>
+                                    @if($cashout->status === 'pending')
+                                        <span class="badge bg-warning">Pending</span>
+                                    @elseif($cashout->status === 'paid')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif($cashout->status === 'cancelled')
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($cashout->status) }}</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('transaction.debit-notes.show', $debitNote->id) }}" 
+                                        <a href="{{ route('transaction.cashouts.show', $cashout->id) }}" 
                                            class="btn btn-outline-primary" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
@@ -309,7 +305,7 @@
                                 <td colspan="13" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
-                                        <p>No debit notes found for the selected criteria.</p>
+                                        <p>No cashouts found for the selected criteria.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -319,9 +315,9 @@
             </div>
 
             <!-- Pagination -->
-            @if($debitNotes->hasPages())
+            @if($cashouts->hasPages())
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $debitNotes->links() }}
+                    {{ $cashouts->links() }}
                 </div>
             @endif
         </div>

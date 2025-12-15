@@ -4,15 +4,9 @@
 
 @section('content')
 <div class="container">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-money-bill-wave me-2"></i>
-                Cashout Report
-            </h5>
-            <small class="text-muted">Generate cashout reports with filtering options</small>
-        </div>
-        <div class="card-body">
+    @livewire('report.cashout-report')
+</div>
+@endsection
             <!-- Filters Form -->
             <form id="filterForm" class="mb-4">
                 <div class="row g-3">
@@ -102,6 +96,8 @@
                             <th>Due Date</th>
                             <th>Debit Note</th>
                             <th>Contract</th>
+                            <th>Policy Number</th>
+                            <th>Type Insurance</th>
                             <th>Client</th>
                             <th>Insurance</th>
                             <th>Currency</th>
@@ -199,8 +195,13 @@ function displayReport(cashouts) {
     const tbody = $('#reportTableBody');
     tbody.empty();
     
+    // Destroy existing DataTable if it exists
+    if ($.fn.DataTable.isDataTable('#cashout-report-table')) {
+        $('#cashout-report-table').DataTable().destroy();
+    }
+    
     if (cashouts.length === 0) {
-        tbody.append('<tr><td colspan="10" class="text-center">No data available</td></tr>');
+        tbody.append('<tr><td colspan="12" class="text-center">No data available</td></tr>');
         return;
     }
     
@@ -213,6 +214,8 @@ function displayReport(cashouts) {
                 <td>${cashout.due_date}</td>
                 <td>${cashout.debit_note_number}</td>
                 <td>${cashout.contract_number}</td>
+                <td>${cashout.policy_number || '-'}</td>
+                <td>${cashout.contract_type || '-'}</td>
                 <td>${cashout.client_name}</td>
                 <td>${cashout.insurance_name}</td>
                 <td>${cashout.currency_code}</td>
@@ -221,6 +224,30 @@ function displayReport(cashouts) {
             </tr>
         `;
         tbody.append(row);
+    });
+    
+    // Initialize DataTable with pagination
+    $('#cashout-report-table').DataTable({
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        order: [[1, 'desc']], // Sort by date descending
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "Showing 0 to 0 of 0 entries",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
     });
 }
 

@@ -92,6 +92,12 @@
                             <a class="dropdown-item" href="{{ route("report.piutang.index") }}">A/R Aging</a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('report.account-statement.index') }}">
+                                <i class="fas fa-book me-1"></i>
+                                Account Statement <span class="badge bg-info">new</span>
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ route('report.debit-notes.index') }}">
                                 <i class="fas fa-file-invoice me-1"></i>
                                 Debit Note Report <span class="badge bg-primary">new</span>
@@ -104,12 +110,6 @@
                             <a class="dropdown-item" href="{{ route('report.cashout.index') }}">
                                 <i class="fas fa-money-bill-wave me-1"></i>
                                 Cashout Report <span class="badge bg-success">new</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('report.cashout.reconciliation') }}">
-                                <i class="fas fa-balance-scale me-1"></i>
-                                Cashout Reconciliation <span class="badge bg-success">new</span>
                             </a>
                         </li>
                     </ul>
