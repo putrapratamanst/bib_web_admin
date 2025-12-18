@@ -32,6 +32,13 @@ Route::get('/contact/select2', [\App\Http\Controllers\Api\ContactController::cla
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->name('api.contacts.store');
 Route::put('/contact/{id}', [\App\Http\Controllers\Api\ContactController::class, 'update'])->name('api.contacts.update');
 
+// Billing Address
+Route::get('/contact/{contactId}/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.index');
+Route::post('/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'store'])->name('api.billing-addresses.store');
+Route::put('/billing-address/{id}', [\App\Http\Controllers\Api\BillingAddressController::class, 'update'])->name('api.billing-addresses.update');
+Route::delete('/billing-address/{id}', [\App\Http\Controllers\Api\BillingAddressController::class, 'destroy'])->name('api.billing-addresses.destroy');
+Route::post('/billing-address/{id}/set-primary', [\App\Http\Controllers\Api\BillingAddressController::class, 'setPrimary'])->name('api.billing-addresses.set-primary');
+
 // Cash Bank
 Route::get('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 'index'])->name('api.cash-banks.index');
 Route::get('/cash-bank/datatables', [\App\Http\Controllers\Api\CashBankController::class, 'datatables'])->name('api.cash-banks.datatables');
@@ -51,6 +58,7 @@ Route::post('/payment-allocation/{cashbankID}/cashout', [\App\Http\Controllers\A
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
 Route::get('/contract/select2', [\App\Http\Controllers\Api\ContractController::class, 'select2'])->name('api.contracts.select2');
+Route::get('/contract/generate-number', [\App\Http\Controllers\Api\ContractController::class, 'generateNumber'])->name('api.contracts.generate-number');
 Route::get('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'show'])->name('api.contracts.show');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
 Route::put('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'update'])->name('api.contracts.update');

@@ -22,7 +22,7 @@ class DebitNoteDetail extends Model
 
     public function getAmountFormattedAttribute()
     {
-        return number_format($this->amount, 2, ',', '.');
+        return number_format($this->amount, 2, '.', ',');
     }
 
     public function debitNote(): BelongsTo

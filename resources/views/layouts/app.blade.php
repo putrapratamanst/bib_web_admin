@@ -41,8 +41,8 @@
             });
 
             $('.autonumeric').autoNumeric('init', {
-                aSep: '.',
-                aDec: ',',
+                aSep: ',',
+                aDec: '.',
                 aForm: true,
             });
 

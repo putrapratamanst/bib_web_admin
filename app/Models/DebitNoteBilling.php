@@ -65,7 +65,7 @@ class DebitNoteBilling extends Model
 
     public function getAmountFormattedAttribute(): string
     {
-        return number_format($this->getNetAmount(), 2, ',', '.');
+        return number_format($this->getNetAmount(), 2, '.', ',');
     }
 
     /**

@@ -69,28 +69,28 @@ class Contract extends Model
 
     public function getExchangeRateFormattedAttribute(): string
     {
-        return number_format($this->exchange_rate, 2, ",", ".");
+        return number_format($this->exchange_rate, 2, ".", ",");
     }
 
     public function getCoverageAmountFormattedAttribute(): string
     {
-        return number_format($this->coverage_amount, 2, ",", ".");
+        return number_format($this->coverage_amount, 2, ".", ",");
     }
 
     public function getGrossPremiumFormattedAttribute(): string
     {
-        return number_format($this->gross_premium, 2, ",", ".");
+        return number_format($this->gross_premium, 2, ".", ",");
     }
 
     public function getDiscountFormattedAttribute(): string
     {
         // to %
-        return number_format($this->discount, 2, ",", ".") . '%';
+        return number_format($this->discount, 2, ".", ",") . '%';
     }
 
     public function getStampFeeFormattedAttribute(): string
     {
-        return number_format($this->stamp_fee, 2, ",", ".");
+        return number_format($this->stamp_fee, 2, ".", ",");
     }
 
     public function getDiscountAmountAttribute(): float
@@ -102,12 +102,12 @@ class Contract extends Model
     {
         $discountAmount = $this->gross_premium * ($this->discount / 100);
 
-        return number_format($discountAmount, 2, ",", ".");
+        return number_format($discountAmount, 2, ".", ",");
     }
 
     public function getAmountFormattedAttribute(): string
     {
-        return number_format($this->amount, 2, ",", ".");
+        return number_format($this->amount, 2, ".", ",");
     }
 
     public function getPeriodStartFormattedAttribute(): string

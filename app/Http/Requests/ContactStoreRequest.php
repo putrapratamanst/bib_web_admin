@@ -21,6 +21,10 @@ class ContactStoreRequest extends FormRequest
             'name' => 'nullable|min:5|max:100',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
+            'billing_name' => 'nullable|max:100',
+            'billing_address' => 'nullable',
+            'billing_email' => 'nullable|email|max:100',
+            'billing_phone' => 'nullable|max:20',
             'type' => 'required|in:client,agent,insurance',
         ];
     }
@@ -37,6 +41,10 @@ class ContactStoreRequest extends FormRequest
             'email.email' => 'Email must be a valid email address',
             'email.max' => 'Email may not be greater than 100 characters',
             'phone.max' => 'Phone may not be greater than 20 characters',
+            'billing_name.max' => 'Billing name may not be greater than 100 characters',
+            'billing_email.email' => 'Billing email must be a valid email address',
+            'billing_email.max' => 'Billing email may not be greater than 100 characters',
+            'billing_phone.max' => 'Billing phone may not be greater than 20 characters',
             'type.required' => 'Type is required',
             'type.in' => 'Type must be client, agent, or insurance',
         ];

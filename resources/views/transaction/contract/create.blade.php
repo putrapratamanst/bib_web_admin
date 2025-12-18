@@ -54,7 +54,8 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Contract Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required />
+                            <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" required />
+                            <small class="text-muted">Auto-generated when insurance is selected</small>
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -387,6 +388,11 @@
 
         assignInsuranceData("0");
 
+        // Generate contract number when contract type is selected
+        $("#contract_type_id").on("change", function() {
+            tryGenerateContractNumber();
+        });
+
         $("#discount").on("change", function() {
             calculateDiscount();
         });
@@ -432,6 +438,31 @@
                 },
                 minimumInputLength: 2,
             },
+        });
+    }
+
+    function tryGenerateContractNumber() {
+        // Check if contract type is selected
+        var contractTypeId = $("#contract_type_id").val();
+        if (!contractTypeId) {
+            return;
+        }
+
+        // Generate contract number based on contract type
+        generateContractNumber(contractTypeId);
+    }
+
+    function generateContractNumber(contractTypeId) {
+        $.ajax({
+            url: "{{ route('api.contracts.generate-number') }}",
+            method: "GET",
+            data: { contract_type_id: contractTypeId },
+            success: function(response) {
+                $("#number").val(response.data.number);
+            },
+            error: function(xhr) {
+                console.error('Failed to generate contract number:', xhr);
+            }
         });
     }
 

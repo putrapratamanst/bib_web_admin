@@ -55,12 +55,17 @@
                         </div>
                     </div>
                 </div>
+
             </div>
             <div class="card-footer">
                 <button type="submit" id="btnSubmit" class="btn btn-primary">Save</button>
                 <a href="{{ route('master.contacts.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <i class="fas fa-info-circle"></i> Note: You can add billing addresses after creating the contact.
     </div>
 </div>
 @endsection
@@ -126,7 +131,7 @@
                         allowEscapeKey: false,
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = "{{ route('master.contacts.index') }}";
+                            window.location.href = "{{ route('master.contacts.show', '') }}/" + response.data.id;
                         }
                     });
                 },

@@ -42,6 +42,11 @@ class Contact extends Model
         return $this->hasMany(ContactType::class, 'contact_id', 'id');
     }
 
+    public function billingAddresses(): HasMany
+    {
+        return $this->hasMany(BillingAddress::class, 'contact_id', 'id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by', 'id');

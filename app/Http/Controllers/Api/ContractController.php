@@ -101,10 +101,62 @@ class ContractController extends Controller
         ]);
     }
 
+    public function generateNumber(Request $request)
+    {
+        try {
+            $contractTypeId = $request->get('contract_type_id');
+            
+            if (!$contractTypeId) {
+                return response()->json([
+                    'message' => 'Contract Type ID is required'
+                ], 400);
+            }
+
+            // Get contract type
+            $contractType = \App\Models\ContractType::findOrFail($contractTypeId);
+            
+            // Get contract type code (first 3 letters of name, uppercase, remove non-alpha)
+            $contractTypeCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $contractType->name), 0, 3));
+            
+            // Current month and year
+            $month = date('m');
+            $year = date('Y');
+            
+            // Get last contract number for this month and contract type
+            $prefix = "{$contractTypeCode}/{$month}/{$year}/";
+            $lastContract = Contract::where('number', 'like', "{$prefix}%")
+                ->orderBy('number', 'desc')
+                ->first();
+            
+            // Generate running number
+            if ($lastContract) {
+                // Extract last number
+                $lastNumber = (int) substr($lastContract->number, strrpos($lastContract->number, '/') + 1);
+                $runningNumber = $lastNumber + 1;
+            } else {
+                $runningNumber = 1;
+            }
+            
+            // Format: KODE/MM/YYYY/00001
+            $contractNumber = sprintf("%s%05d", $prefix, $runningNumber);
+            
+            return response()->json([
+                'data' => [
+                    'number' => $contractNumber
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function store(ContractStoreRequest $request)
     {
         try {
             $data = $request->validated();
+            
             $contract = Contract::create([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],

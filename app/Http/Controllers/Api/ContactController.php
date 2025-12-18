@@ -79,12 +79,20 @@ class ContactController extends Controller
     {
         try {
             $data = $request->validated();
+            
+            // Extract type field (saved in separate table)
+            $type = $data['type'];
+            unset($data['type']);
+            
+            // Add audit fields
+            $data['created_by'] = auth()->id() ?? 1;
+            $data['updated_by'] = auth()->id() ?? 1;
 
             $contact = Contact::create($data);
 
             // save contact type
             $contact->contactTypes()->create([
-                'type' => $data['type']
+                'type' => $type
             ]);
 
             return response()->json([
@@ -103,13 +111,20 @@ class ContactController extends Controller
     {
         try {
             $data = $request->validated();
+            
+            // Extract type field (saved in separate table)
+            $type = $data['type'];
+            unset($data['type']);
+            
+            // Add audit field for update
+            $data['updated_by'] = auth()->id() ?? 1;
 
             $contact = Contact::find($id);
             $contact->update($data);
 
             // update contact type
             $contact->contactTypes()->update([
-                'type' => $data['type']
+                'type' => $type
             ]);
 
             return response()->json([

@@ -51,7 +51,7 @@ class CashBank extends Model
 
     public function getDisplayAmountAttribute(): string
     {
-        return number_format($this->amount, 2, ',', '.');
+        return number_format($this->amount, 2, '.', ',');
     }
 
     public function contact(): BelongsTo

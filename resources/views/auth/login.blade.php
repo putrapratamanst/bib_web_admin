@@ -24,19 +24,20 @@
         .login-header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 30px;
             text-align: center;
         }
-        .login-header h3 {
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 1.8rem;
+        .logo-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
-        .login-header .company-name {
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            opacity: 0.9;
-            font-weight: 400;
+        .logo-container img {
+            max-width: 160px;
+            height: auto;
+            display: block;
         }
         .login-body {
             padding: 40px;
@@ -63,9 +64,9 @@
             <div class="col-md-5">
                 <div class="login-card">
                     <div class="login-header">
-                        <h3 class="mb-1">Briliant Insurance Brokers</h3>
-                        <p class="mb-0 company-name">PT. BRILLIANT INSURANCE BROKERS</p>
-                        <p class="mb-0 mt-3" style="font-size: 0.9rem;">Login to your account</p>
+                        <div class="logo-container">
+                            <img src="{{ asset('logo.png') }}" alt="Briliant Insurance Brokers Logo">
+                        </div>
                     </div>
                     <div class="login-body">
                         @if ($errors->any())

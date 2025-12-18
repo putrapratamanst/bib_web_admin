@@ -91,12 +91,12 @@ class DebitNote extends Model
 
     public function getExchangeRateFormattedAttribute(): string
     {
-        return number_format($this->exchange_rate, 2, ",", ".");
+        return number_format($this->exchange_rate, 2, ".", ",");
     }
 
     public function getAmountFormattedAttribute(): string
     {
-        return number_format($this->amount, 2, ",", ".");
+        return number_format($this->amount, 2, ".", ",");
     }
 
     public function creditNotes(): HasMany
