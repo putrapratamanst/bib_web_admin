@@ -167,6 +167,17 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label for="documents" class="form-label">Upload Documents (PDF, XLS, XLSX, DOC, DOCX, PPT, PPTX, TXT, JPG, PNG)</label>
+                            <input type="file" name="documents" id="documents" class="form-control" multiple accept=".pdf,.xlsx,.xls,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" />
+                            <small class="text-muted">Max file size: 10MB per file. Multiple files allowed.</small>
+                        </div>
+                        <div id="documentPreview"></div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-3">
                         <label for="installment_count" class="form-label">Installment Count</label>
                         <div class="mb-3">
@@ -326,15 +337,18 @@
                     $("#btnSubmit").attr("disabled", true);
                 },
                 success: function(response) {
-                    Swal.fire({
-                        text: response.message,
-                        icon: "success",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "{{ route('transaction.contracts.index') }}";
-                        }
+                    // Upload documents if any
+                    uploadDocuments(response.data.id, function() {
+                        Swal.fire({
+                            text: response.message,
+                            icon: "success",
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "{{ route('transaction.contracts.index') }}";
+                            }
+                        });
                     });
                 },
                 error: function(xhr) {
@@ -403,6 +417,30 @@
 
         $("#stamp_fee").on("change", function() {
             calculateDiscount();
+        });
+
+        // Document upload preview
+        $("#documents").on("change", function() {
+            let files = this.files;
+            let preview = $("#documentPreview");
+            preview.empty();
+
+            if (files.length > 0) {
+                preview.append('<div class="mt-3"><strong>Selected files:</strong></div>');
+                preview.append('<ul class="list-group mt-2" id="fileList"></ul>');
+                
+                let fileList = $("#fileList");
+                for (let i = 0; i < files.length; i++) {
+                    let file = files[i];
+                    let fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    
+                    if (fileSize > 10) {
+                        fileList.append('<li class="list-group-item text-danger">' + file.name + ' (' + fileSize + 'MB) - <strong>Exceeds 10MB limit</strong></li>');
+                    } else {
+                        fileList.append('<li class="list-group-item">' + file.name + ' (' + fileSize + 'MB)</li>');
+                    }
+                }
+            }
         });
     });
 
@@ -508,5 +546,35 @@
             $coveredItemField.find('input, select, textarea').val('').prop('required', false);
         }
     });
+
+    function uploadDocuments(contractId, callback) {
+        var files = document.getElementById('documents').files;
+
+        if (files.length === 0) {
+            callback();
+            return;
+        }
+
+        var formData = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            formData.append('documents[]', files[i]);
+        }
+
+        $.ajax({
+            url: "{{ route('api.contracts.upload-document', '') }}/" + contractId,
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                console.log('Documents uploaded:', response);
+                callback();
+            },
+            error: function(xhr) {
+                console.error('Error uploading documents:', xhr);
+                callback();
+            },
+        });
+    }
 </script>
 @endpush

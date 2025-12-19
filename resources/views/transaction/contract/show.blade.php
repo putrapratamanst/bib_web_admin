@@ -189,6 +189,26 @@
                 </div>
                 @endif
 
+                <!-- Documents Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6 class="mb-3">Documents</h6>
+                        <div id="documentsContainer">
+                            <div class="alert alert-info">
+                                <i class="bi bi-hourglass"></i> Loading documents...
+                            </div>
+                        </div>
+                        
+                        @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <i class="bi bi-cloud-upload"></i> Add Documents
+                            </button>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
                 <table id="tableDetails" class="table table-sm table-bordered table-hover">
                     <thead>
                         <tr>
@@ -272,9 +292,150 @@
     </div>
 </div>
 
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Documents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formUploadDocument">
+                    <div class="mb-3">
+                        <label for="documentFiles" class="form-label">Select Documents<sup class="text-danger">*</sup></label>
+                        <input type="file" class="form-control" id="documentFiles" name="documents" multiple accept=".pdf,.xlsx,.xls,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" required>
+                        <small class="text-muted">Max file size: 10MB per file. Allowed formats: PDF, XLS, XLSX, DOC, DOCX, PPT, PPTX, TXT, JPG, PNG</small>
+                    </div>
+                    <div id="uploadFilePreview"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnUploadDocument">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Load documents
+        loadDocuments();
+
+        // Document file preview
+        $("#documentFiles").on("change", function() {
+            let files = this.files;
+            let preview = $("#uploadFilePreview");
+            preview.empty();
+
+            if (files.length > 0) {
+                preview.append('<div class="mt-3"><strong>Selected files:</strong></div>');
+                preview.append('<ul class="list-group mt-2" id="fileList"></ul>');
+                
+                let fileList = $("#fileList");
+                for (let i = 0; i < files.length; i++) {
+                    let file = files[i];
+                    let fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    
+                    if (fileSize > 10) {
+                        fileList.append('<li class="list-group-item text-danger">' + file.name + ' (' + fileSize + 'MB) - <strong>Exceeds 10MB limit</strong></li>');
+                    } else {
+                        fileList.append('<li class="list-group-item">' + file.name + ' (' + fileSize + 'MB)</li>');
+                    }
+                }
+            }
+        });
+
+        // Upload document
+        $("#btnUploadDocument").on("click", function() {
+            let files = document.getElementById('documentFiles').files;
+
+            if (files.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+
+            let formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('documents[]', files[i]);
+            }
+
+            $.ajax({
+                url: '/api/contract/{{ $contract->id }}/documents',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                beforeSend: function() {
+                    $("#btnUploadDocument").attr("disabled", true).text('Uploading...');
+                },
+                success: function(response) {
+                    $("#btnUploadDocument").attr("disabled", false).text('Upload');
+                    $('#uploadDocumentModal').modal('hide');
+                    $('#documentFiles').val('');
+                    $('#uploadFilePreview').empty();
+                    
+                    Swal.fire({
+                        text: response.message,
+                        icon: "success",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    }).then(() => {
+                        loadDocuments();
+                    });
+                },
+                error: function(xhr) {
+                    $("#btnUploadDocument").attr("disabled", false).text('Upload');
+                    
+                    let errorMessage = 'Failed to upload documents';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        text: errorMessage,
+                        icon: "error",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    });
+                },
+            });
+        });
+
+        // Delete document
+        $(document).on('click', '.btnDeleteDocument', function() {
+            let documentId = $(this).data('id');
+            let documentName = $(this).data('name');
+
+            if (confirm('Are you sure you want to delete: ' + documentName + '?')) {
+                $.ajax({
+                    url: '/api/contract/{{ $contract->id }}/documents/' + documentId,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            text: response.message,
+                            icon: "success",
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                        }).then(() => {
+                            loadDocuments();
+                        });
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete document');
+                    }
+                });
+            }
+        });
+
         // Approve Contract
         $('#btnApprove').on('click', function() {
             if (confirm('Are you sure you want to approve this contract?')) {
@@ -324,6 +485,46 @@
             });
         });
     });
+
+    function loadDocuments() {
+        $.ajax({
+            url: '/api/contract/{{ $contract->id }}/documents',
+            method: 'GET',
+            success: function(response) {
+                let documents = response.data;
+                let container = $('#documentsContainer');
+                container.empty();
+
+                if (documents.length === 0) {
+                    container.html('<div class="alert alert-info">No documents uploaded yet</div>');
+                } else {
+                    let html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead><tbody>';
+                    
+                    documents.forEach(function(doc) {
+                        html += '<tr>' +
+                                '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
+                                '<td>' + doc.file_size_formatted + '</td>' +
+                                '<td>' + doc.uploaded_at + '</td>' +
+                                '<td>' +
+                                '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ';
+                        
+                        @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                        html += '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>';
+                        @endif
+                        
+                        html += '</td>' +
+                                '</tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    container.html(html);
+                }
+            },
+            error: function(xhr) {
+                $('#documentsContainer').html('<div class="alert alert-danger">Failed to load documents</div>');
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

@@ -37,6 +37,7 @@ class Contract extends Model
         'approved_by',
         'approved_at',
         'rejection_reason',
+        'documents',
         'created_by',
         'updated_by',
     ];
@@ -45,6 +46,7 @@ class Contract extends Model
         'period_start' => 'date',
         'period_end' => 'date',
         'approved_at' => 'datetime',
+        'documents' => 'json',
     ];
 
     protected $appends = [

@@ -414,4 +414,177 @@ class ContractController extends Controller
             ], 500);
         }
     }
+
+    public function uploadDocument(Request $request, $id)
+    {
+        try {
+            $contract = Contract::findOrFail($id);
+
+            $request->validate([
+                'documents' => 'required|array',
+                'documents.*' => 'file|mimes:pdf,xlsx,xls,doc,docx,ppt,pptx,txt,jpg,jpeg,png|max:10240'
+            ]);
+
+            $uploadedDocuments = [];
+            $documents = $contract->documents ?? [];
+            
+            foreach ($request->file('documents') as $file) {
+                $originalFilename = $file->getClientOriginalName();
+                $fileExtension = $file->getClientOriginalExtension();
+                $mimeType = $file->getMimeType();
+                $fileSize = $file->getSize();
+                
+                // Generate unique filename
+                $filename = time() . '_' . uniqid() . '.' . $fileExtension;
+                
+                // Store file in storage/app/documents/contracts/{contract_id}
+                $filePath = $file->storeAs(
+                    "documents/contracts/{$contract->id}",
+                    $filename,
+                    'local'
+                );
+                
+                $docData = [
+                    'id' => uniqid(),
+                    'filename' => $filename,
+                    'original_filename' => $originalFilename,
+                    'file_path' => $filePath,
+                    'mime_type' => $mimeType,
+                    'file_size' => $fileSize,
+                    'file_extension' => $fileExtension,
+                    'created_at' => now()->toDateTimeString(),
+                ];
+                
+                $documents[] = $docData;
+                
+                $uploadedDocuments[] = [
+                    'id' => $docData['id'],
+                    'filename' => $docData['original_filename'],
+                    'file_size_formatted' => $this->formatFileSize($fileSize),
+                    'uploaded_at' => $docData['created_at'],
+                ];
+            }
+
+            $contract->update(['documents' => $documents]);
+
+            return response()->json([
+                'message' => 'Documents uploaded successfully',
+                'data' => $uploadedDocuments
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteDocument($contractId, $documentId)
+    {
+        try {
+            $contract = Contract::findOrFail($contractId);
+            $documents = $contract->documents ?? [];
+            
+            $documentToDelete = null;
+            $documents = array_filter($documents, function($doc) use ($documentId, &$documentToDelete) {
+                if ($doc['id'] === $documentId) {
+                    $documentToDelete = $doc;
+                    return false;
+                }
+                return true;
+            });
+
+            if (!$documentToDelete) {
+                return response()->json([
+                    'message' => 'Document not found'
+                ], 404);
+            }
+
+            // Delete file from storage
+            \Storage::delete($documentToDelete['file_path']);
+            
+            // Update contract with remaining documents
+            $contract->update(['documents' => array_values($documents)]);
+
+            return response()->json([
+                'message' => 'Document deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadDocument($contractId, $documentId)
+    {
+        try {
+            $contract = Contract::findOrFail($contractId);
+            $documents = $contract->documents ?? [];
+            
+            $document = null;
+            foreach ($documents as $doc) {
+                if ($doc['id'] === $documentId) {
+                    $document = $doc;
+                    break;
+                }
+            }
+
+            if (!$document) {
+                return response()->json([
+                    'message' => 'Document not found'
+                ], 404);
+            }
+
+            $filePath = storage_path('app/' . $document['file_path']);
+            
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'message' => 'File not found'
+                ], 404);
+            }
+
+            return response()->download($filePath, $document['original_filename']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDocuments($id)
+    {
+        try {
+            $contract = Contract::findOrFail($id);
+            $documents = $contract->documents ?? [];
+            
+            $formattedDocuments = array_map(function($doc) {
+                return [
+                    'id' => $doc['id'],
+                    'filename' => $doc['original_filename'],
+                    'file_extension' => $doc['file_extension'],
+                    'file_size_formatted' => $this->formatFileSize($doc['file_size']),
+                    'uploaded_at' => \Carbon\Carbon::parse($doc['created_at'])->format('d M Y H:i'),
+                ];
+            }, $documents);
+
+            return response()->json([
+                'data' => $formattedDocuments
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function formatFileSize($bytes)
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= (1 << (10 * $pow));
+
+        return round($bytes, 2) . ' ' . $units[$pow];
+    }
 }
