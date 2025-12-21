@@ -38,6 +38,7 @@
                         <th>Contact</th>
                         <th>Period</th>
                         <th>Amount</th>
+                        <th>Status</th>
                         <th>Covered Item</th>
                     </tr>
                 </thead>
@@ -91,6 +92,28 @@
                     data: 'amount_formatted',
                     name: 'amount_formatted',
                     className: 'text-end'
+                },
+                {
+                    data: 'approval_status',
+                    name: 'approval_status',
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        var badgeClass = '';
+                        var statusText = '';
+                        
+                        if (data === 'approved') {
+                            badgeClass = 'bg-success';
+                            statusText = 'Approved';
+                        } else if (data === 'rejected') {
+                            badgeClass = 'bg-danger';
+                            statusText = 'Rejected';
+                        } else {
+                            badgeClass = 'bg-warning';
+                            statusText = 'Pending';
+                        }
+                        
+                        return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
+                    }
                 },
                 {
                     data: 'covered_item',

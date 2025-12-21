@@ -58,6 +58,9 @@
                             <input readonly type="text" value="{{ $contract->policy_number }}" class="form-control" name="policy_number" id="policy_number" />
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_start" class="form-label">Period Start<sup class="text-danger">*</sup></label>
@@ -68,6 +71,12 @@
                         <div class="mb-3">
                             <label for="period_end" class="form-label">Period End<sup class="text-danger">*</sup></label>
                             <input readonly type="text" value="{{ $contract->period_end_formatted }}" class="form-control" name="period_end" id="period_end" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="period_duration" class="form-label">Period Duration</label>
+                            <input readonly type="text" value="{{ $contract->period_start->diffInDays($contract->period_end) }} days" class="form-control" style="background-color: #e9ecef;">
                         </div>
                     </div>
                 </div>

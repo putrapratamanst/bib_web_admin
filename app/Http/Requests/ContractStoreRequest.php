@@ -15,10 +15,19 @@ class ContractStoreRequest extends FormRequest
 
     public function rules(): array
     {
+        // Get contract ID from route if exists (for update)
+        $contractId = $this->route('id');
+        
         return [
             'contract_status' => 'required|in:renewal,new',
             'contract_type_id' => 'required|exists:contract_types,id',
-            'number' => 'nullable|max:100|unique:contracts,number',
+            'number' => [
+                'nullable',
+                'max:100',
+                $contractId 
+                    ? 'unique:contracts,number,' . $contractId . ',id'
+                    : 'unique:contracts,number'
+            ],
             // 'policy_number' => 'required|max:150',
             'contact_id' => 'required|exists:contacts,id',
             'contract_reference_id' => 'nullable|exists:contracts,id',

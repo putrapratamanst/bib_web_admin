@@ -91,6 +91,9 @@
                             <input type="text" name="policy_number" id="policy_number" class="form-control" value="{{ $contract->policy_number }}" />
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_start" class="form-label">Period Start<sup class="text-danger">*</sup></label>
@@ -101,6 +104,13 @@
                         <div class="mb-3">
                             <label for="period_end" class="form-label">Period End<sup class="text-danger">*</sup></label>
                             <input type="text" name="period_end" id="period_end" class="form-control datepicker" value="{{ $contract->period_end ? $contract->period_end->format('d-m-Y') : '' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="period_duration" class="form-label">Period Duration</label>
+                            <input type="text" id="period_duration" class="form-control" readonly style="background-color: #e9ecef;" value="{{ $contract->period_start->diffInDays($contract->period_end) }} days">
+                            <small class="text-muted">Auto-calculated</small>
                         </div>
                     </div>
                 </div>
@@ -216,7 +226,7 @@
                             </div>
                         </div>
                         
-                        <div class="mt-3">
+                        <div class="mt-3 mb-3">
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="bi bi-cloud-upload"></i> Add Documents
                             </button>
@@ -616,6 +626,33 @@
             $coveredItemField.hide();
             $coveredItemField.find('input, select, textarea').val('').prop('required', false);
         }
+    });
+
+    // Calculate period duration
+    function calculatePeriodDuration() {
+        var startDate = $("#period_start").datepicker('getDate');
+        var endDate = $("#period_end").datepicker('getDate');
+        
+        if (startDate && endDate) {
+            var timeDiff = endDate.getTime() - startDate.getTime();
+            var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (daysDiff >= 0) {
+                $("#period_duration").val(daysDiff + " days");
+            } else {
+                $("#period_duration").val("Invalid date range");
+            }
+        } else {
+            $("#period_duration").val("0 days");
+        }
+    }
+
+    $("#period_start").on("change", function() {
+        calculatePeriodDuration();
+    });
+
+    $("#period_end").on("change", function() {
+        calculatePeriodDuration();
     });
 
     function loadDocuments() {
