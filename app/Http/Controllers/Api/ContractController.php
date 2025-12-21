@@ -163,6 +163,7 @@ class ContractController extends Controller
                 'number' => $data['number'],
                 'policy_number' => $data['policy_number'] ?? 0,
                 'contact_id' => $data['contact_id'],
+                'contract_reference_id' => $data['contract_reference_id'] ?? null,
                 'period_start' => $data['period_start'],
                 'period_end' => $data['period_end'],
                 'currency_code' => $data['currency_code'],
@@ -296,6 +297,7 @@ class ContractController extends Controller
                 'number' => $data['number'],
                 'policy_number' => $data['policy_number'] ?? 0,
                 'contact_id' => $data['contact_id'],
+                'contract_reference_id' => $data['contract_reference_id'] ?? null,
                 'period_start' => $data['period_start'],
                 'period_end' => $data['period_end'],
                 'currency_code' => $data['currency_code'],
@@ -418,31 +420,42 @@ class ContractController extends Controller
     public function uploadDocument(Request $request, $id)
     {
         try {
+            \Log::info("Upload document started for contract ID: $id");
+            \Log::info("Request has files: " . ($request->hasFile('documents') ? 'yes' : 'no'));
+            
             $contract = Contract::findOrFail($id);
+            \Log::info("Contract found: " . $contract->number);
 
             $request->validate([
                 'documents' => 'required|array',
                 'documents.*' => 'file|mimes:pdf,xlsx,xls,doc,docx,ppt,pptx,txt,jpg,jpeg,png|max:10240'
             ]);
 
+            \Log::info("Validation passed");
+
             $uploadedDocuments = [];
             $documents = $contract->documents ?? [];
+            \Log::info("Existing documents count: " . count($documents));
             
-            foreach ($request->file('documents') as $file) {
+            foreach ($request->file('documents') as $index => $file) {
+                \Log::info("Processing file $index: " . $file->getClientOriginalName());
+                
                 $originalFilename = $file->getClientOriginalName();
                 $fileExtension = $file->getClientOriginalExtension();
                 $mimeType = $file->getMimeType();
                 $fileSize = $file->getSize();
                 
                 // Generate unique filename
-                $filename = time() . '_' . uniqid() . '.' . $fileExtension;
+                $filename = $contract->id . '_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                \Log::info("Generated filename: $filename");
                 
-                // Store file in storage/app/documents/contracts/{contract_id}
+                // Store file in storage/app/private/documents/contracts/
                 $filePath = $file->storeAs(
-                    "documents/contracts/{$contract->id}",
+                    'documents/contracts',
                     $filename,
                     'local'
                 );
+                \Log::info("File stored at: $filePath");
                 
                 $docData = [
                     'id' => uniqid(),
@@ -465,15 +478,32 @@ class ContractController extends Controller
                 ];
             }
 
-            $contract->update(['documents' => $documents]);
+            // Save to database
+            \Log::info("Saving documents to database. Total documents: " . count($documents));
+            $contract->documents = $documents;
+            $savedResult = $contract->save();
+            \Log::info("Save result: " . ($savedResult ? 'success' : 'failed'));
+            
+            // Verify save
+            $contract->refresh();
+            \Log::info("Documents after refresh: " . count($contract->documents ?? []));
 
             return response()->json([
                 'message' => 'Documents uploaded successfully',
-                'data' => $uploadedDocuments
+                'data' => $uploadedDocuments,
+                'total_documents' => count($documents)
             ], 201);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error: ' . json_encode($e->errors()));
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Upload document error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'message' => 'Failed to upload documents: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -500,17 +530,19 @@ class ContractController extends Controller
             }
 
             // Delete file from storage
-            \Storage::delete($documentToDelete['file_path']);
+            \Storage::disk('local')->delete($documentToDelete['file_path']);
             
             // Update contract with remaining documents
-            $contract->update(['documents' => array_values($documents)]);
+            $contract->documents = array_values($documents);
+            $contract->save();
 
             return response()->json([
                 'message' => 'Document deleted successfully'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Delete document error: ' . $e->getMessage());
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => 'Failed to delete document: ' . $e->getMessage()
             ], 500);
         }
     }

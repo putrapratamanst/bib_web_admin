@@ -20,6 +20,7 @@ class Contract extends Model
         'number',
         'policy_number',
         'contact_id',
+        'contract_reference_id',
         'period_start',
         'period_end',
         'currency_code',
@@ -140,6 +141,11 @@ class Contract extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'contact_id', 'id');
+    }
+
+    public function contractReference(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class, 'contract_reference_id', 'id');
     }
 
     public function currency(): BelongsTo

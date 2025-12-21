@@ -21,6 +21,7 @@ class ContractStoreRequest extends FormRequest
             'number' => 'nullable|max:100|unique:contracts,number',
             // 'policy_number' => 'required|max:150',
             'contact_id' => 'required|exists:contacts,id',
+            'contract_reference_id' => 'nullable|exists:contracts,id',
             'period_start' => 'required|date',
             'period_end' => 'required|date',
             'currency_code' => 'required|exists:currencies,code',

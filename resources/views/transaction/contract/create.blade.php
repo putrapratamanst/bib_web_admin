@@ -42,6 +42,16 @@
                         </div>
                     </div>
 
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <select name="contract_reference_id" id="contract_reference_id" class="form-control">
+                                <option value=""></option>
+                            </select>
+                            <small class="text-muted">Optional - Select original contract for endorsement</small>
+                        </div>
+                    </div>
+
                     <div class="col-lg-3" style="display: none;" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
@@ -283,6 +293,33 @@
             },
         });
 
+        $('#contract_reference_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contract reference (optional) --',
+            allowClear: true,
+            ajax: {
+                url: "{{ route('api.contracts.select2') }}",
+                dataType: 'json',
+                delay: 500,
+                data: function(params) {
+                    return {
+                        search: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    };
+                },
+                minimumInputLength: 2,
+            },
+        });
+
         $("#currency_code").on("change", function() {
             var currencyCode = $(this).val();
             $(".curr-code").text(currencyCode);
@@ -314,6 +351,7 @@
                 number: $("#number").val(),
                 policy_number: $("#policy_number").val(),
                 contact_id: $("#contact_id").val(),
+                contract_reference_id: $("#contract_reference_id").val() || null,
                 period_start: $("#period_start").val(),
                 period_end: $("#period_end").val(),
                 currency_code: $("#currency_code").val(),
@@ -337,18 +375,42 @@
                     $("#btnSubmit").attr("disabled", true);
                 },
                 success: function(response) {
+                    console.log('Contract created successfully:', response);
+                    
                     // Upload documents if any
-                    uploadDocuments(response.data.id, function() {
-                        Swal.fire({
-                            text: response.message,
-                            icon: "success",
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = "{{ route('transaction.contracts.index') }}";
+                    uploadDocuments(response.data.id, function(uploadSuccess) {
+                        if (uploadSuccess || uploadSuccess === undefined) {
+                            // Success or no files uploaded
+                            var message = response.message;
+                            var files = document.getElementById('documents').files;
+                            if (files.length > 0) {
+                                message += '\nDocuments uploaded successfully!';
                             }
-                        });
+                            
+                            Swal.fire({
+                                text: message,
+                                icon: "success",
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "{{ route('transaction.contracts.index') }}";
+                                }
+                            });
+                        } else {
+                            // Document upload failed but contract was created
+                            Swal.fire({
+                                title: 'Contract Created',
+                                text: 'Contract created successfully but document upload failed. You can upload documents later.',
+                                icon: 'warning',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "{{ route('transaction.contracts.index') }}";
+                                }
+                            });
+                        }
                     });
                 },
                 error: function(xhr) {
@@ -550,29 +612,56 @@
     function uploadDocuments(contractId, callback) {
         var files = document.getElementById('documents').files;
 
+        console.log('uploadDocuments called with contractId:', contractId);
+        console.log('Number of files:', files.length);
+
         if (files.length === 0) {
-            callback();
+            console.log('No files to upload, calling callback immediately');
+            callback(true);
             return;
         }
 
         var formData = new FormData();
         for (var i = 0; i < files.length; i++) {
+            console.log('Adding file to FormData:', files[i].name, 'Size:', files[i].size);
             formData.append('documents[]', files[i]);
         }
 
+        console.log('Sending AJAX request to:', '/api/contract/' + contractId + '/documents');
+
         $.ajax({
-            url: "{{ route('api.contracts.upload-document', '') }}/" + contractId,
+            url: '/api/contract/' + contractId + '/documents',
             method: "POST",
             data: formData,
             processData: false,
             contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
             success: function(response) {
-                console.log('Documents uploaded:', response);
-                callback();
+                console.log('✓ Documents uploaded successfully:', response);
+                callback(true);
             },
             error: function(xhr) {
-                console.error('Error uploading documents:', xhr);
-                callback();
+                console.error('✗ Error uploading documents:', xhr);
+                console.error('Status:', xhr.status);
+                console.error('Response:', xhr.responseJSON);
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    console.error('Error message:', xhr.responseJSON.message);
+                }
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    console.error('Validation errors:', xhr.responseJSON.errors);
+                }
+                
+                // Show error to user
+                Swal.fire({
+                    title: 'Document Upload Failed',
+                    text: xhr.responseJSON?.message || 'Failed to upload documents. Please try again.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                
+                callback(false);
             },
         });
     }

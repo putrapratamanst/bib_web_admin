@@ -56,6 +56,20 @@
                         </div>
                     </div>
 
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <select name="contract_reference_id" id="contract_reference_id" class="form-control">
+                                @if($contract->contract_reference_id)
+                                <option value="{{ $contract->contract_reference_id }}" selected>{{ $contract->contractReference->number }}</option>
+                                @else
+                                <option value=""></option>
+                                @endif
+                            </select>
+                            <small class="text-muted">Optional - Select original contract for endorsement</small>
+                        </div>
+                    </div>
+
                     <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
@@ -68,7 +82,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Contract Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" required />
+                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" readonly style="background-color: #e9ecef;" required />
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -192,6 +206,24 @@
                     </div>
                 </div>
 
+                <!-- Documents Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6 class="mb-3">Documents</h6>
+                        <div id="documentsContainer">
+                            <div class="alert alert-info">
+                                <i class="bi bi-hourglass"></i> Loading documents...
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <i class="bi bi-cloud-upload"></i> Add Documents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <table id="tableDetails" class="table table-sm table-bordered table-hover">
                     <thead>
                         <tr>
@@ -250,6 +282,33 @@
         </form>
     </div>
 </div>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Documents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadDocumentForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="documents" class="form-label">Select Documents</label>
+                        <input type="file" class="form-control" id="documents" name="documents[]" multiple accept=".pdf,.xlsx,.xls,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" required>
+                        <small class="text-muted">Max file size: 10MB per file. Allowed: PDF, Office files, Images</small>
+                    </div>
+                    <div id="documentPreview"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnUploadDocuments">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -285,7 +344,34 @@
                         }
                     };
                 },
-                minimumInputLength: 2,
+                minimumInputLength: 0,
+            },
+        });
+
+        $('#contract_reference_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contract reference (optional) --',
+            allowClear: true,
+            ajax: {
+                url: "{{ route('api.contracts.select2') }}",
+                dataType: 'json',
+                delay: 500,
+                data: function(params) {
+                    return {
+                        search: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    };
+                },
+                minimumInputLength: 0,
             },
         });
 
@@ -350,6 +436,7 @@
                 number: $("#number").val(),
                 policy_number: $("#policy_number").val(),
                 contact_id: $("#contact_id").val(),
+                contract_reference_id: $("#contract_reference_id").val() || null,
                 period_start: $("#period_start").val(),
                 period_end: $("#period_end").val(),
                 currency_code: $("#currency_code").val(),
@@ -449,6 +536,9 @@
         $("#stamp_fee").on("change", function() {
             calculateDiscount();
         });
+
+        // Load documents on page load
+        loadDocuments();
     });
 
     $(document).on('click', '.removeRow', function() {
@@ -527,5 +617,142 @@
             $coveredItemField.find('input, select, textarea').val('').prop('required', false);
         }
     });
+
+    function loadDocuments() {
+        $.ajax({
+            url: '/api/contract/{{ $contract->id }}/documents',
+            method: 'GET',
+            success: function(response) {
+                let documents = response.data;
+                let container = $('#documentsContainer');
+                container.empty();
+
+                if (documents.length === 0) {
+                    container.html('<div class="alert alert-info">No documents uploaded yet</div>');
+                } else {
+                    let html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead><tbody>';
+                    
+                    documents.forEach(function(doc) {
+                        html += '<tr>' +
+                                '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
+                                '<td>' + doc.file_size_formatted + '</td>' +
+                                '<td>' + doc.uploaded_at + '</td>' +
+                                '<td>' +
+                                '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ' +
+                                '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+                                '</td>' +
+                                '</tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    container.html(html);
+                }
+            },
+            error: function(xhr) {
+                $('#documentsContainer').html('<div class="alert alert-danger">Failed to load documents</div>');
+            }
+        });
+    }
+
+    // Upload documents
+    $('#btnUploadDocuments').on('click', function() {
+        var formData = new FormData();
+        var files = $('#documents')[0].files;
+
+        if (files.length === 0) {
+            alert('Please select at least one file');
+            return;
+        }
+
+        for (var i = 0; i < files.length; i++) {
+            formData.append('documents[]', files[i]);
+        }
+
+        $.ajax({
+            url: '/api/contract/{{ $contract->id }}/documents',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                $('#btnUploadDocuments').prop('disabled', true).text('Uploading...');
+            },
+            success: function(response) {
+                $('#uploadDocumentModal').modal('hide');
+                $('#uploadDocumentForm')[0].reset();
+                loadDocuments();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Documents uploaded successfully'
+                });
+            },
+            error: function(xhr) {
+                var message = xhr.responseJSON?.message || 'Failed to upload documents';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message
+                });
+            },
+            complete: function() {
+                $('#btnUploadDocuments').prop('disabled', false).text('Upload');
+            }
+        });
+    });
+
+    // Delete document
+    $(document).on('click', '.btnDeleteDocument', function() {
+        var documentId = $(this).data('id');
+        var documentName = $(this).data('name');
+
+        Swal.fire({
+            title: 'Delete Document?',
+            text: 'Are you sure you want to delete: ' + documentName + '?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/api/contract/{{ $contract->id }}/documents/' + documentId,
+                    method: 'DELETE',
+                    success: function(response) {
+                        loadDocuments();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted',
+                            text: 'Document deleted successfully',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to delete document'
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Document preview
+    $("#documents").on("change", function() {
+        var files = this.files;
+        let preview = $("#documentPreview");
+        preview.empty();
+
+        for (var i = 0; i < files.length; i++) {
+            let fileName = files[i].name;
+            let fileSize = (files[i].size / 1024 / 1024).toFixed(2) + ' MB';
+            preview.append('<div class="alert alert-secondary py-2"><i class="bi bi-file"></i> ' + fileName + ' (' + fileSize + ')</div>');
+        }
+    });
 </script>
 @endpush
+

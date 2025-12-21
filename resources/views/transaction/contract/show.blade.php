@@ -37,6 +37,12 @@
                             <input readonly type="text" value="{{ $contract->contact->display_name }}" class="form-control">
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <input readonly type="text" value="{{ $contract->contractReference?->number ?? '-' }}" class="form-control">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -200,7 +206,7 @@
                         </div>
                         
                         @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
-                        <div class="mt-3">
+                        <div class="mt-3 mb-3">
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="bi bi-cloud-upload"></i> Add Documents
                             </button>
@@ -357,13 +363,21 @@
                 return;
             }
 
+            let contractId = '{{ $contract->id }}';
+            console.log('Contract ID:', contractId);
+            
+            if (!contractId) {
+                alert('Contract ID not found');
+                return;
+            }
+
             let formData = new FormData();
             for (let i = 0; i < files.length; i++) {
                 formData.append('documents[]', files[i]);
             }
 
             $.ajax({
-                url: '/api/contract/{{ $contract->id }}/documents',
+                url: '/api/contract/' + contractId + '/documents',
                 method: 'POST',
                 data: formData,
                 processData: false,
