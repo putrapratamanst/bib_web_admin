@@ -86,7 +86,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>
-                            <input type="date" class="form-control @error('date') is-invalid @enderror" name="date" id="date" value="{{ old('date', date('Y-m-d')) }}" required>
+                            <input type="text" class="form-control datepicker @error('date') is-invalid @enderror" name="date" id="date" value="{{ old('date', date('d-m-Y')) }}" required>
                             @error('date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -95,8 +95,17 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="due_date" class="form-label">Due Date<sup class="text-danger">*</sup></label>
-                            <input type="date" class="form-control @error('due_date') is-invalid @enderror" name="due_date" id="due_date" value="{{ old('due_date') }}" required>
+                            <input type="text" class="form-control datepicker @error('due_date') is-invalid @enderror" name="due_date" id="due_date" value="{{ old('due_date') }}" required>
                             @error('due_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="created_at" class="form-label">Created Date<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control datepicker @error('created_at') is-invalid @enderror" name="created_at" id="created_at" value="{{ old('created_at', date('d-m-Y')) }}" required>
+                            @error('created_at')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -523,11 +532,23 @@ $(document).ready(function() {
         
         console.log('Form submit - Exchange rate:', exchangeRate, 'Amount:', amount);
         
+        // Convert date format from d-m-Y to Y-m-d for API
+        function convertDateFormat(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return parts[2] + '-' + parts[1] + '-' + parts[0]; // Y-m-d
+            }
+            return dateStr;
+        }
+        
         // Create form data
         const formData = new FormData(this);
         formData.set('exchange_rate', exchangeRate);
         formData.set('amount', amount);
-        console.log(formData);
+        formData.set('date', convertDateFormat($('#date').val()));
+        formData.set('due_date', convertDateFormat($('#due_date').val()));
+        formData.set('created_at', convertDateFormat($('#created_at').val()));
         $.ajax({
             url: '{{ route("api.debit-notes.store") }}',
             method: 'POST',

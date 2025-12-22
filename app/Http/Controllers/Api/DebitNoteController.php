@@ -55,6 +55,7 @@ class DebitNoteController extends Controller
             'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
+            'created_at' => 'nullable|date',
             'currency' => 'required|string|max:3',
             'exchange_rate' => 'required|numeric|min:0',
             'installment' => 'required|integer|max:12',
@@ -89,7 +90,7 @@ class DebitNoteController extends Controller
                 'description' => $request->description,
                 'status' => 'active',
                 'installment' => $request->installment,
-                'created_at' => now(),
+                'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
             ]);
 

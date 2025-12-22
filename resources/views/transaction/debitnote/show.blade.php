@@ -52,6 +52,12 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="created_at" class="form-label">Created Date<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" readonly name="created_at" id="created_at" value="{{ $debitNote->created_at->format('d-m-Y') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="installment" class="form-label">Installment<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly name="installment" id="installment" value="{{ $debitNote->installment }}">
                         </div>

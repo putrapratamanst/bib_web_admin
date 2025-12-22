@@ -79,6 +79,12 @@
                             <input readonly type="text" value="{{ $contract->period_start->diffInDays($contract->period_end) }} days" class="form-control" style="background-color: #e9ecef;">
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="created_at" class="form-label">Created Date<sup class="text-danger">*</sup></label>
+                            <input readonly type="text" value="{{ $contract->created_at->format('d-m-Y') }}" class="form-control" name="created_at" id="created_at" />
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

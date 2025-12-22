@@ -96,6 +96,12 @@
                             <small class="text-muted">Auto-calculated</small>
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="created_at" class="form-label">Created Date<sup class="text-danger">*</sup></label>
+                            <input type="text" name="created_at" id="created_at" class="form-control datepicker" value="{{ date('d-m-Y') }}" required>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
