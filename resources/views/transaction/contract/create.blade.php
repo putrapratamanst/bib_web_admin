@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Create Contract')
+@section('title', 'Create Placing')
 
 @section('content')
 <div class="container">
     <div class="card">
         <div class="card-header">
-            Add New Contract
+            Add New Placing
         </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <input type="hidden" name="status" value="approved" />
@@ -14,8 +14,8 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_status" class="form-label">Contract Status<sup class="text-danger">*</sup></label>
-                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select contract status --" required>
+                            <label for="contract_status" class="form-label">Placing Status<sup class="text-danger">*</sup></label>
+                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select placing status --" required>
                                 <option value=""></option>
                                 <option value="renewal">Renewal</option>
                                 <option value="new">New</option>
@@ -24,8 +24,8 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_type_id" class="form-label">Contract Type<sup class="text-danger">*</sup></label>
-                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select contract type --" required>
+                            <label for="contract_type_id" class="form-label">Placing Type<sup class="text-danger">*</sup></label>
+                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select placing type --" required>
                                 <option value=""></option>
                                 @foreach($contractTypes as $contractType)
                                 <option value="{{ $contractType->id }}">{{ $contractType->name }}</option>
@@ -44,11 +44,11 @@
 
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <label for="contract_reference_id" class="form-label">Placing Reference / Endorsement</label>
                             <select name="contract_reference_id" id="contract_reference_id" class="form-control">
                                 <option value=""></option>
                             </select>
-                            <small class="text-muted">Optional - Select original contract for endorsement</small>
+                            <small class="text-muted">Optional - Select original placing for endorsement</small>
                         </div>
                     </div>
 
@@ -63,7 +63,7 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="number" class="form-label">Contract Number<sup class="text-danger">*</sup></label>
+                            <label for="number" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
                             <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" required />
                             <small class="text-muted">Auto-generated when insurance is selected</small>
                         </div>

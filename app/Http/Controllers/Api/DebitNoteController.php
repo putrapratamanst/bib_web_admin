@@ -52,6 +52,7 @@ class DebitNoteController extends Controller
         $validator = Validator::make($request->all(), [
             'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
+            'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             'currency' => 'required|string|max:3',
@@ -79,6 +80,7 @@ class DebitNoteController extends Controller
                 'number' => $newNumber,
                 'contact_id' => $request->contact_id,
                 'contract_id' => $request->contract_id,
+                'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
                 'currency_code' => $request->currency,

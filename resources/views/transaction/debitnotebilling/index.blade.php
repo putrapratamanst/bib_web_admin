@@ -12,7 +12,7 @@
                     <table id="debitNoteBillingsTable" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>Contract</th>
+                                <th>Placing</th>
                                 <th>Debit Note</th>
                                 <th>Billing Number</th>
                                 <th>Date</th>

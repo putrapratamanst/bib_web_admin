@@ -21,6 +21,47 @@ class BillingAddressController extends Controller
         ]);
     }
 
+    public function select2(Request $request)
+    {
+        $search = $request->get('q', '');
+        $contactId = $request->get('contact_id', '');
+
+        $query = BillingAddress::query();
+
+        if ($contactId) {
+            $query->where('contact_id', $contactId);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $addresses = $query->orderBy('is_primary', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $data = $addresses->map(function ($address) {
+            $text = $address->name;
+            if ($address->address) {
+                $text .= ' - ' . substr($address->address, 0, 40);
+            }
+
+            return [
+                'id' => $address->id,
+                'text' => $text,
+                'is_primary' => $address->is_primary
+            ];
+        });
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

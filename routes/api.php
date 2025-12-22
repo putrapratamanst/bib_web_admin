@@ -34,6 +34,7 @@ Route::put('/contact/{id}', [\App\Http\Controllers\Api\ContactController::class,
 
 // Billing Address
 Route::get('/contact/{contactId}/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.index');
+Route::get('/billing-address/select2', [\App\Http\Controllers\Api\BillingAddressController::class, 'select2'])->name('api.billing-addresses.select2');
 Route::post('/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'store'])->name('api.billing-addresses.store');
 Route::put('/billing-address/{id}', [\App\Http\Controllers\Api\BillingAddressController::class, 'update'])->name('api.billing-addresses.update');
 Route::delete('/billing-address/{id}', [\App\Http\Controllers\Api\BillingAddressController::class, 'destroy'])->name('api.billing-addresses.destroy');
@@ -91,10 +92,12 @@ Route::get('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::c
 Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteController::class, 'postDebitNote'])->name('api.debit-notes.post');
 
 // Debit Note Billing
-Route::get('/debit-note-billing/datatables', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'datatables'])->name('api.debit-note-billings.datatables');
+Route::get('/debit-note-billing/datatables', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'datatables'])->name('api.billings.datatables');
 Route::get('/debit-note-billing/select2', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'select2'])->name('api.debit-note-billings.select2');
 Route::get('/debit-note-billing/{id}', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'show'])->name('api.debit-note-billings.show');
 Route::post('/debit-note-billing/{id}/post-to-cashout', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'postToCashout'])->name('api.debit-note-billings.post-to-cashout');
+Route::post('/debit-note-billing/{id}/post', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'postBilling'])->name('api.billings.post');
+Route::get('/debit-note-billing/{id}/print', [\App\Http\Controllers\Api\DebitNoteBillingController::class, 'printBilling'])->name('api.billings.print');
 
 // Cashout
 Route::get('/cashout', [\App\Http\Controllers\Api\CashoutController::class, 'index'])->name('api.cashouts.index');

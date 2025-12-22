@@ -12,12 +12,18 @@ use Illuminate\Support\Facades\Log;
 
 class DebitNoteBillingController extends Controller
 {
-    public function create($id)
+    public function create($id = null)
     {
-        $debitNote = DebitNote::findOrFail($id);
-        return view('transaction.debitnotebilling.create', [
-            'debitNote' => $debitNote,
-        ]);
+        // If $id provided, it's from Debit Note
+        if ($id) {
+            $debitNote = DebitNote::findOrFail($id);
+            return view('transaction.debitnotebilling.create', [
+                'debitNote' => $debitNote,
+            ]);
+        }
+        
+        // Otherwise, create standalone billing
+        return view('transaction.billing.create');
     }
 
     public function store(Request $request)
@@ -47,7 +53,7 @@ class DebitNoteBillingController extends Controller
                 $debitNoteBilling->date = $request->date[$i];
                 $debitNoteBilling->due_date = $request->due_date[$i];
                 $debitNoteBilling->amount = $request->amount[$i];
-                $debitNoteBilling->status = 'paid'; // default kalau ga ada
+                $debitNoteBilling->status = 'pending'; // default status is pending
                 
                 if (!$debitNoteBilling->save()) {
                     throw new \Exception("Failed to save billing: {$billingNumber}");
@@ -95,7 +101,31 @@ class DebitNoteBillingController extends Controller
     // Method untuk menampilkan list billing
     public function index()
     {
-        return view('transaction.debit-note-billing.index');
+        return view('transaction.billing.index');
+    }
+
+    public function show($id)
+    {
+        try {
+            $billing = DebitNoteBilling::with(['debitNote.contract.contact', 'debitNote.contract.details'])->findOrFail($id);
+            return view('transaction.billing.show', [
+                'billing' => $billing
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('transaction.billings.index')->with('error', 'Billing not found');
+        }
+    }
+
+    public function printBilling($id)
+    {
+        try {
+            $billing = DebitNoteBilling::with(['debitNote.contract.contact', 'debitNote.contract.details'])->findOrFail($id);
+            return view('transaction.billing.print', [
+                'billing' => $billing
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('transaction.billings.index')->with('error', 'Billing not found');
+        }
     }
 
     // Method untuk post billing ke cashout

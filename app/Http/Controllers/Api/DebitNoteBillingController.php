@@ -99,6 +99,97 @@ class DebitNoteBillingController extends Controller
         }
     }
 
+    public function postBilling($id)
+    {
+        try {
+            $billing = DebitNoteBilling::with(['debitNote', 'debitNote.contract'])->findOrFail($id);
+
+            // Check if already posted to cashout
+            $existingCashout = Cashout::where('debit_note_billing_id', $billing->id)->first();
+            if ($existingCashout) {
+                return response()->json([
+                    'message' => 'Billing sudah di-posting ke cashout sebelumnya',
+                    'success' => false
+                ], 400);
+            }
+
+            // Check if billing is pending
+            if ($billing->status !== 'pending') {
+                return response()->json([
+                    'message' => 'Hanya billing dengan status pending yang dapat di-posting',
+                    'success' => false
+                ], 400);
+            }
+
+            $listInsurance = [];
+            $detailContract = $billing->debitNote->contract;
+            if ($detailContract->details) {
+                $listInsurance = $detailContract->details ?? [];
+                $bilAmount = $billing->amount;
+                foreach ($listInsurance as $insurance) {
+                    $creditNote = CreditNote::where('billing_id', $billing->id)->first();
+                    if ($creditNote) {
+                        $bilAmount -= $creditNote->amount;
+                    }
+                    $share = $bilAmount * ($insurance->percentage / 100);
+                    $brokerfee = $share * ($insurance->brokerage_fee / 100);
+                    $engfee = $share * ($insurance->eng_fee / 100);
+                    $amountForCashout = $share - $brokerfee - $engfee;
+
+                    $cashout = Cashout::create([
+                        'debit_note_id' => $billing->debit_note_id,
+                        'debit_note_billing_id' => $billing->id,
+                        'insurance_id' => $insurance->insurance_id,
+                        'number' => $this->generateCashoutNumber(),
+                        'date' => now()->toDateString(),
+                        'due_date' => $billing->due_date,
+                        'currency_code' => $billing->debitNote->currency_code,
+                        'exchange_rate' => $billing->debitNote->exchange_rate,
+                        'amount' => $amountForCashout,
+                        'installment_number' => $this->getInstallmentNumber($billing),
+                        'description' => "Cashout untuk Billing: {$billing->billing_number}",
+                        'status' => 'pending',
+                        'created_by' => auth()->id() ?? 1,
+                    ]);
+                    $bilAmount = $billing->amount;
+                }
+            }
+
+            // Update billing status to posted
+            $billing->update(['status' => 'posted']);
+
+            return response()->json([
+                'message' => 'Billing berhasil di-posting ke cashout',
+                'success' => true,
+                'data' => [
+                    'billing' => $billing
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
+    }
+
+    public function printBilling($id)
+    {
+        try {
+            $billing = DebitNoteBilling::with(['debitNote.contract.contact', 'debitNote.contract.details'])->findOrFail($id);
+
+            // Generate PDF or return view for printing
+            return view('transaction.billing.print', [
+                'billing' => $billing
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Billing not found',
+                'success' => false
+            ], 404);
+        }
+    }
+
     public function postToCashout($id)
     {
         try {

@@ -18,7 +18,7 @@
                         <th>Number</th>
                         <th>Date</th>
                         <th>Due Date</th>
-                        <th>Contract</th>
+                        <th>Placing</th>
                         <th>Installment</th>
                         <th>Amount</th>
                         <th>Status</th>

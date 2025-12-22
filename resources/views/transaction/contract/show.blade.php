@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Contract')
+@section('title', 'Detail Placing')
 
 @section('content')
 <div class="container">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Detail Contract</span>
+            <span>Detail Placing</span>
             @php
                 $badgeClass = match($contract->approval_status) {
                     'approved' => 'bg-success',
@@ -21,13 +21,13 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_status" class="form-label">Contract Status<sup class="text-danger">*</sup></label>
+                            <label for="contract_status" class="form-label">Placing Status<sup class="text-danger">*</sup></label>
                             <input readonly type="text" value="{{ $contract->contract_status }}" class="form-control" name="contract_status" id="contract_status" />
                         </div>
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_type_id" class="form-label">Contract Type<sup class="text-danger">*</sup></label>
+                            <label for="contract_type_id" class="form-label">Placing Type<sup class="text-danger">*</sup></label>
                             <input readonly type="text" value="{{ $contract->contractType->name }}" class="form-control">
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <label for="contract_reference_id" class="form-label">Placing Reference / Endorsement</label>
                             <input readonly type="text" value="{{ $contract->contractReference?->number ?? '-' }}" class="form-control">
                         </div>
                     </div>

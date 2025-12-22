@@ -33,7 +33,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="{{ route('transaction.contracts.index') }}">Contract</a>
+                            <a class="dropdown-item" href="{{ route('transaction.contracts.index') }}">Placing</a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.debit-notes.index') }}">Debit Note</a>

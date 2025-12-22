@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Contract')
+@section('title', 'Edit Placing')
 
 @section('content')
 <div class="container">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Edit Contract</span>
+            <span>Edit Placing</span>
             @php
                 $badgeClass = match($contract->approval_status) {
                     'approved' => 'bg-success',
@@ -28,8 +28,8 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_status" class="form-label">Contract Status<sup class="text-danger">*</sup></label>
-                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select contract status --" required>
+                            <label for="contract_status" class="form-label">Placing Status<sup class="text-danger">*</sup></label>
+                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select placing status --" required>
                                 <option value=""></option>
                                 <option value="renewal" {{ $contract->contract_status === 'renewal' ? 'selected' : '' }}>Renewal</option>
                                 <option value="new" {{ $contract->contract_status === 'new' ? 'selected' : '' }}>New</option>
@@ -38,8 +38,8 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_type_id" class="form-label">Contract Type<sup class="text-danger">*</sup></label>
-                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select contract type --" required>
+                            <label for="contract_type_id" class="form-label">Placing Type<sup class="text-danger">*</sup></label>
+                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select placing type --" required>
                                 <option value=""></option>
                                 @foreach($contractTypes as $contractType)
                                 <option value="{{ $contractType->id }}" {{ $contract->contract_type_id == $contractType->id ? 'selected' : '' }}>{{ $contractType->name }}</option>
@@ -58,7 +58,7 @@
 
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_reference_id" class="form-label">Contract Reference / Endorsement</label>
+                            <label for="contract_reference_id" class="form-label">Placing Reference / Endorsement</label>
                             <select name="contract_reference_id" id="contract_reference_id" class="form-control">
                                 @if($contract->contract_reference_id)
                                 <option value="{{ $contract->contract_reference_id }}" selected>{{ $contract->contractReference->number }}</option>
@@ -66,7 +66,7 @@
                                 <option value=""></option>
                                 @endif
                             </select>
-                            <small class="text-muted">Optional - Select original contract for endorsement</small>
+                            <small class="text-muted">Optional - Select original placing for endorsement</small>
                         </div>
                     </div>
 
@@ -81,7 +81,7 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="number" class="form-label">Contract Number<sup class="text-danger">*</sup></label>
+                            <label for="number" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
                             <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" readonly style="background-color: #e9ecef;" required />
                         </div>
                     </div>

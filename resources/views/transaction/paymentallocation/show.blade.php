@@ -118,7 +118,7 @@
                                     <th>Number</th>
                                     <th>Date</th>
                                     <th>Due Date</th>
-                                    <th>Contract</th>
+                                    <th>Placing</th>
                                     <th>Installment</th>
                                     <th class="text-end">Amount</th>
                                     <th class="text-end">Status Alokasi</th>

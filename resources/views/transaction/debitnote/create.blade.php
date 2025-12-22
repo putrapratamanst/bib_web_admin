@@ -49,9 +49,9 @@
                     </div> -->
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_id" class="form-label">Contract<sup class="text-danger">*</sup></label>
+                            <label for="contract_id" class="form-label">Placing<sup class="text-danger">*</sup></label>
                             <select class="form-select select2 @error('contract_id') is-invalid @enderror" name="contract_id" id="contract_id" required>
-                                <option value="">Select Contract</option>
+                                <option value="">Select Placing</option>
                             </select>
                             @error('contract_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -65,6 +65,17 @@
                                 <option value="">Select Contact</option>
                             </select>
                             @error('contact_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
+                            <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required disabled>
+                                <option value="">Select Billing Address</option>
+                            </select>
+                            @error('billing_address_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -243,11 +254,62 @@ $(document).ready(function() {
         }
     });
 
+    // Initialize Select2 for billing address selection
+    $('#billing_address_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select Billing Address',
+        allowClear: true,
+        escapeMarkup: function (markup) {
+            return markup; // Don't escape markup
+        },
+        templateResult: function(data) {
+            if (!data.id) return data.text;
+            
+            if (data.is_primary) {
+                return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
+            }
+            return data.text;
+        },
+        templateSelection: function(data) {
+            if (!data.id) return data.text;
+            
+            if (data.is_primary) {
+                return data.text + ' ★';
+            }
+            return data.text;
+        },
+        ajax: {
+            url: '{{ route("api.billing-addresses.select2") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                const contactId = $('#contact_id').val();
+                return {
+                    search: params.term,
+                    page: params.page || 1,
+                    contact_id: contactId
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.data,
+                    pagination: {
+                        more: data.pagination && data.pagination.more
+                    }
+                };
+            },
+            cache: true
+        }
+    });
+
     // Handle contract selection change
     $('#contract_id').on('select2:select', function(e) {
         const contractId = e.params.data.id;
         const contractText = e.params.data.text;
         console.log('Contract selected:', contractId, contractText);
+        
+        // Enable billing address dropdown when contract is selected
+        $('#billing_address_id').prop('disabled', false).val(null).trigger('change');
         
         if (contractId) {
             // Get contract details - use the correct API endpoint
@@ -348,6 +410,7 @@ $(document).ready(function() {
         console.log('Contract cleared');
         // Clear fields when no contract selected
         $('#contact_id').val(null).trigger('change');
+        $('#billing_address_id').val(null).trigger('change').prop('disabled', true);
         $('#currency').val('').trigger('change');
         $('#installment').val('0');
         setTimeout(function() {

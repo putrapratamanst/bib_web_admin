@@ -16,7 +16,7 @@
                 <div class="row">
                     <div class="col-lg-3 col-md-4">
                         <div class="mb-0">
-                            <label for="contract_type" class="form-label">Contract Type</label>
+                            <label for="contract_type" class="form-label">Placing Type</label>
                             <select name="contract_type" id="contract_type" class="form-control select2">
                                 <option value="">All</option>
                                 @foreach($contractTypes as $contractType)

@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-muted mb-1">Active Contracts</h6>
+                            <h6 class="text-muted mb-1">Active Placings</h6>
                             <h3 class="mb-0" id="activeContracts">-</h3>
                             <small class="text-muted">Total active policies</small>
                         </div>
@@ -151,7 +151,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-clock me-2"></i>Recent Contracts
+                        <i class="fas fa-clock me-2"></i>Recent Placings
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -159,7 +159,7 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Contract No</th>
+                                    <th>Placing No</th>
                                     <th>Client</th>
                                     <th>Type</th>
                                     <th>Date</th>
@@ -321,11 +321,11 @@ function loadRecentContracts() {
                     tbody.append(row);
                 });
             } else {
-                tbody.append('<tr><td colspan="4" class="text-center py-3 text-muted">No recent contracts</td></tr>');
+                tbody.append('<tr><td colspan="4" class="text-center py-3 text-muted">No recent placings </td></tr>');
             }
         },
         error: function() {
-            $('#recentContracts').html('<tr><td colspan="4" class="text-center py-3 text-muted">Failed to load contracts</td></tr>');
+            $('#recentContracts').html('<tr><td colspan="4" class="text-center py-3 text-muted">Failed to load placings</td></tr>');
         }
     });
 }

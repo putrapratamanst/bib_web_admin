@@ -21,6 +21,7 @@ class DebitNote extends Model
     protected $fillable = [
         'contract_id',
         'contact_id',
+        'billing_address_id',
         'number',
         'date',
         'due_date',
@@ -57,6 +58,11 @@ class DebitNote extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'contact_id', 'id');
+    }
+
+    public function billingAddress(): BelongsTo
+    {
+        return $this->belongsTo(BillingAddress::class, 'billing_address_id', 'id');
     }
 
     public function currency(): BelongsTo

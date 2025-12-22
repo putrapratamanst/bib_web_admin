@@ -19,7 +19,7 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contract_id" class="form-label">Contract Number<sup class="text-danger">*</sup></label>
+                            <label for="contract_id" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly name="contract_id" id="contract_id" value="{{ $debitNote->contract->number }}">
                         </div>
                     </div>
@@ -27,6 +27,12 @@
                         <div class="mb-3">
                             <label for="contact" class="form-label">Contact<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly id="contact" value="{{ $debitNote->contract->contact->display_name }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" readonly id="billing_address_id" value="{{ $debitNote->billingAddress?->name ?? '-' }}">
                         </div>
                     </div>
                 </div>
@@ -102,13 +108,15 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
+                <table class="table table-new table-hover table-striped table-bordered">
                     <thead class="table-header">
                         <tr>
                             <th>Number</th>
                             <th>Date</th>
                             <th>Due Date</th>
                             <th class="text-end">Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,10 +127,29 @@
                             <td>{{ $billing->due_date_formatted }}</td>
                             <!-- Amount sudah otomatis dikurangi credit notes melalui accessor di model -->
                             <td class="text-end">{{ $debitNote->currency_code }} {{ $billing->amount_formatted }}</td>
+                            <td>
+                                @if ($billing->status === 'pending')
+                                    <span class="badge bg-warning">Pending</span>
+                                @elseif ($billing->status === 'posted')
+                                    <span class="badge bg-success">Posted</span>
+                                @else
+                                    <span class="badge bg-secondary">{{ $billing->status }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($billing->status === 'pending')
+                                    <button type="button" class="btn btn-sm btn-success me-1" onclick="postBillingToPosted('{{ $billing->id }}')" title="Post Billing">
+                                        <i class="fas fa-check-circle"></i> Post
+                                    </button>
+                                @endif
+                                <a href="javascript:void(0);" class="btn btn-sm btn-info" onclick="printBilling('{{ $billing->id }}')" title="Print Billing">
+                                    <i class="fas fa-print"></i> Print
+                                </a>
+                            </td>
 
                             @empty
                         <tr>
-                            <td colspan="7" class="text-center">No billing found</td>
+                            <td colspan="6" class="text-center">No billing found</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -243,5 +270,43 @@
             }
         });
     }
+
+    function postBillingToPosted(billingId) {
+        if (confirm('Are you sure you want to post this billing? This will change status from Pending to Posted.')) {
+            $.ajax({
+                url: `/api/debit-note-billing/${billingId}/post`,
+                method: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response.message,
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'An error occurred';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', errorMsg, 'error');
+                }
+            });
+        }
+    }
+
+    function printBilling(billingId) {
+        window.open(`/transaction/billings/print/${billingId}`, '_blank');
+    }
+
 </script>
 @endpush
