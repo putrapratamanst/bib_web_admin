@@ -28,7 +28,8 @@ class ContractStoreRequest extends FormRequest
                     ? 'unique:contracts,number,' . $contractId . ',id'
                     : 'unique:contracts,number'
             ],
-            // 'policy_number' => 'required|max:150',
+            'policy_number' => 'nullable|max:150',
+            'policy_fee' => 'nullable|numeric',
             'contact_id' => 'required|exists:contacts,id',
             'contract_reference_id' => 'nullable|exists:contracts,id',
             'period_start' => 'required|date',

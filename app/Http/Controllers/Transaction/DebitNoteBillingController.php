@@ -44,6 +44,22 @@ class DebitNoteBillingController extends Controller
                 // 'status.*' => 'required|in:unpaid,paid,overdue',
             ]);
 
+            // Get the debit note to check amount limit
+            $debitNote = DebitNote::findOrFail($request->debit_note_id);
+            
+            // Calculate total billing amount being added
+            $totalNewBillingAmount = 0;
+            foreach ($request->amount as $amount) {
+                $totalNewBillingAmount += floatval($amount);
+            }
+            
+            // Check if total new billing exceeds debit note amount
+            if ($totalNewBillingAmount > $debitNote->amount) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Total billing amount (' . number_format($totalNewBillingAmount, 2) . ') exceeds the debit note amount (' . number_format($debitNote->amount, 2) . '). Please adjust the amounts.');
+            }
+
             DB::beginTransaction();
 
             foreach ($request->billing_number as $i => $billingNumber) {

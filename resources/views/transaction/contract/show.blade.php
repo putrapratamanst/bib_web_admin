@@ -143,6 +143,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, ',', '.') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-3">
                     <div class="mb-3">

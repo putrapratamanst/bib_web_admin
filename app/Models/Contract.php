@@ -19,6 +19,7 @@ class Contract extends Model
         'contract_type_id',
         'number',
         'policy_number',
+        'policy_fee',
         'contact_id',
         'contract_reference_id',
         'period_start',

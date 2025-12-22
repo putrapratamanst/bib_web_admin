@@ -87,7 +87,7 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
+                            <label for="policy_number" class="form-label">Policy Number</label>
                             <input type="text" name="policy_number" id="policy_number" class="form-control" value="{{ $contract->policy_number }}" />
                         </div>
                     </div>
@@ -195,6 +195,15 @@
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
                                 <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required readonly />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
+                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" value="{{ $contract->policy_fee }}" />
                             </div>
                         </div>
                     </div>
@@ -451,6 +460,7 @@
                 contract_type_id: $("#contract_type_id").val(),
                 number: $("#number").val(),
                 policy_number: $("#policy_number").val(),
+                policy_fee: $("#policy_fee").autoNumeric('get'),
                 contact_id: $("#contact_id").val(),
                 contract_reference_id: $("#contract_reference_id").val() || null,
                 period_start: $("#period_start").val(),

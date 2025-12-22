@@ -13,6 +13,28 @@
             <input type="hidden" name="debit_note_id" value="{{ $debitNote->id }}">
             <div class="card-body">
 
+                {{-- Display Debit Note Amount Information --}}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-info-circle"></i> Billing Amount Information</strong>
+                    <div class="mt-2">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small><strong>Total Debit Note Amount:</strong></small><br>
+                                <strong>{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small><strong>Total Billed:</strong></small><br>
+                                <strong id="totalBilled">0.00 {{ $debitNote->currency_code }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small><strong>Remaining Available:</strong></small><br>
+                                <strong id="remainingAmount">{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
                 {{-- Display Error Messages --}}
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -143,6 +165,69 @@
 
 @push('scripts')
 <script>
+    const debitNoteAmount = {{ $debitNote->amount }};
+    const currencyCode = "{{ $debitNote->currency_code }}";
+
+    // Initialize currency formatter
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+
+    // Calculate and update total billed and remaining amount
+    function updateBillingTotals() {
+        const amountInputs = document.querySelectorAll('input[name="amount[]"]');
+        let totalBilled = 0;
+
+        amountInputs.forEach(input => {
+            const value = input.value.replace(/\./g, '').replace(/,/g, '.');
+            const numValue = parseFloat(value) || 0;
+            totalBilled += numValue;
+        });
+
+        const remainingAmount = debitNoteAmount - totalBilled;
+        
+        // Update display
+        document.getElementById('totalBilled').innerHTML = `${formatCurrency(totalBilled)} ${currencyCode}`;
+        document.getElementById('remainingAmount').innerHTML = `${formatCurrency(remainingAmount)} ${currencyCode}`;
+
+        // Check if total exceeds debit note amount
+        if (totalBilled > debitNoteAmount) {
+            document.getElementById('remainingAmount').innerHTML = `<span class="text-danger">${formatCurrency(remainingAmount)} ${currencyCode}</span>`;
+        } else {
+            document.getElementById('remainingAmount').innerHTML = `${formatCurrency(remainingAmount)} ${currencyCode}`;
+        }
+
+        return remainingAmount;
+    }
+
+    // Add event listener to all amount inputs
+    document.addEventListener('change', function(event) {
+        if (event.target.matches('input[name="amount[]"]')) {
+            const remainingAmount = updateBillingTotals();
+            
+            // Get the current input's value
+            const currentValue = parseFloat(event.target.value.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            
+            // Warn if individual input exceeds remaining
+            if (currentValue > debitNoteAmount) {
+                Swal.fire({
+                    title: 'Amount Exceeds Limit',
+                    text: `The billing amount exceeds the total debit note amount ({{ $debitNote->amount }}). Please adjust the amount.`,
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBillingTotals();
+    });
+
     // Show error messages if they exist in session
     @if(session('error'))
         Swal.fire({

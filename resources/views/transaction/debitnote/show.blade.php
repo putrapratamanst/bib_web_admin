@@ -143,14 +143,16 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($billing->status === 'pending')
+                                @if ($billing->status === 'pending' && auth()->user()->role === 'approver')
                                     <button type="button" class="btn btn-sm btn-success me-1" onclick="postBillingToPosted('{{ $billing->id }}')" title="Post Billing">
                                         <i class="fas fa-check-circle"></i> Post
                                     </button>
                                 @endif
+                                @if ($billing->status === 'posted')
                                 <a href="javascript:void(0);" class="btn btn-sm btn-info" onclick="printBilling('{{ $billing->id }}')" title="Print Billing">
                                     <i class="fas fa-print"></i> Print
                                 </a>
+                                @endif
                             </td>
 
                             @empty
