@@ -21,7 +21,6 @@ class Contract extends Model
         'policy_number',
         'policy_fee',
         'contact_id',
-        'contract_reference_id',
         'period_start',
         'period_end',
         'currency_code',
@@ -172,6 +171,11 @@ class Contract extends Model
     public function details(): HasMany
     {
         return $this->hasMany(ContractDetail::class, 'contract_id', 'id');
+    }
+
+    public function endorsements(): HasMany
+    {
+        return $this->hasMany(ContractEndorsement::class, 'contract_id', 'id');
     }
 
     public function debitNotes(): HasMany

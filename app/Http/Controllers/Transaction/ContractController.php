@@ -30,7 +30,7 @@ class ContractController extends Controller
 
     public function show($id)
     {
-        $contract = Contract::find($id);
+        $contract = Contract::with(['endorsements.contractReference.contact'])->findOrFail($id);
         return view('transaction.contract.show', [
             'contract' => $contract,
         ]);
@@ -38,7 +38,7 @@ class ContractController extends Controller
 
     public function edit($id)
     {
-        $contract = Contract::with(['details', 'contractType', 'contact'])->findOrFail($id);
+        $contract = Contract::with(['details', 'endorsements.contractReference.contact', 'contractType', 'contact'])->findOrFail($id);
         
         // Check if user is admin and contract is pending or rejected
         if (auth()->user()->role !== 'admin') {

@@ -31,7 +31,6 @@ class ContractStoreRequest extends FormRequest
             'policy_number' => 'nullable|max:150',
             'policy_fee' => 'nullable|numeric',
             'contact_id' => 'required|exists:contacts,id',
-            'contract_reference_id' => 'nullable|exists:contracts,id',
             'period_start' => 'required|date',
             'period_end' => 'required|date',
             'currency_code' => 'required|exists:currencies,code',
@@ -50,6 +49,9 @@ class ContractStoreRequest extends FormRequest
             'details.*.brokerage_fee' => 'required|numeric',
             'details.*.eng_fee' => 'required|numeric',
             'covered_item' => 'nullable|numeric',
+            'endorsements' => 'nullable|array',
+            'endorsements.*.contract_reference_id' => 'nullable|exists:contracts,id',
+            'endorsements.*.endorsement_number' => 'nullable|string|max:100',
         ];
     }
 

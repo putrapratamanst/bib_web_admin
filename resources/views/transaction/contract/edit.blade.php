@@ -56,20 +56,6 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="contract_reference_id" class="form-label">Placing Reference / Endorsement</label>
-                            <select name="contract_reference_id" id="contract_reference_id" class="form-control">
-                                @if($contract->contract_reference_id)
-                                <option value="{{ $contract->contract_reference_id }}" selected>{{ $contract->contractReference->number }}</option>
-                                @else
-                                <option value=""></option>
-                                @endif
-                            </select>
-                            <small class="text-muted">Optional - Select original placing for endorsement</small>
-                        </div>
-                    </div>
-
                     <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
@@ -231,6 +217,55 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="mb-3">Endorsement / Placing Reference</h6>
+                        <table id="tableEndorsements" class="table table-sm table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="40%">Placing Reference</th>
+                                    <th width="30%">Endorsement No</th>
+                                    <th width="10%">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($contract->endorsements as $index => $endorsement)
+                                <tr>
+                                    <td>
+                                        <select id="contract_reference_id_{{ $index }}" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --">
+                                            @if($endorsement->contract_reference_id)
+                                            <option value="{{ $endorsement->contract_reference_id }}" selected>{{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}</option>
+                                            @else
+                                            <option value=""></option>
+                                            @endif
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input id="endorsement_number_{{ $index }}" type="text" class="form-control" name="endorsement_number[]" value="{{ $endorsement->endorsement_number }}" placeholder="Enter endorsement number">
+                                    </td>
+                                    <td class="text-center" style="vertical-align: middle;">
+                                        <button type="button" class="removeEndorsementRow btn btn-outline-danger btn-sm">Remove</button>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr id="emptyEndorsementRow">
+                                    <td colspan="3" class="text-center text-muted">
+                                        <i class="bi bi-info-circle"></i> No endorsements yet. Click "Add Endorsement" to add one.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddEndorsementRow">Add Endorsement</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Documents Section -->
                 <div class="row mt-4">
                     <div class="col-md-12">
@@ -345,6 +380,7 @@
     });
 
     var rowNumber = {{ count($contract->details) }};
+    var endorsementRowNumber = {{ count($contract->endorsements) > 0 ? count($contract->endorsements) : 1 }};
 
     $(document).ready(function() {
         $('#contact_id').select2({
@@ -353,33 +389,6 @@
             placeholder: '-- select contact --',
             ajax: {
                 url: "{{ route('api.contacts.select2') }}?type=client",
-                dataType: 'json',
-                delay: 500,
-                data: function(params) {
-                    return {
-                        search: params.term,
-                        page: params.page || 1
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data.data,
-                        pagination: {
-                            more: data.pagination.more
-                        }
-                    };
-                },
-                minimumInputLength: 0,
-            },
-        });
-
-        $('#contract_reference_id').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: '-- select contract reference (optional) --',
-            allowClear: true,
-            ajax: {
-                url: "{{ route('api.contracts.select2') }}",
                 dataType: 'json',
                 delay: 500,
                 data: function(params) {
@@ -429,6 +438,39 @@
         });
         @endforeach
 
+        // Initialize select2 for existing endorsement dropdowns
+        @foreach($contract->endorsements as $index => $endorsement)
+        @if($endorsement->contract_reference_id)
+        // Endorsement {{ $index }} has reference, keep selected option
+        @endif
+        $('#contract_reference_id_{{ $index }}').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contract reference --',
+            allowClear: true,
+            ajax: {
+                url: "{{ route('api.contracts.select2') }}",
+                dataType: 'json',
+                delay: 500,
+                data: function(params) {
+                    return {
+                        search: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    };
+                },
+                minimumInputLength: 2,
+            },
+        });
+        @endforeach
+
         $("#currency_code").on("change", function() {
             var currencyCode = $(this).val();
             $(".curr-code").text(currencyCode);
@@ -454,6 +496,19 @@
                 });
             });
 
+            var endorsements = [];
+            $('#tableEndorsements tbody tr').each(function() {
+                var contractReferenceId = $(this).find('select[name="contract_reference_id[]"]').val();
+                var endorsementNumber = $(this).find('input[name="endorsement_number[]"]').val();
+
+                if (contractReferenceId || endorsementNumber) {
+                    endorsements.push({
+                        contract_reference_id: contractReferenceId,
+                        endorsement_number: endorsementNumber,
+                    });
+                }
+            });
+
             var contractId = $("#contract_id").val();
             var formData = {
                 contract_status: $("#contract_status").val(),
@@ -462,7 +517,7 @@
                 policy_number: $("#policy_number").val(),
                 policy_fee: $("#policy_fee").autoNumeric('get'),
                 contact_id: $("#contact_id").val(),
-                contract_reference_id: $("#contract_reference_id").val() || null,
+                endorsements: endorsements,
                 period_start: $("#period_start").val(),
                 period_end: $("#period_end").val(),
                 currency_code: $("#currency_code").val(),
@@ -551,6 +606,44 @@
             rowNumber++;
         });
 
+        // Endorsement row management
+        $('#btnAddEndorsementRow').click(function() {
+            // Remove empty row if exists
+            $('#emptyEndorsementRow').remove();
+            
+            $('#tableEndorsements tbody').append(`
+                <tr>
+                    <td>
+                        <select id="contract_reference_id_` + endorsementRowNumber + `" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --"></select>
+                    </td>
+                    <td>
+                        <input id="endorsement_number_` + endorsementRowNumber + `" type="text" class="form-control" name="endorsement_number[]" placeholder="Enter endorsement number">
+                    </td>
+                    <td class="text-center" style="vertical-align: middle;">
+                        <button type="button" class="removeEndorsementRow btn btn-outline-danger btn-sm">Remove</button>
+                    </td>
+                </tr>
+            `);
+
+            assignEndorsementData(endorsementRowNumber.toString());
+            endorsementRowNumber++;
+        });
+
+        $(document).on('click', '.removeEndorsementRow', function() {
+            $(this).closest('tr').remove();
+            
+            // If no more rows, add empty row back
+            if ($('#tableEndorsements tbody tr').length === 0) {
+                $('#tableEndorsements tbody').append(`
+                    <tr id="emptyEndorsementRow">
+                        <td colspan="3" class="text-center text-muted">
+                            <i class="bi bi-info-circle"></i> No endorsements yet. Click "Add Endorsement" to add one.
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+
         $("#discount").on("change", function() {
             calculateDiscount();
         });
@@ -581,6 +674,35 @@
             placeholder: '-- select insurance --',
             ajax: {
                 url: "{{ route('api.contacts.select2') }}?type=insurance",
+                dataType: 'json',
+                delay: 500,
+                data: function(params) {
+                    return {
+                        search: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    };
+                },
+                minimumInputLength: 2,
+            },
+        });
+    }
+
+    function assignEndorsementData(number) {
+        $('#contract_reference_id_' + number).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contract reference --',
+            allowClear: true,
+            ajax: {
+                url: "{{ route('api.contracts.select2') }}",
                 dataType: 'json',
                 delay: 500,
                 data: function(params) {

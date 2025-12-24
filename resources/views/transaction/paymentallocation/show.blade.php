@@ -254,6 +254,9 @@
                     $.ajax({
                         url: "{{ route('api.payment-allocations.storeAll', ['cashbankID' => $cashBank->id]) }}",
                         method: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
                         success: function(response) {
                             Swal.fire({
                                 icon: 'success',
@@ -288,6 +291,7 @@
                 url: "{{ route('api.payment-allocations.storeByCashBankID', ['cashbankID' => $cashBank->id]) }}",
                 method: 'POST',
                 data: {
+                    _token: "{{ csrf_token() }}",
                     debit_note_billing_id: billingId,
                     allocation: allocation,
                     cash_bank_id: "{{ $cashBank->id }}"
@@ -324,6 +328,7 @@
                 url: "{{ route('api.payment-allocations.storeByCashBankIDForCashout', ['cashbankID' => $cashBank->id]) }}",
                 method: 'POST',
                 data: {
+                    _token: "{{ csrf_token() }}",
                     cashout_id: cashoutId,
                     allocation: allocation,
                     cash_bank_id: "{{ $cashBank->id }}"

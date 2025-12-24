@@ -37,12 +37,6 @@
                             <input readonly type="text" value="{{ $contract->contact->display_name }}" class="form-control">
                         </div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="contract_reference_id" class="form-label">Placing Reference / Endorsement</label>
-                            <input readonly type="text" value="{{ $contract->contractReference?->number ?? '-' }}" class="form-control">
-                        </div>
-                    </div>
                 </div>
 
                 <div class="row">
@@ -218,6 +212,43 @@
                     </div>
                 </div>
                 @endif
+
+                <!-- Endorsements Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6 class="mb-3">Endorsement / Placing Reference</h6>
+                        @if($contract->endorsements->count() > 0)
+                        <table class="table table-sm table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="40%">Placing Reference</th>
+                                    <th width="30%">Endorsement No</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($contract->endorsements as $index => $endorsement)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>
+                                        @if($endorsement->contractReference)
+                                            {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>{{ $endorsement->endorsement_number ?? '-' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @else
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No endorsements found
+                        </div>
+                        @endif
+                    </div>
+                </div>
 
                 <!-- Documents Section -->
                 <div class="row mt-4">

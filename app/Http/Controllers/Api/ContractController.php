@@ -94,7 +94,13 @@ class ContractController extends Controller
 
     public function show($id)
     {
-        $contract = Contract::with(['contact', 'contractType', 'details', 'currency'])->findOrFail($id);
+        $contract = Contract::with([
+            'contact', 
+            'contractType', 
+            'details.insurance', 
+            'endorsements.contractReference:id,number,contact_id', 
+            'currency'
+        ])->findOrFail($id);
 
         return response()->json([
             'data' => new ContractResource($contract)
@@ -164,7 +170,6 @@ class ContractController extends Controller
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],
-                'contract_reference_id' => $data['contract_reference_id'] ?? null,
                 'period_start' => $data['period_start'],
                 'period_end' => $data['period_end'],
                 'currency_code' => $data['currency_code'],
@@ -192,6 +197,19 @@ class ContractController extends Controller
                         'brokerage_fee' => $detail['brokerage_fee'],
                         'eng_fee' => $detail['eng_fee'],
                     ]);
+                }
+            }
+
+            // Save endorsements
+            if (!empty($data['endorsements'])) {
+                foreach ($data['endorsements'] as $endorsement) {
+                    // Only save if has data
+                    if (!empty($endorsement['contract_reference_id']) || !empty($endorsement['endorsement_number'])) {
+                        $contract->endorsements()->create([
+                            'contract_reference_id' => $endorsement['contract_reference_id'] ?? null,
+                            'endorsement_number' => $endorsement['endorsement_number'] ?? null,
+                        ]);
+                    }
                 }
             }
 
@@ -299,7 +317,6 @@ class ContractController extends Controller
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],
-                'contract_reference_id' => $data['contract_reference_id'] ?? null,
                 'period_start' => $data['period_start'],
                 'period_end' => $data['period_end'],
                 'currency_code' => $data['currency_code'],
@@ -327,6 +344,21 @@ class ContractController extends Controller
                         'brokerage_fee' => $detail['brokerage_fee'],
                         'eng_fee' => $detail['eng_fee'],
                     ]);
+                }
+            }
+
+            // Delete existing endorsements and recreate
+            $contract->endorsements()->delete();
+            
+            if (!empty($data['endorsements'])) {
+                foreach ($data['endorsements'] as $endorsement) {
+                    // Only save if has data
+                    if (!empty($endorsement['contract_reference_id']) || !empty($endorsement['endorsement_number'])) {
+                        $contract->endorsements()->create([
+                            'contract_reference_id' => $endorsement['contract_reference_id'] ?? null,
+                            'endorsement_number' => $endorsement['endorsement_number'] ?? null,
+                        ]);
+                    }
                 }
             }
 

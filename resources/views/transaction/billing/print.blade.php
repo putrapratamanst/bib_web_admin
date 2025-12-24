@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debit Note - {{ $billing->billing_number }}</title>
+    <title>Debit Note - {{ $billing->debitNote->number ?? $billing->billing_number }}</title>
     <style>
         * {
             margin: 0;
@@ -18,45 +18,85 @@
         }
         
         .container {
-            max-width: 210mm;
-            height: 297mm;
+            max-width: 850px;
+            height: 650px;
             margin: 0 auto;
             background: white;
-            padding: 0;
+            padding: 15mm;
             position: relative;
             overflow: hidden;
         }
         
-        /* Header section */
-        .header-section {
+        /* Top left header */
+        .company-header {
             position: absolute;
-            top: 35mm;
-            right: 15mm;
-            width: 65mm;
+            top: 10mm;
+            left: 15mm;
+            width: 80mm;
         }
         
-        .header-item {
-            display: flex;
-            margin-bottom: 2mm;
+        .company-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        
+        .company-name {
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        /* Top right - Client info */
+        .client-header {
+            position: absolute;
+            top: 10mm;
+            right: 15mm;
+            width: 90mm;
             font-size: 9px;
         }
         
-        .header-label {
-            width: 20mm;
+        .client-name {
             font-weight: bold;
+            margin-bottom: 2mm;
         }
         
-        .header-value {
+        .client-address {
+            margin-bottom: 3mm;
+            line-height: 1.3;
+        }
+        
+        .dn-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1mm;
+        }
+        
+        .dn-label {
+            font-weight: bold;
+            width: 15mm;
+        }
+        
+        .dn-value {
             flex: 1;
-            border-bottom: 0.5px solid #000;
-            padding-bottom: 1px;
-            margin-left: 2mm;
+        }
+        
+        /* Main title */
+        .main-title {
+            position: absolute;
+            top: 45mm;
+            left: 15mm;
+            right: 15mm;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
         }
         
         /* Description section (left) */
         .description-section {
             position: absolute;
-            top: 60mm;
+            top: 55mm;
             left: 15mm;
             width: 95mm;
         }
@@ -66,41 +106,53 @@
             font-weight: bold;
             text-align: center;
             border: 1px solid #000;
-            padding: 2px;
-            margin-bottom: 2px;
+            padding: 3px;
+            margin-bottom: 2mm;
+            background-color: #f9f9f9;
         }
         
         .desc-row {
             display: flex;
-            font-size: 8px;
-            margin-bottom: 1mm;
+            font-size: 8.5px;
+            margin-bottom: 1.5mm;
+            align-items: flex-start;
         }
         
         .desc-label {
-            width: 30mm;
-            font-weight: bold;
+            width: 28mm;
             padding-right: 2mm;
+        }
+        
+        .desc-colon {
+            width: 3mm;
         }
         
         .desc-value {
             flex: 1;
-            border-bottom: 0.5px solid #000;
-            padding-bottom: 1px;
+            line-height: 1.3;
         }
         
-        .desc-value-multiline {
-            flex: 1;
-            border-bottom: 0.5px solid #000;
-            padding-bottom: 1px;
-            line-height: 1.2;
+        .desc-remarks {
+            margin-top: 2mm;
+            font-size: 8.5px;
+            color: #0066cc;
+            line-height: 1.4;
+        }
+        
+        .desc-footer-note {
+            margin-top: 5mm;
+            font-size: 7.5px;
+            font-style: italic;
+            color: #0066cc;
+            line-height: 1.4;
         }
         
         /* Premium Calculation section (right) */
         .premium-section {
             position: absolute;
-            top: 60mm;
+            top: 55mm;
             right: 15mm;
-            width: 65mm;
+            width: 85mm;
         }
         
         .premium-title {
@@ -108,81 +160,122 @@
             font-weight: bold;
             text-align: center;
             border: 1px solid #000;
-            padding: 2px;
-            margin-bottom: 2px;
+            padding: 3px;
+            margin-bottom: 2mm;
+            background-color: #f9f9f9;
         }
         
         .premium-row {
             display: flex;
             justify-content: space-between;
-            font-size: 8px;
-            margin-bottom: 1mm;
-            padding-bottom: 1px;
-            border-bottom: 0.5px solid #ccc;
+            font-size: 8.5px;
+            margin-bottom: 1.5mm;
+            padding: 2px 3px;
+            border-bottom: 0.5px solid #e0e0e0;
         }
         
         .premium-row.total {
             font-weight: bold;
-            border-bottom: 1px solid #000;
-            border-top: 1px solid #000;
-            padding: 1px 0;
-            margin: 2mm 0;
+            border-bottom: 1.5px solid #000;
+            border-top: 1.5px solid #000;
+            padding: 3px;
+            margin-top: 3mm;
+            margin-bottom: 3mm;
         }
         
         .premium-label {
             flex: 1;
         }
         
+        .premium-currency {
+            width: 15mm;
+            text-align: center;
+        }
+        
         .premium-value {
             text-align: right;
-            min-width: 25mm;
-            padding-right: 1mm;
+            min-width: 30mm;
+            padding-right: 2mm;
         }
         
-        /* Table section */
-        .table-section {
+        .eoe-text {
+            text-align: right;
+            font-size: 8px;
+            font-style: italic;
+            margin-top: 2mm;
+        }
+        
+        /* Signature section */
+        .signature-section {
             position: absolute;
-            top: 150mm;
+            top: 180mm;
+            right: 15mm;
+            width: 70mm;
+            text-align: center;
+        }
+        
+        .paid-stamp {
+            margin-bottom: 10mm;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            border: 3px solid #666;
+            padding: 5px 15px;
+            display: inline-block;
+            transform: rotate(-10deg);
+        }
+        
+        .signature-label {
+            font-size: 9px;
+            margin-top: 15mm;
+            padding-top: 5mm;
+            border-top: 1px solid #000;
+        }
+        
+        /* Footer Section */
+        .footer-section {
+            position: absolute;
+            bottom: 15mm;
             left: 15mm;
             right: 15mm;
-            width: 170mm;
         }
         
-        .table-label {
-            font-size: 9px;
-            font-weight: bold;
-            margin-bottom: 2px;
-            text-align: center;
-        }
-        
-        .table-items {
-            width: 100%;
-            border-collapse: collapse;
+        .bank-info {
             font-size: 8px;
+            line-height: 1.5;
+            margin-bottom: 3mm;
         }
         
-        .table-items td {
-            border: 0.5px solid #000;
-            padding: 2px 3px;
+        .bank-title {
+            font-weight: bold;
+        }
+        
+        .company-footer {
+            font-size: 7px;
             text-align: center;
-        }
-        
-        .table-items td:first-child {
-            text-align: left;
+            line-height: 1.4;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 2mm;
         }
         
         .print-button {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 8px 15px;
+            padding: 10px 20px;
             background-color: #2196F3;
             color: white;
             border: none;
-            border-radius: 3px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .print-button:hover {
+            background-color: #1976D2;
         }
         
         @media print {
@@ -194,64 +287,93 @@
             .print-button {
                 display: none;
             }
+            
+            .container {
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="print-button" onclick="window.print()">Print</button>
+    <button class="print-button" onclick="window.print()">🖨️ Print</button>
 
     <div class="container">
-        <!-- Header Section -->
-        <div class="header-section">
-            <div class="header-item">
-                <div class="header-label">No :</div>
-                <div class="header-value">{{ $billing->billing_number }}</div>
-            </div>
-            <div class="header-item">
-                <div class="header-label">Tanggal :</div>
-                <div class="header-value">{{ \Carbon\Carbon::parse($billing->date)->format('d-m-Y') }}</div>
+        <!-- Company Header -->
+        <div class="company-header">
+            <div class="company-logo">Brilliant 🏢</div>
+            <div style="font-size: 9px; font-style: italic;">Insurance Brokers</div>
+            <div class="company-name">PT. BRILLIANT INSURANCE BROKERS</div>
+        </div>
+
+        <!-- Client Header -->
+        <div class="client-header">
+            @php
+                $contract = $billing->debitNote->contract ?? null;
+                $contact = $contract?->contact ?? $billing->debitNote->contact;
+                $billingAddress = $billing->debitNote->billingAddress;
+            @endphp
+            <div class="client-name">{{ $contact?->display_name ?? $contact?->name ?? '-' }}</div>
+            <div class="client-address">{{ $billingAddress?->address ?? ($contact?->address ?? 'N/A') }}</div>
+            <div class="dn-info">
+                <div class="dn-label">No :</div>
+                <div class="dn-value">{{ $billing->debitNote->number ?? $billing->billing_number }}</div>
+                <div class="dn-label" style="margin-left: 5mm;">Tanggal :</div>
+                <div class="dn-value">{{ $billing->debitNote?->date_formatted ?? \Carbon\Carbon::parse($billing->date)->format('d-m-Y') }}</div>
             </div>
         </div>
 
+        <!-- Main Title -->
+        <div class="main-title">DEBIT NOTE</div>
+
         <!-- Description Section -->
         <div class="description-section">
-            <div class="description-title">DESCRIPTION</div>
+            <div class="description-title">D E S C R I P T I O N</div>
+            
+            @php
+                $policyNumber = $contract?->policy_number ?? '-';
+                $endorsementNumber = $contract?->contractReference?->number ?? '0';
+                $startDate = $contract?->period_start ?? $billing->debitNote?->date ?? $billing->date;
+                $endDate = $contract?->period_end ?? \Carbon\Carbon::parse($startDate)->addYear()->toDateString();
+                $coverageName = $contract?->contractType?->name ?? 'Insurance Coverage';
+                $installmentNum = $billing->debitNote->installment ?? 0;
+            @endphp
             
             <div class="desc-row">
-                <div class="desc-label">Placing No</div>
-                <div class="desc-value">{{ $billing->debitNote->contract->number ?? '-' }}</div>
+                <div class="desc-label">Policy No</div>
+                <div class="desc-colon">:</div>
+                <div class="desc-value">{{ $policyNumber }} (No End. {{ $endorsementNumber }})</div>
             </div>
             
             <div class="desc-row">
                 <div class="desc-label">Period</div>
-                <div class="desc-value">
-                    @php
-                        $contract = $billing->debitNote->contract;
-                        $startDate = $contract->effective_date ?? $billing->debitNote->date ?? $billing->date;
-                        $endDate = $contract->expiry_date ?? \Carbon\Carbon::parse($startDate)->addYear()->toDateString();
-                    @endphp
-                    {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}
-                </div>
+                <div class="desc-colon">:</div>
+                <div class="desc-value">{{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
             </div>
             
             <div class="desc-row">
                 <div class="desc-label">Sum Insured</div>
-                <div class="desc-value">IDR {{ number_format($billing->debitNote->coverage_amount ?? 0, 0, ',', '.') }},-</div>
+                <div class="desc-colon">:</div>
+                <div class="desc-value">{{ $contract?->currency_code ?? 'IDR' }}  {{ number_format($contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
             </div>
             
             <div class="desc-row">
                 <div class="desc-label">REMARKS</div>
-                <div class="desc-value">{{ $billing->debitNote->contract->contract_type->name ?? 'Insurance Coverage' }}</div>
+                <div class="desc-colon">:</div>
+                <div class="desc-value">{{ $coverageName }}</div>
             </div>
             
-            <div class="desc-row">
-                <div class="desc-label">Risk Location</div>
-                <div class="desc-value-multiline">{{ $billing->debitNote->contract->contact->address ?? 'N/A' }}</div>
+            <div class="desc-remarks">
+                {!! nl2br(e($contract?->memo ?? '-')) !!}
             </div>
-            
-            <div class="desc-row">
-                <div class="desc-label">Stocks</div>
-                <div class="desc-value">IDR {{ number_format($billing->debitNote->coverage_amount ?? 0, 0, ',', '.') }},00</div>
+
+            <div class="desc-footer-note">
+                @php
+                    $dueDateText = $billing->due_date ? \Carbon\Carbon::parse($billing->due_date)->format('d-m-Y') : '';
+                    $dueClause = $dueDateText ? ", yaitu tanggal {$dueDateText}" : ".";
+                @endphp
+                "Jatuh Tempo pembayaran Premi adalah 7 hari setelah Polis diterima"<br/>
+                "Klaim dapat ditolak jika pembayaran premi melebihi jatuh tempo"<br/>
+                "Pembayaran Premi ditujukan atas atas nama dituangkan nomor Debit Note & Polis tersebut"
             </div>
         </div>
 
@@ -259,77 +381,77 @@
         <div class="premium-section">
             <div class="premium-title">PREMIUM CALCULATION</div>
             
-            <div class="premium-row">
-                <div class="premium-label">Currency</div>
-                <div class="premium-value">{{ $billing->debitNote->currency_code ?? 'IDR' }}</div>
-            </div>
-            
             @php
-                $gross = $billing->debitNote->gross_premium ?? $billing->amount;
-                $endorsementCost = $billing->debitNote->endorsement_cost ?? 0;
-                $stampDuty = $billing->debitNote->stamp_duty ?? ($gross * 0.02);
-                $discount = $billing->debitNote->discount ?? 0;
-                $discountAmount = $gross * ($discount / 100);
-                $net = $gross + $endorsementCost + $stampDuty - $discountAmount;
+                $currencyName = $contract?->currency?->name ?? 'Rupiah Indonesia';
+                $currencyCode = $contract?->currency_code ?? 'IDR';
+                $gross = $contract?->gross_premium ?? ($billing->amount ?? 0);
+                $policyFee = 0; // Set sesuai data
+                $stampDuty = $contract?->stamp_fee ?? 0;
+                $discountPercent = $contract?->discount ?? 0;
+                $discountAmount = ($gross * $discountPercent) / 100;
+                $net = $gross + $policyFee + $stampDuty - $discountAmount;
             @endphp
             
             <div class="premium-row">
+                <div class="premium-label">Currency</div>
+                <div class="premium-value" style="text-align: center;">{{ $currencyName }}</div>
+            </div>
+            
+            <div class="premium-row">
                 <div class="premium-label">Gross Premium</div>
-                <div class="premium-value">{{ number_format($gross, 0, ',', '.') }},-</div>
+                <div class="premium-currency">{{ $currencyCode }}</div>
+                <div class="premium-value">{{ number_format($gross, 0, '.', ',') }},-</div>
             </div>
             
             <div class="premium-row">
                 <div class="premium-label">Policy/Endorsement Cost</div>
-                <div class="premium-value">{{ number_format($endorsementCost, 0, ',', '.') }},-</div>
+                <div class="premium-currency">{{ $currencyCode }}</div>
+                <div class="premium-value">{{ number_format($policyFee, 0, '.', ',') }},-</div>
             </div>
             
             <div class="premium-row">
                 <div class="premium-label">Stamp duty</div>
-                <div class="premium-value">{{ number_format($stampDuty, 0, ',', '.') }},-</div>
+                <div class="premium-currency">{{ $currencyCode }}</div>
+                <div class="premium-value">{{ number_format($stampDuty, 0, '.', ',') }},-</div>
             </div>
             
+            @if($discountPercent > 0)
             <div class="premium-row">
-                <div class="premium-label">Discount {{ $discount }}%</div>
-                <div class="premium-value">({{ number_format($discountAmount, 0, ',', '.') }}),-</div>
+                <div class="premium-label">Discount {{ number_format($discountPercent, 2, ',', '.') }}%</div>
+                <div class="premium-currency">{{ $currencyCode }}</div>
+                <div class="premium-value">({{ number_format($discountAmount, 0, '.', ',') }}),-</div>
             </div>
+            @endif
             
             <div class="premium-row total">
                 <div class="premium-label">Net Premium</div>
-                <div class="premium-value">{{ number_format($net, 0, ',', '.') }},-</div>
+                <div class="premium-currency">{{ $currencyCode }}</div>
+                <div class="premium-value">{{ number_format($net, 0, '.', ',') }},-</div>
             </div>
+            
+            <div class="eoe-text">E. & O.E.</div>
         </div>
 
-        <!-- Items Table -->
-        <div class="table-section">
-            <div class="table-label">INSTALLMENT DETAILS</div>
-            <table class="table-items">
-                <tbody>
-                    <tr>
-                        <td style="width: 40mm;">Installment</td>
-                        <td style="width: 35mm;">Amount</td>
-                        <td style="width: 35mm;">Due Date</td>
-                        <td style="width: 60mm;">Description</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            @php
-                                $installmentNumber = $billing->debitNote->debitNoteBillings()
-                                    ->where('date', '<=', $billing->date)
-                                    ->orderBy('date')
-                                    ->orderBy('id')
-                                    ->get()
-                                    ->search(function($item) use ($billing) {
-                                        return $item->id === $billing->id;
-                                    }) + 1;
-                            @endphp
-                            Installment {{ $installmentNumber }}
-                        </td>
-                        <td>{{ number_format($net, 0, ',', '.') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($billing->due_date)->format('d-m-Y') }}</td>
-                        <td style="text-align: left;">Tagihan Premi Asuransi</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="paid-stamp">PAID<br><span style="font-size: 14px;">{{ now()->format('d M Y') }}</span></div>
+            <div class="signature-label">Authorized Signature</div>
+        </div>
+
+        <!-- Footer Section -->
+        <div class="footer-section">
+            <div class="bank-info">
+                <div class="bank-title">PT. Brilliant Insurance Brokers</div>
+                <div>Bank Mandiri KCP Botanical Garden a/c No. 070.0006.524123 (IDR)</div>
+                <div>BNI 46 Cab. Senayan a/c No. 025.9060.691 (IDR)</div>
+                <div>Bank Mandiri KCP Botanical Garden a/c No. 070.0006.524131 (USD)</div>
+                <div>BCA KCP Puri Botanical a/c No. 6260.5866.88 (IDR)</div>
+            </div>
+            <div class="company-footer">
+                Rukan Botanic Junction, Blok i 10 No. 60, Joglo - Jakarta Barat 11640<br/>
+                Telp. : 021- 55589803, 22542676, 25680394<br/>
+                Email : admin@brilliantinsbrokers.com
+            </div>
         </div>
     </div>
 
