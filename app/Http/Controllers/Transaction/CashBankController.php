@@ -34,4 +34,27 @@ class CashBankController extends Controller
             'cashBank' => $cashBank,
         ]);
     }
+
+    public function print($id)
+    {
+        $cashBank = CashBank::with([
+            'contact',
+            'chartOfAccount',
+            'cashBankDetails.chartOfAccount',
+            'createdBy'
+        ])->findOrFail($id);
+
+        // Choose template based on type
+        if ($cashBank->type === 'pay') {
+            return view('transaction.cashbank.print', [
+                'cashBank' => $cashBank,
+            ]);
+        } elseif ($cashBank->type === 'receive') {
+            return view('transaction.cashbank.print-receive', [
+                'cashBank' => $cashBank,
+            ]);
+        }
+
+        abort(403, 'Invalid transaction type');
+    }
 }

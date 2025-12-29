@@ -6,6 +6,9 @@
         <div class="card-header">
             Cash & Bank Detail
             <div class="float-end">
+                <a href="{{ route('transaction.cash-banks.print', $cashBank->id) }}" class="btn btn-primary btn-sm" target="_blank">
+                    <i class="bi bi-printer"></i> Print
+                </a>
                 <a href="{{ route('transaction.cash-banks.index') }}" class="btn btn-secondary btn-sm">
                     Back
                 </a>

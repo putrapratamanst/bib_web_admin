@@ -108,10 +108,10 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
+                            <label for="exchange_rate" class="form-label">Exchange Rate</label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" required />
+                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" />
                             </div>
                         </div>
                     </div>
@@ -218,35 +218,20 @@
                 <div class="row">
                     <div class="col-md-12">
                         <h6 class="mb-3">Endorsement / Placing Reference</h6>
-                        <table id="tableEndorsements" class="table table-sm table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th width="40%">Placing Reference</th>
-                                    <th width="30%">Endorsement No</th>
-                                    <th width="10%">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <select id="contract_reference_id_0" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --"></select>
-                                    </td>
-                                    <td>
-                                        <input id="endorsement_number_0" type="text" class="form-control" name="endorsement_number[]" placeholder="Enter endorsement number">
-                                    </td>
-                                    <td class="text-center" style="vertical-align: middle;">
-                                        <button type="button" class="removeEndorsementRow btn btn-outline-danger btn-sm">Remove</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddEndorsementRow">Add Endorsement</button>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contract_reference_id" class="form-label">Placing Reference</label>
+                                    <select id="contract_reference_id" name="contract_reference_id" class="form-select" data-placeholder="-- select contract reference --"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="endorsement_number" class="form-label">Endorsement No</label>
+                                    <input id="endorsement_number" type="text" class="form-control" name="endorsement_number" placeholder="Enter endorsement number">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -321,7 +306,6 @@
     });
 
     var rowNumber = 1;
-    var endorsementRowNumber = 1;
 
     $(document).ready(function() {
         $('#contact_id').select2({
@@ -376,17 +360,15 @@
             });
 
             var endorsements = [];
-            $('#tableEndorsements tbody tr').each(function() {
-                var contractReferenceId = $(this).find('select[name="contract_reference_id[]"]').val();
-                var endorsementNumber = $(this).find('input[name="endorsement_number[]"]').val();
+            var contractReferenceId = $('#contract_reference_id').val();
+            var endorsementNumber = $('#endorsement_number').val();
 
-                if (contractReferenceId || endorsementNumber) {
-                    endorsements.push({
-                        contract_reference_id: contractReferenceId,
-                        endorsement_number: endorsementNumber,
-                    });
-                }
-            });
+            if (contractReferenceId || endorsementNumber) {
+                endorsements.push({
+                    contract_reference_id: contractReferenceId,
+                    endorsement_number: endorsementNumber,
+                });
+            }
 
             var formData = {
                 contract_status: $("#contract_status").val(),
@@ -508,37 +490,33 @@
 
         assignInsuranceData("0");
 
-        // Endorsement row management
-        $('#btnAddEndorsementRow').click(function() {
-            $('#tableEndorsements tbody').append(`
-                <tr>
-                    <td>
-                        <select id="contract_reference_id_` + endorsementRowNumber + `" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --"></select>
-                    </td>
-                    <td>
-                        <input id="endorsement_number_` + endorsementRowNumber + `" type="text" class="form-control" name="endorsement_number[]" placeholder="Enter endorsement number">
-                    </td>
-                    <td class="text-center" style="vertical-align: middle;">
-                        <button type="button" class="removeEndorsementRow btn btn-outline-danger btn-sm">Remove</button>
-                    </td>
-                </tr>
-            `);
-
-            assignEndorsementData(endorsementRowNumber.toString());
-            endorsementRowNumber++;
-        });
-
-        $(document).on('click', '.removeEndorsementRow', function() {
-            if ($('#tableEndorsements tbody tr').length === 1) {
-                // Clear the values instead of removing the row
-                $(this).closest('tr').find('select').val('').trigger('change');
-                $(this).closest('tr').find('input').val('');
-                return;
+        // Initialize Select2 for contract reference
+        $('#contract_reference_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contract reference --',
+            allowClear: true,
+            ajax: {
+                url: "{{ route('api.contracts.select2') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        search: params.term,
+                        page: params.page || 1
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    };
+                },
+                cache: true
             }
-            $(this).closest('tr').remove();
         });
-
-        assignEndorsementData("0");
 
         // Generate contract number when contract type is selected
         $("#contract_type_id").on("change", function() {
@@ -623,35 +601,6 @@
             placeholder: '-- select insurance --',
             ajax: {
                 url: "{{ route('api.contacts.select2') }}?type=insurance",
-                dataType: 'json',
-                delay: 500,
-                data: function(params) {
-                    return {
-                        search: params.term,
-                        page: params.page || 1
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data.data,
-                        pagination: {
-                            more: data.pagination.more
-                        }
-                    };
-                },
-                minimumInputLength: 2,
-            },
-        });
-    }
-
-    function assignEndorsementData(number) {
-        $('#contract_reference_id_' + number).select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: '-- select contract reference --',
-            allowClear: true,
-            ajax: {
-                url: "{{ route('api.contracts.select2') }}",
                 dataType: 'json',
                 delay: 500,
                 data: function(params) {

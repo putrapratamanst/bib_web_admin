@@ -36,6 +36,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/cash-banks', [\App\Http\Controllers\Transaction\CashBankController::class, 'index'])->name('transaction.cash-banks.index');
     Route::get('/cash-banks/create', [\App\Http\Controllers\Transaction\CashBankController::class, 'create'])->name('transaction.cash-banks.create');
     Route::get('/cash-banks/{id}', [\App\Http\Controllers\Transaction\CashBankController::class, 'show'])->name('transaction.cash-banks.show');
+    Route::get('/cash-banks/{id}/print', [\App\Http\Controllers\Transaction\CashBankController::class, 'print'])->name('transaction.cash-banks.print');
 
     // Contract
     Route::get('/contracts', [\App\Http\Controllers\Transaction\ContractController::class, 'index'])->name('transaction.contracts.index');
