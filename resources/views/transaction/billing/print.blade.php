@@ -171,13 +171,10 @@
             font-size: 8.5px;
             margin-bottom: 1.5mm;
             padding: 2px 3px;
-            border-bottom: 0.5px solid #e0e0e0;
         }
         
         .premium-row.total {
             font-weight: bold;
-            border-bottom: 1.5px solid #000;
-            border-top: 1.5px solid #000;
             padding: 3px;
             margin-top: 3mm;
             margin-bottom: 3mm;
@@ -339,26 +336,26 @@
             @endphp
             
             <div class="desc-row">
-                <div class="desc-label">Policy No</div>
-                <div class="desc-colon">:</div>
+                <div class="desc-label">{{-- Policy No --}}</div>
+                <div class="desc-colon">{{-- : --}}</div>
                 <div class="desc-value">{{ $policyNumber }} (No End. {{ $endorsementNumber }})</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">Period</div>
-                <div class="desc-colon">:</div>
+                <div class="desc-label">{{-- Period --}}</div>
+                <div class="desc-colon">{{-- : --}}</div>
                 <div class="desc-value">{{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">Sum Insured</div>
-                <div class="desc-colon">:</div>
+                <div class="desc-label">{{-- Sum Insured --}}</div>
+                <div class="desc-colon">{{-- : --}}</div>
                 <div class="desc-value">{{ $contract?->currency_code ?? 'IDR' }}  {{ number_format($contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">REMARKS</div>
-                <div class="desc-colon">:</div>
+                <div class="desc-label">{{-- REMARKS --}}</div>
+                <div class="desc-colon">{{-- : --}}</div>
                 <div class="desc-value">{{ $coverageName }}</div>
             </div>
             
@@ -393,38 +390,38 @@
             @endphp
             
             <div class="premium-row">
-                <div class="premium-label">Currency</div>
+                <div class="premium-label">{{-- Currency --}}</div>
                 <div class="premium-value" style="text-align: center;">{{ $currencyName }}</div>
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">Gross Premium</div>
+                <div class="premium-label">{{-- Gross Premium --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($gross, 0, '.', ',') }},-</div>
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">Policy/Endorsement Cost</div>
+                <div class="premium-label">{{-- Policy/Endorsement Cost --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($policyFee, 0, '.', ',') }},-</div>
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">Stamp duty</div>
+                <div class="premium-label">{{-- Stamp duty --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($stampDuty, 0, '.', ',') }},-</div>
             </div>
             
             @if($discountPercent > 0)
             <div class="premium-row">
-                <div class="premium-label">Discount {{ number_format($discountPercent, 2, ',', '.') }}%</div>
+                <div class="premium-label">{{-- Discount {{ number_format($discountPercent, 2, ',', '.') }}% --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">({{ number_format($discountAmount, 0, '.', ',') }}),-</div>
             </div>
             @endif
             
             <div class="premium-row total">
-                <div class="premium-label">Net Premium</div>
+                <div class="premium-label">{{-- Net Premium --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($net, 0, '.', ',') }},-</div>
             </div>

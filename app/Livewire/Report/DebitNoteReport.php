@@ -111,6 +111,11 @@ class DebitNoteReport extends Component
 
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
+                    // Skip pending billings
+                    if ($billing->status === 'pending') {
+                        continue;
+                    }
+                    
                     $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
 
                     $rows->push((object)[

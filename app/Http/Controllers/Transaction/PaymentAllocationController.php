@@ -38,10 +38,11 @@ class PaymentAllocationController extends Controller
         
         // Check if type is 'receive' or 'pay'
         if ($cashBank->type === 'receive') {
-            // Get all debit note billings for the contact
+            // Get approved debit note billings for the contact
             $debitNoteBillings = DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
                 $query->where('contact_id', $cashBank->contact_id);
             })
+            ->where('status', '!=', 'pending')
             ->with(['debitNote.contract', 'debitNote' => function($query) {
                 $query->select('id', 'number', 'currency_code', 'contact_id', 'contract_id');
             }])
@@ -54,6 +55,7 @@ class PaymentAllocationController extends Controller
                 'amount',
                 'status'
             ])
+            ->orderBy('date', 'desc')
             ->get()
             ->map(function($billing) use ($cashBank){
                 // Calculate allocated amount for this billing across ALL cash banks
