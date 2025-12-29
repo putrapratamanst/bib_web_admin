@@ -224,14 +224,14 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="contract_reference_id" class="form-label">Placing Reference</label>
-                                    <select id="contract_reference_id" name="contract_reference_id" class="form-select" data-placeholder="-- select contract reference --">
-                                        @if($contract->endorsements->first() && $contract->endorsements->first()->contract_reference_id)
-                                        <option value="{{ $contract->endorsements->first()->contract_reference_id }}" selected>
-                                            {{ $contract->endorsements->first()->contractReference->number }} - {{ $contract->endorsements->first()->contractReference->contact->display_name }}
-                                        </option>
-                                        @else
-                                        <option value=""></option>
-                                        @endif
+                                    <select id="contract_reference_id" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --" multiple>
+                                        @foreach($contract->endorsements as $endorsement)
+                                            @if($endorsement->contract_reference_id)
+                                            <option value="{{ $endorsement->contract_reference_id }}" selected>
+                                                {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
+                                            </option>
+                                            @endif
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -472,13 +472,15 @@
             });
 
             var endorsements = [];
-            var contractReferenceId = $('#contract_reference_id').val();
+            var contractReferenceIds = $('#contract_reference_id').val(); // array of selected IDs
             var endorsementNumber = $('#endorsement_number').val();
 
-            if (contractReferenceId || endorsementNumber) {
-                endorsements.push({
-                    contract_reference_id: contractReferenceId,
-                    endorsement_number: endorsementNumber,
+            if (contractReferenceIds && contractReferenceIds.length > 0) {
+                contractReferenceIds.forEach(function(refId) {
+                    endorsements.push({
+                        contract_reference_id: refId,
+                        endorsement_number: endorsementNumber,
+                    });
                 });
             }
 

@@ -10,8 +10,8 @@ $total = $cashBank->amount;
   <title>Jurnal Pembayaran - {{ $cashBank->number }}</title>
   <style>
     @page {
-      size: A4;
-      margin: 20mm 15mm 25mm 15mm;
+      size: 16.3cm 21.2cm;
+      margin: 15mm 10mm 20mm 10mm;
     }
 
     body {
