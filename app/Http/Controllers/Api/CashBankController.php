@@ -28,7 +28,7 @@ class CashBankController extends Controller
 
     public function datatables()
     {
-        $query = CashBank::with('contact', 'chartOfAccount')->orderBy('created_at', 'desc');
+        $query = CashBank::with('contact', 'chartOfAccount', 'contraAccount')->orderBy('created_at', 'desc');
             return DataTables::eloquent($query)
             ->addColumn('contact_name', function (CashBank $cashBank){
                 return $cashBank->contact->display_name;
@@ -44,7 +44,7 @@ class CashBankController extends Controller
     public function show($id)
     {
         try {
-            $cashBank = CashBank::with(['contact', 'chartOfAccount', 'cashBankDetails.debitNote'])->findOrFail($id);
+            $cashBank = CashBank::with(['contact', 'chartOfAccount', 'contraAccount', 'cashBankDetails.debitNote'])->findOrFail($id);
             return response()->json([
                 'success' => true,
                 'data' => new CashBankResource($cashBank)
@@ -71,6 +71,7 @@ class CashBankController extends Controller
                 'contact_id' => $data['contact_id'],
                 'date' => $data['date'],
                 'chart_of_account_id' => $data['chart_of_account_id'],
+                'contra_account_id' => $data['contra_account_id'],
                 'amount' => $data['amount'],
                 'description' => $data['description'],
                 'status' => $data['status'],

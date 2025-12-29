@@ -24,6 +24,7 @@ class CashBank extends Model
         'contact_id',
         'date',
         'chart_of_account_id',
+        'contra_account_id',
         'amount',
         'description',
         'reference',
@@ -62,6 +63,11 @@ class CashBank extends Model
     public function chartOfAccount(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id');
+    }
+
+    public function contraAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'contra_account_id', 'id');
     }
 
     public function createdBy(): BelongsTo

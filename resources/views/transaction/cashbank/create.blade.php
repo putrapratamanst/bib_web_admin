@@ -40,6 +40,14 @@
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
+                            <label for="contra_account_id" class="form-label">Contra Account<sup class="text-danger">*</sup></label>
+                            <select name="contra_account_id" id="contra_account_id" class="form-control">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
                             <input type="text" name="number" id="number" class="form-control" required />
                         </div>
@@ -177,6 +185,61 @@
                 },
                 minimumInputLength: 2,
             },
+        });
+
+        $('#contra_account_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select contra account --',
+            ajax: {
+                url: "{{ route('api.chart-of-accounts.select2') }}",
+                dataType: 'json',
+                delay: 500,
+                data: function(params) {
+                    return {
+                        q: params.term,
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.items, function(item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        })
+                    };
+                },
+                minimumInputLength: 2,
+            },
+        });
+
+        // Auto-set default contra account berdasarkan tipe transaksi
+        $('#type').on('change', function() {
+            const type = $(this).val();
+            let accountName = '';
+            
+            if (type === 'receive') {
+                accountName = 'AR Premi';
+            } else if (type === 'pay') {
+                accountName = 'AP Premi';
+            }
+            
+            if (accountName) {
+                $.ajax({
+                    url: "{{ route('api.chart-of-accounts.select2') }}?q=" + accountName,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.items && data.items.length > 0) {
+                            const account = data.items.find(item => item.text.includes(accountName));
+                            if (account) {
+                                const option = new Option(account.text, account.id, true, true);
+                                $('#contra_account_id').append(option).trigger('change');
+                            }
+                        }
+                    }
+                });
+            }
         });
 
         $('#reference').select2({

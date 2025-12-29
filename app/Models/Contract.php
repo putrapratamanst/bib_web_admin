@@ -133,6 +133,11 @@ class Contract extends Model
         return $this->period_end->format('d M Y');
     }
 
+    public function getEndorsementNumberAttribute(): ?string
+    {
+        return $this->endorsements->first()?->endorsement_number;
+    }
+
     public function contractType(): BelongsTo
     {
         return $this->belongsTo(ContractType::class, 'contract_type_id', 'id');

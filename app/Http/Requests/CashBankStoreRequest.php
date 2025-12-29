@@ -22,6 +22,7 @@ class CashBankStoreRequest extends FormRequest
             'date' => 'required|date',
             //required|exists:chart_of_accounts,id add must string
             'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
+            'contra_account_id' => 'required|exists:chart_of_accounts,id',
             'amount' => 'required|numeric',
             'description' => 'nullable|max:255',
             'reference' => 'nullable|max:50',

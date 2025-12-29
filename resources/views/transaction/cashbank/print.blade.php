@@ -9,15 +9,26 @@ $total = $cashBank->amount;
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Jurnal Pembayaran - {{ $cashBank->number }}</title>
   <style>
-    @page {
-      size: 16.3cm 21.2cm;
-      margin: 15mm 10mm 20mm 10mm;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
     body {
-      margin: 0;
       font-family: Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      padding: 5px;
       color: #111;
+    }
+
+    .container {
+      max-width: 850px;
+      height: 650px;
+      margin: 0 auto;
+      background: white;
+      padding: 15mm;
+      position: relative;
     }
 
     /* ===== HEADER ===== */
@@ -101,6 +112,7 @@ $total = $cashBank->amount;
       <button onclick="window.print()">Print</button>
   </div>
 
+  <div class="container">
   <!-- ===== HEADER ===== -->
   <div class="header">
     <div class="company">PT. BRILLIANT INSURANCE BROKERS</div>
@@ -144,10 +156,10 @@ $total = $cashBank->amount;
       @endphp
       @for($i = 0; $i < $maxRows; $i++)
       <tr>
-        @if(isset($details[$i]))
-        <td>{{ $details[$i]->debitNote ? $details[$i]->debitNote->number : 'Pembayaran' }}</td>
+        @if($i == 0 && $cashBank->contraAccount)
+        <td>{{ $cashBank->contraAccount->display_name }}</td>
         <td class="center">✓</td>
-        <td class="right">{{ number_format($details[$i]->amount, 2, ',', '.') }}</td>
+        <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
         @else
         <td>&nbsp;</td>
         <td>&nbsp;</td>
@@ -188,6 +200,7 @@ $total = $cashBank->amount;
   <div class="footer">
     PT. BRILLIANT INSURANCE BROKERS • Jurnal Pembayaran • {{ \Carbon\Carbon::parse($cashBank->date)->format('d/m/Y') }}<br/>
     Rukan Botanic Junction, Mega Kebon Jeruk Blok I 10 No. 60, Joglo - Jakarta Barat 11640 Telp.: 021-5890 8403, 2254 2676, 2568 0394 Email : admin@brilliantinsbrokers.com
+  </div>
   </div>
 </body>
 </html>

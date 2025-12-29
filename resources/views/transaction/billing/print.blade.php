@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debit Note - {{ $billing->debitNote->number ?? $billing->billing_number }}</title>
+    <title>Debit Note - {{ $billing->number ?? $billing->billing_number }}</title>
     <style>
         * {
             margin: 0;
@@ -316,7 +316,7 @@
             <div class="client-address">{{ $billingAddress?->address ?? ($contact?->address ?? 'N/A') }}</div>
             <div class="dn-info">
                 <div class="dn-label">No :</div>
-                <div class="dn-value">{{ $billing->debitNote->number ?? $billing->billing_number }}</div>
+                <div class="dn-value">{{ $billing->number ?? $billing->billing_number }}</div>
                 <div class="dn-label" style="margin-left: 5mm;">Tanggal :</div>
                 <div class="dn-value">{{ $billing->debitNote?->date_formatted ?? \Carbon\Carbon::parse($billing->date)->format('d-m-Y') }}</div>
             </div>
@@ -331,7 +331,7 @@
             
             @php
                 $policyNumber = $contract?->policy_number ?? '-';
-                $endorsementNumber = $contract?->contractReference?->number ?? '0';
+                $endorsementNumber = $contract?->endorsement_number ?? '0';
                 $startDate = $contract?->period_start ?? $billing->debitNote?->date ?? $billing->date;
                 $endDate = $contract?->period_end ?? \Carbon\Carbon::parse($startDate)->addYear()->toDateString();
                 $coverageName = $contract?->contractType?->name ?? 'Insurance Coverage';
@@ -389,7 +389,7 @@
                 $stampDuty = $contract?->stamp_fee ?? 0;
                 $discountPercent = $contract?->discount ?? 0;
                 $discountAmount = ($gross * $discountPercent) / 100;
-                $net = $gross + $policyFee + $stampDuty - $discountAmount;
+                $net = $billing->amount ?? 0;
             @endphp
             
             <div class="premium-row">
