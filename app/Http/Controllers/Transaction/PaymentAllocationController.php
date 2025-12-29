@@ -85,9 +85,9 @@ class PaymentAllocationController extends Controller
                 return $billing;
             })
             // Only include billings that still have remaining amount (i.e., not fully allocated)
-            ->filter(function($billing) {
-                return ($billing->remaining_amount ?? 0) > 0;
-            })
+            // ->filter(function($billing) {
+            //     return ($billing->remaining_amount ?? 0) > 0;
+            // })
             ->values();
 
             return view('transaction.paymentallocation.show', [
@@ -117,9 +117,9 @@ class PaymentAllocationController extends Controller
                     return $cashout;
                 })
                 // Only include cashouts that still have remaining amount
-                ->filter(function($cashout) {
-                    return ($cashout->remaining_amount ?? 0) > 0;
-                })
+                // ->filter(function($cashout) {
+                //     return ($cashout->remaining_amount ?? 0) > 0;
+                // })
                 ->values();
 
             return view('transaction.paymentallocation.show', [

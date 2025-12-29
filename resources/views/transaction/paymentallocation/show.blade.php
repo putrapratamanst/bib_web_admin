@@ -127,7 +127,7 @@
                             </thead>
                             <tbody>
                                 @foreach($debitNoteBillings as $debitNoteBilling)
-                                <tr>
+                                <tr class="{{ $debitNoteBilling->allocated_amount > 0 ? 'table-success' : '' }}">
                                     <td>{{ $debitNoteBilling->debitNote->number }}</td>
                                     <td>{{ $debitNoteBilling->billing_number }}</td>
                                     <td>{{ \Carbon\Carbon::parse($debitNoteBilling->date)->format('d M Y') }}</td>
@@ -188,7 +188,7 @@
                             </thead>
                             <tbody>
                                 @foreach($cashouts as $cashout)
-                                <tr>
+                                <tr class="{{ $cashout->allocated_amount > 0 ? 'table-success' : '' }}">
                                     <td>{{ $cashout->number }}</td>
                                     <td>{{ $cashout->insurance->display_name ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($cashout->date)->format('d M Y') }}</td>
