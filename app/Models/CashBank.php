@@ -26,6 +26,7 @@ class CashBank extends Model
         'chart_of_account_id',
         'contra_account_id',
         'amount',
+        'exchange_rate',
         'description',
         'reference',
         'status',

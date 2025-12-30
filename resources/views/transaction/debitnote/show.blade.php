@@ -132,7 +132,23 @@
                             <td>{{ $billing->date_formatted }}</td>
                             <td>{{ $billing->due_date_formatted }}</td>
                             <!-- Amount sudah otomatis dikurangi credit notes melalui accessor di model -->
-                            <td class="text-end">{{ $debitNote->currency_code }} {{ $billing->amount_formatted }}</td>
+                            <td class="text-end">
+                                @php
+                                    // Check if this is the first installment
+                                    preg_match('/-INST(\d+)/i', $billing->billing_number, $matches);
+                                    $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+                                    
+                                    $displayAmount = $billing->amount;
+                                    
+                                    // Add policy fee and stamp fee for first installment only
+                                    if ($installmentNumber == 1) {
+                                        $policyFee = $debitNote->contract->policy_fee ?? 0;
+                                        $stampFee = $debitNote->contract->stamp_fee ?? 0;
+                                        $displayAmount += $policyFee + $stampFee;
+                                    }
+                                @endphp
+                                {{ $debitNote->currency_code }} {{ number_format($displayAmount, 2, ',', '.') }}
+                            </td>
                             <td>
                                 @if ($billing->status === 'pending')
                                     <span class="badge bg-warning">Pending</span>

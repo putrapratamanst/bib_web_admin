@@ -103,7 +103,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="amount_{{ $i }}" class="form-label">Amount <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control currency @error('amount.' . ($i-1)) is-invalid @enderror" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1)) }}">
+                                    <input type="text" class="form-control autonumeric @error('amount.' . ($i-1)) is-invalid @enderror" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1)) }}">
                                     @error('amount.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -144,7 +144,7 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="amount" class="form-label">Amount <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control currency @error('amount.0') is-invalid @enderror" name="amount[]" id="amount" value="{{ old('amount.0') }}">
+                                <input type="text" class="form-control autonumeric @error('amount.0') is-invalid @enderror" name="amount[]" id="amount" value="{{ old('amount.0') }}">
                                 @error('amount.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -182,8 +182,15 @@
         let totalBilled = 0;
 
         amountInputs.forEach(input => {
-            const value = input.value.replace(/\./g, '').replace(/,/g, '.');
-            const numValue = parseFloat(value) || 0;
+            // Use AutoNumeric get method if available
+            let numValue = 0;
+            try {
+                numValue = parseFloat($(input).autoNumeric('get')) || 0;
+            } catch(e) {
+                // Fallback to manual parsing
+                const value = input.value.replace(/\./g, '').replace(/,/g, '.');
+                numValue = parseFloat(value) || 0;
+            }
             totalBilled += numValue;
         });
 
@@ -204,28 +211,50 @@
     }
 
     // Add event listener to all amount inputs
-    document.addEventListener('change', function(event) {
-        if (event.target.matches('input[name="amount[]"]')) {
-            const remainingAmount = updateBillingTotals();
-            
-            // Get the current input's value
-            const currentValue = parseFloat(event.target.value.replace(/\./g, '').replace(/,/g, '.')) || 0;
-            
-            // Warn if individual input exceeds remaining
-            if (currentValue > debitNoteAmount) {
-                Swal.fire({
-                    title: 'Amount Exceeds Limit',
-                    text: `The billing amount exceeds the total debit note amount ({{ $debitNote->amount }}). Please adjust the amount.`,
-                    icon: 'warning',
-                    confirmButtonText: 'OK'
-                });
-            }
+    $(document).on('change keyup', 'input[name="amount[]"]', function() {
+        const remainingAmount = updateBillingTotals();
+        
+        // Get the current input's value
+        let currentValue = 0;
+        try {
+            currentValue = parseFloat($(this).autoNumeric('get')) || 0;
+        } catch(e) {
+            currentValue = parseFloat(this.value.replace(/\./g, '').replace(/,/g, '.')) || 0;
+        }
+        
+        // Warn if individual input exceeds remaining
+        if (currentValue > debitNoteAmount) {
+            Swal.fire({
+                title: 'Amount Exceeds Limit',
+                text: `The billing amount exceeds the total debit note amount ({{ $debitNote->amount }}). Please adjust the amount.`,
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
         }
     });
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateBillingTotals();
+    });
+
+    // Handle form submission to clean AutoNumeric values
+    $('#formCreate').on('submit', function(e) {
+        // Clean all amount inputs before submit
+        $('input[name="amount[]"]').each(function() {
+            try {
+                // Get clean numeric value from AutoNumeric
+                var cleanValue = $(this).autoNumeric('get');
+                // Set the clean value back
+                $(this).val(cleanValue);
+            } catch(e) {
+                // If AutoNumeric fails, manually clean
+                var value = $(this).val().replace(/\./g, '').replace(/,/g, '.');
+                $(this).val(value);
+            }
+        });
+        // Allow form to submit normally
+        return true;
     });
 
     // Show error messages if they exist in session

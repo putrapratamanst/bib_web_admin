@@ -48,8 +48,12 @@
                     <td>{{ $cashBank->currency_code ?? '-' }}</td>
                 </tr>
                 <tr>
+                    <th>Exchange Rate</th>
+                    <td>{{ $cashBank->currency_code }} {{ number_format($cashBank->exchange_rate ?? 1, 2, ',', '.') }}</td>
+                </tr>
+                <tr>
                     <th>Amount</th>
-                    <td>{{ $cashBank->currency_code }}{{ number_format($cashBank->amount, 2, ',', '.') }}</td>
+                    <td>{{ $cashBank->currency_code }} {{ number_format($cashBank->amount, 2, ',', '.') }}</td>
                 </tr>
                 <tr>
                     <th>Description</th>

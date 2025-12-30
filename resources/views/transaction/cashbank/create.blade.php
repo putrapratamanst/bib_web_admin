@@ -49,7 +49,7 @@
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required />
+                            <input type="text" name="number" id="number" class="form-control" readonly required />
                         </div>
                     </div>
                 </div>
@@ -68,12 +68,21 @@
                             <input type="text" name="date" id="date" class="form-control datepicker" value="{{ $currentDate }}" required />
                         </div>
                     </div>
-
+                    <input type="hidden" name="currency_code" id="currency_code" value="IDR" />
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="exchange_rate" class="form-label">Exchange Rate</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">IDR</span>
+                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" />
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;" id="basic-addon1">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">IDR</span>
                                 <input type="text" name="amount" id="amount" class="form-control autonumeric" required />
                             </div>
                         </div>
@@ -128,20 +137,19 @@
     }, 1000);
 
     $(document).ready(function() {
-        // Initialize autoNumeric for amount field
-        new AutoNumeric('#amount', {
-            currencySymbol: '',
-            decimalCharacter: ',',
-            digitGroupSeparator: '.',
-            decimalPlaces: 2,
-            minimumValue: '0'
-        });
+        console.log('Document ready!');
 
-        $('#type').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: '-- select type --',
-        });
+        // Initialize Type select2
+        try {
+            $('#type').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: '-- select type --',
+            });
+            console.log('Type select2 initialized');
+        } catch(e) {
+            console.error('Type select2 error:', e);
+        }
 
         $('#contact_id').select2({
             theme: 'bootstrap-5',
@@ -230,8 +238,81 @@
             
             if (type === 'receive') {
                 accountName = 'AR Premi';
+                
+                // Generate prefix with current year/month
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = String(now.getMonth() + 1).padStart(2, '0');
+                var prefix = 'BR/' + year + '/' + month + '/';
+                
+                // Get next number from backend
+                $.ajax({
+                    url: "{{ route('api.cash-banks.index') }}",
+                    method: 'GET',
+                    data: { 
+                        q: prefix,
+                        limit: 1
+                    },
+                    success: function(response) {
+                        // Get last number from response
+                        var lastNumber = 0;
+                        if (response.data && response.data.length > 0) {
+                            var lastDoc = response.data[0].number;
+                            console.log('Last BR document:', lastDoc);
+                            if (lastDoc && lastDoc.startsWith(prefix)) {
+                                var parts = lastDoc.split('/');
+                                lastNumber = parseInt(parts[parts.length - 1]) || 0;
+                            }
+                        }
+                        
+                        var nextNumber = String(lastNumber + 1).padStart(5, '0');
+                        $('#number').val(prefix + nextNumber);
+                        console.log('Next BR number:', prefix + nextNumber);
+                    },
+                    error: function() {
+                        // Fallback to default
+                        $('#number').val(prefix + '00001');
+                    }
+                });
+                
             } else if (type === 'pay') {
                 accountName = 'AP Premi';
+                
+                // Generate prefix with current year/month
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = String(now.getMonth() + 1).padStart(2, '0');
+                var prefix = 'BP/' + year + '/' + month + '/';
+                
+                // Get next number from backend
+                $.ajax({
+                    url: "{{ route('api.cash-banks.index') }}",
+                    method: 'GET',
+                    data: { 
+                        q: prefix,
+                        limit: 1
+                    },
+                    success: function(response) {
+                        // Get last number from response
+                        var lastNumber = 0;
+                        if (response.data && response.data.length > 0) {
+                            var lastDoc = response.data[0].number;
+                            console.log('Last BP document:', lastDoc);
+                            if (lastDoc && lastDoc.startsWith(prefix)) {
+                                var parts = lastDoc.split('/');
+                                lastNumber = parseInt(parts[parts.length - 1]) || 0;
+                            }
+                        }
+                        
+                        var nextNumber = String(lastNumber + 1).padStart(5, '0');
+                        $('#number').val(prefix + nextNumber);
+                        console.log('Next BP number:', prefix + nextNumber);
+                    },
+                    error: function() {
+                        // Fallback to default
+                        $('#number').val(prefix + '00001');
+                    }
+                });
             }
             
             if (accountName) {
@@ -269,7 +350,7 @@
                         results: data.items
                     };
                 },
-                minimumInputLength: 2,
+                minimumInputLength: 0,
             },
         });
 
@@ -300,8 +381,8 @@
                         if (response.data) {
                             var billing = response.data;
 
-                            // Auto-populate amount with autoNumeric formatting
-                            AutoNumeric.getAutoNumericElement('#amount').set(billing.amount);
+                            // Auto-populate amount with autoNumeric
+                            $('#amount').autoNumeric('set', billing.amount);
 
                             // Auto-populate contact if available
                             if (billing.debit_note && billing.debit_note.contract && billing.debit_note.contract.contact) {
@@ -321,13 +402,24 @@
         $("#formCreate").submit(function(e) {
             e.preventDefault();
             
-            // Get raw value from autoNumeric
-            var formData = $(this).serializeArray();
-            var amountValue = AutoNumeric.getNumber('#amount');
+            // Get raw value from autoNumeric - remove all commas
+            var amountRaw = $('#amount').val().replace(/,/g, '');
+            var exchangeRateRaw = $('#exchange_rate').val().replace(/,/g, '');
             
-            // Replace amount value with raw number
-            formData = formData.filter(item => item.name !== 'amount');
-            formData.push({name: 'amount', value: amountValue});
+            // Debug: check value
+            console.log('Amount raw after remove comma:', amountRaw);
+            console.log('Amount type:', typeof amountRaw);
+            
+            // Get all form data
+            var formData = $(this).serializeArray();
+            
+            // Replace amount and exchange_rate values with cleaned numbers
+            formData = formData.filter(item => item.name !== 'amount' && item.name !== 'exchange_rate');
+            formData.push({name: 'amount', value: amountRaw});
+            formData.push({name: 'exchange_rate', value: exchangeRateRaw});
+            
+            // Debug: check final formData
+            console.log('Final formData:', formData);
 
             $.ajax({
                 url: "{{ route('api.cash-banks.store') }}",
