@@ -39,6 +39,8 @@ class CashBank extends Model
         'display_type',
         'display_date',
         'display_amount',
+        'available_for_allocation',
+        'available_for_allocation_formatted',
     ];
 
     public function getDisplayTypeAttribute(): string
@@ -84,5 +86,35 @@ class CashBank extends Model
     public function cashBankDetails(): HasMany
     {
         return $this->hasMany(CashBankDetail::class, 'cash_bank_id', 'id');
+    }
+
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class, 'cash_bank_id', 'id');
+    }
+
+    /**
+     * Get total allocated amount from payment allocations
+     */
+    public function getTotalAllocatedAttribute(): float
+    {
+        return $this->paymentAllocations()->where('status', 'active')->sum('allocation');
+    }
+
+    /**
+     * Get available amount for allocation
+     * Formula: amount - total_allocated
+     */
+    public function getAvailableForAllocationAttribute(): float
+    {
+        return $this->amount - $this->getTotalAllocatedAttribute();
+    }
+
+    /**
+     * Get formatted available for allocation
+     */
+    public function getAvailableForAllocationFormattedAttribute(): string
+    {
+        return number_format($this->available_for_allocation, 2, ',', '.');
     }
 }

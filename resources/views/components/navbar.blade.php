@@ -54,6 +54,12 @@
                             <a class="dropdown-item" href="{{ route('transaction.cash-banks.index') }}">Cash &amp; Bank</a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('transaction.advances.index') }}">
+                                <i class="bi bi-cash-coin me-1"></i>
+                                Advance Payment <span class="badge bg-warning text-dark">new</span>
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ route('transaction.payment-allocations.index') }}">Payment Allocation</a>
                         </li>
                         <li>

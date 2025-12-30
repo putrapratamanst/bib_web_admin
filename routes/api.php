@@ -55,6 +55,14 @@ Route::post('/payment-allocation/{cashbankID}', [\App\Http\Controllers\Api\Payme
 Route::post('/payment-allocation/{cashbankID}/store-all', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeAll'])->name('api.payment-allocations.storeAll');
 Route::post('/payment-allocation/{cashbankID}/cashout', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankIDForCashout'])->name('api.payment-allocations.storeByCashBankIDForCashout');
 
+// Advance
+Route::get('/advances/datatables', [\App\Http\Controllers\Api\AdvanceController::class, 'datatables'])->name('api.advances.datatables');
+Route::get('/advances/cash-bank/select2', [\App\Http\Controllers\Api\AdvanceController::class, 'cashBankSelect2'])->name('api.advances.cash-bank.select2');
+Route::get('/advances/cash-bank/{id}', [\App\Http\Controllers\Api\AdvanceController::class, 'getCashBankDetail'])->name('api.advances.cash-bank.detail');
+Route::post('/advances', [\App\Http\Controllers\Api\AdvanceController::class, 'store'])->name('api.advances.store');
+Route::get('/advances/{id}', [\App\Http\Controllers\Api\AdvanceController::class, 'show'])->name('api.advances.show');
+Route::delete('/advances/{id}', [\App\Http\Controllers\Api\AdvanceController::class, 'destroy'])->name('api.advances.destroy');
+
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
