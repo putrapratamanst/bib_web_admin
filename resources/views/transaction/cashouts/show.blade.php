@@ -158,12 +158,12 @@
                     <thead class="table-light">
                         <tr>
                             <th>Premi</th>
-                            <th>Share 25%</th>
+                            <th>Share</th>
                             <th>Basos</th>
                             <th>Diskon</th>
                             <th>Komisi</th>
                             <th>PPh</th>
-                            <th>Polis+stamp</th>
+                            <th>{{ $cashout->installment_number == 1 ? 'Polis+stamp' : 'Stamp' }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -180,23 +180,34 @@
                             // Share 25% = gross premium * percentage / 100
                             $share25 = $grossPremium * ($percentage / 100);
                             
-                            // Brokerage fee (Basos) = share * brokerage_fee%
+                            // Brokerage fee percentage
                             $brokerageFeePercent = $contractDetail ? $contractDetail->brokerage_fee : 0;
-                            $basos = $share25 * ($brokerageFeePercent / 100);
+                            
+                            // Eng fee percentage
+                            $engFeePercent = $contractDetail ? $contractDetail->eng_fee : 0;
+                            
+                            // Basos = share * eng_fee%
+                            $basos = $share25 * ($engFeePercent / 100);
                             
                             // Diskon amount
                             $discountAmount = $contract->discount_amount;
+                            $discountPercent = $contract->discount; // discount percentage dari contract
                             $discountShare = $discountAmount * ($percentage / 100);
                             
-                            // Komisi = brokerage fee (same as basos in this case)
-                            $komisi = $basos;
+                            // Komisi = share * brokerage_fee%
+                            $komisi = $share25 * ($brokerageFeePercent / 100);
+                            $komisiPercent = $brokerageFeePercent;
                             
-                            // PPh = 2% of komisi (or from eng_fee if available)
-                            $engFeePercent = $contractDetail ? $contractDetail->eng_fee : 2;
-                            $pph = $komisi * ($engFeePercent / 100);
+                            // PPh = 2% of komisi
+                            $pphPercent = 2;
+                            $pph = $komisi * ($pphPercent / 100);
                             
-                            // Polis + stamp
+                            // Polis + stamp (+ policy fee jika installment pertama)
                             $polisStamp = $contract->stamp_fee * ($percentage / 100);
+                            if ($cashout->installment_number == 1) {
+                                $policyFee = $contract->policy_fee ?? 0;
+                                $polisStamp += $policyFee;
+                            }
                         @endphp
                         <tr>
                             <td class="text-end">{{ $contract->currency_code }} {{ number_format($grossPremium, 2, ',', '.') }}</td>
@@ -206,14 +217,22 @@
                                 <small class="text-muted">{{ $contract->currency_code }} {{ number_format($share25, 2, ',', '.') }}</small>
                             </td>
                             <td class="text-end">
-                                {{ number_format($brokerageFeePercent, 2, ',', '.') }}%
+                                {{ number_format($engFeePercent, 2, ',', '.') }}%
                                 <br>
                                 <small class="text-muted">{{ $contract->currency_code }} {{ number_format($basos, 2, ',', '.') }}</small>
                             </td>
-                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($discountShare, 2, ',', '.') }}</td>
-                            <td class="text-end">{{ $contract->currency_code }} {{ number_format($komisi, 2, ',', '.') }}</td>
                             <td class="text-end">
-                                {{ number_format($engFeePercent, 2, ',', '.') }}%
+                                {{ number_format($discountPercent, 2, ',', '.') }}%
+                                <br>
+                                <small class="text-muted">{{ $contract->currency_code }} {{ number_format($discountShare, 2, ',', '.') }}</small>
+                            </td>
+                            <td class="text-end">
+                                {{ number_format($komisiPercent, 2, ',', '.') }}%
+                                <br>
+                                <small class="text-muted">{{ $contract->currency_code }} {{ number_format($komisi, 2, ',', '.') }}</small>
+                            </td>
+                            <td class="text-end">
+                                {{ number_format($pphPercent, 2, ',', '.') }}%
                                 <br>
                                 <small class="text-muted">{{ $contract->currency_code }} {{ number_format($pph, 2, ',', '.') }}</small>
                             </td>
