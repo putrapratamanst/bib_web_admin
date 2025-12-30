@@ -26,6 +26,10 @@ class JournalEntry extends Model
         'amount',
         'amount_formatted',
         'date_formatted',
+        'total_debit',
+        'total_debit_formatted',
+        'total_credit',
+        'total_credit_formatted',
     ];
 
     public function createdBy(): BelongsTo
@@ -53,6 +57,30 @@ class JournalEntry extends Model
     public function getAmountFormattedAttribute(): string
     {
         return number_format($this->amount, 2, '.', ',');
+    }
+
+    // get total debit
+    public function getTotalDebitAttribute(): float
+    {
+        return $this->details->sum('debit');
+    }
+
+    // total debit formatted
+    public function getTotalDebitFormattedAttribute(): string
+    {
+        return number_format($this->total_debit, 2, ',', '.');
+    }
+
+    // get total credit
+    public function getTotalCreditAttribute(): float
+    {
+        return $this->details->sum('credit');
+    }
+
+    // total credit formatted
+    public function getTotalCreditFormattedAttribute(): string
+    {
+        return number_format($this->total_credit, 2, ',', '.');
     }
 
     // date format

@@ -49,6 +49,8 @@ Route::prefix('transaction')->group(function () {
     // Journal Entry
     Route::get('/journal-entries', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'index'])->name('transaction.journal-entries.index');
     Route::get('/journal-entries/create', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'create'])->name('transaction.journal-entries.create');
+    Route::get('/journal-entries/{id}', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'show'])->name('transaction.journal-entries.show');
+    Route::get('/journal-entries/{id}/print', [\App\Http\Controllers\Transaction\JournalEntryController::class, 'print'])->name('transaction.journal-entries.print');
 
     // Credit Note
     Route::get(

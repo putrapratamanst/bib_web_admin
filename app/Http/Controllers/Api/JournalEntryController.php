@@ -31,6 +31,37 @@ class JournalEntryController extends Controller
                 ->make(true);
     }
 
+    public function generateNumber()
+    {
+        $year = date('Y');
+        $month = date('m');
+        
+        // Get the last number for current month
+        $lastEntry = JournalEntry::whereYear('entry_date', $year)
+            ->whereMonth('entry_date', $month)
+            ->where('number', 'like', "JE/{$year}/{$month}/%")
+            ->orderBy('number', 'desc')
+            ->first();
+        
+        $nextNumber = 1;
+        
+        if ($lastEntry) {
+            // Extract the number from format JE/YYYY/MM/XXXXX
+            $parts = explode('/', $lastEntry->number);
+            if (count($parts) === 4) {
+                $lastNumber = intval($parts[3]);
+                $nextNumber = $lastNumber + 1;
+            }
+        }
+        
+        $formattedNumber = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        $generatedNumber = "JE/{$year}/{$month}/{$formattedNumber}";
+        
+        return response()->json([
+            'number' => $generatedNumber
+        ]);
+    }
+
     public function store(JournalEntryStoreRequest $request)
     {
         try {

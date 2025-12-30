@@ -36,6 +36,7 @@
                         <th>Date</th>
                         <th>Reference</th>
                         <th>Amount</th>
+                        <th width="10%">Actions</th>
                     </tr>
                 </thead>
             </table>
@@ -58,12 +59,21 @@
                     data: 'number', 
                     name: 'number',
                     render: function(data, type, row) {
-                        return '<a href="{{ route('transaction.contracts.index') }}/' + row.id + '">' + data + '</a>';
+                        return '<a href="{{ route('transaction.journal-entries.index') }}/' + row.id + '">' + data + '</a>';
                     }
                 },
                 { data: 'date_formatted', name: 'date_formatted' },
                 { data: 'reference', name: 'reference' },
-                { data: 'amount_formatted', name: 'amount_formatted', className: 'text-end' }
+                { data: 'amount_formatted', name: 'amount_formatted', className: 'text-end' },
+                { 
+                    data: 'id',
+                    name: 'actions',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return '<a href="{{ route("transaction.journal-entries.index") }}/' + data + '/print" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-print"></i></a>';
+                    }
+                }
             ]
         });
     });

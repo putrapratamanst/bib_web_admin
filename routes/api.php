@@ -76,6 +76,7 @@ Route::get('/contract/{contractId}/documents/{documentId}/download', [\App\Http\
 // Journal Entry
 Route::get('/journal-entry', [\App\Http\Controllers\Api\JournalEntryController::class, 'index'])->name('api.journal-entries.index');
 Route::get('/journal-entry/datatables', [\App\Http\Controllers\Api\JournalEntryController::class, 'datatables'])->name('api.journal-entries.datatables');
+Route::get('/journal-entry/generate-number', [\App\Http\Controllers\Api\JournalEntryController::class, 'generateNumber'])->name('api.journal-entries.generate-number');
 Route::post('/journal-entry', [\App\Http\Controllers\Api\JournalEntryController::class, 'store'])->name('api.journal-entries.store');
 
 // Credit Note

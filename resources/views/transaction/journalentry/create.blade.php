@@ -13,7 +13,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required>
+                            <input type="text" name="number" id="number" class="form-control" required readonly>
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -98,6 +98,8 @@
     var rowNumber = 1;
 
     $(document).ready(function() {
+        // Auto generate number dengan format JE/YYYY/MM/00001
+        generateJournalNumber();
         $("#formCreate").submit(function(e) {
             e.preventDefault();
 
@@ -194,6 +196,24 @@
         }
         $(this).closest('tr').remove();
     });
+
+    function generateJournalNumber() {
+        $.ajax({
+            url: "{{ route('api.journal-entries.generate-number') }}",
+            method: "GET",
+            success: function(response) {
+                $('#number').val(response.number);
+            },
+            error: function(xhr) {
+                // Fallback jika API error, generate di frontend
+                var today = new Date();
+                var year = today.getFullYear();
+                var month = String(today.getMonth() + 1).padStart(2, '0');
+                var number = 'JE/' + year + '/' + month + '/00001';
+                $('#number').val(number);
+            }
+        });
+    }
 
     function assignAccount(number) {
         $('#chart_of_account_id_' + number).select2({

@@ -18,6 +18,11 @@ class JournalEntryDetail extends Model
         'description',
     ];
 
+    protected $appends = [
+        'debit_formatted',
+        'credit_formatted',
+    ];
+
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class, 'journal_entry_id', 'id');
@@ -26,5 +31,17 @@ class JournalEntryDetail extends Model
     public function chartOfAccount(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id');
+    }
+
+    // debit formatted
+    public function getDebitFormattedAttribute(): string
+    {
+        return number_format($this->debit, 2, ',', '.');
+    }
+
+    // credit formatted
+    public function getCreditFormattedAttribute(): string
+    {
+        return number_format($this->credit, 2, ',', '.');
     }
 }
