@@ -53,7 +53,7 @@ class AdvanceController extends Controller
     {
         $search = $request->get('q');
         
-        $cashBanks = CashBank::with(['contact', 'paymentAllocations'])
+        $cashBanks = CashBank::with(['contact'])
             ->where('type', 'receive') // Only receive type
             ->where('status', 'approved') // Only approved
             ->when($search, function ($query) use ($search) {
@@ -65,16 +65,33 @@ class AdvanceController extends Controller
                 });
             })
             ->get()
-            ->filter(function ($cashBank) {
-                // Filter only cash banks with available allocation > 0
-                return $cashBank->available_for_allocation > 0;
-            })
             ->map(function ($cashBank) {
+                // Calculate total allocated from payment_allocations for this cash_bank_id
+                $totalAllocated = PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                    ->where('status', 'posted')
+                    ->sum('allocation');
+                
+                $available = $cashBank->amount - $totalAllocated;
+                
+                return [
+                    'cash_bank' => $cashBank,
+                    'total_allocated' => $totalAllocated,
+                    'available' => $available,
+                ];
+            })
+            ->filter(function ($item) {
+                // Filter only cash banks with available > 0
+                return $item['available'] > 0;
+            })
+            ->map(function ($item) {
+                $cashBank = $item['cash_bank'];
+                $available = $item['available'];
+                
                 return [
                     'id' => $cashBank->id,
-                    'text' => $cashBank->number . ' - ' . $cashBank->contact->display_name . ' (Available: Rp ' . $cashBank->available_for_allocation_formatted . ')',
+                    'text' => $cashBank->number . ' - ' . $cashBank->contact->display_name . ' (Available: Rp ' . number_format($available, 2, ',', '.') . ')',
                     'amount' => $cashBank->amount,
-                    'available' => $cashBank->available_for_allocation,
+                    'available' => $available,
                     'contact_id' => $cashBank->contact_id,
                     'date' => $cashBank->date,
                 ];
@@ -93,8 +110,20 @@ class AdvanceController extends Controller
     public function getCashBankDetail($id)
     {
         try {
-            $cashBank = CashBank::with(['contact', 'chartOfAccount', 'paymentAllocations'])
+            $cashBank = CashBank::with(['contact', 'chartOfAccount'])
                 ->findOrFail($id);
+
+            // Calculate total allocated from payment_allocations for this cash_bank_id
+            $totalAllocated = PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                ->where('status', 'posted')
+                ->sum('allocation');
+            
+            $available = $cashBank->amount - $totalAllocated;
+            
+            // Debug: get all allocations for this cash bank
+            $allocations = PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                ->where('status', 'posted')
+                ->get(['id', 'type', 'allocation', 'status', 'created_at']);
 
             return response()->json([
                 'success' => true,
@@ -107,15 +136,21 @@ class AdvanceController extends Controller
                     'display_date' => $cashBank->display_date,
                     'amount' => $cashBank->amount,
                     'display_amount' => $cashBank->display_amount,
-                    'available_for_allocation' => $cashBank->available_for_allocation,
-                    'available_for_allocation_formatted' => $cashBank->available_for_allocation_formatted,
+                    'total_allocated' => $totalAllocated,
+                    'available_for_allocation' => $available,
+                    'available_for_allocation_formatted' => number_format($available, 2, ',', '.'),
                     'chart_of_account' => $cashBank->chartOfAccount->display_name ?? '-',
+                    // Debug info
+                    'debug' => [
+                        'allocations_count' => $allocations->count(),
+                        'allocations' => $allocations
+                    ]
                 ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cash Bank not found'
+                'message' => 'Cash Bank not found: ' . $e->getMessage()
             ], 404);
         }
     }
@@ -142,12 +177,19 @@ class AdvanceController extends Controller
         try {
             $cashBank = CashBank::findOrFail($request->cash_bank_id);
             
+            // Calculate total allocated from payment_allocations for this cash_bank_id
+            $totalAllocated = PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                ->where('status', 'posted')
+                ->sum('allocation');
+            
+            $available = $cashBank->amount - $totalAllocated;
+            
             // Validate allocation tidak melebihi available
-            if ($request->allocation > $cashBank->available_for_allocation) {
+            if ($request->allocation > $available) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Allocation amount cannot exceed available amount (Rp ' . 
-                                number_format($cashBank->available_for_allocation, 2, ',', '.') . ')'
+                                number_format($available, 2, ',', '.') . ')'
                 ], 422);
             }
 
@@ -157,7 +199,7 @@ class AdvanceController extends Controller
                 'cash_bank_id' => $request->cash_bank_id,
                 'debit_note_id' => null, // NULL karena ini advance
                 'allocation' => $request->allocation,
-                'status' => 'active',
+                'status' => 'posted',
                 'description' => $request->description,
             ]);
 

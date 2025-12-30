@@ -98,7 +98,7 @@ class CashBank extends Model
      */
     public function getTotalAllocatedAttribute(): float
     {
-        return $this->paymentAllocations()->where('status', 'active')->sum('allocation');
+        return $this->paymentAllocations()->where('status', 'posted')->sum('allocation');
     }
 
     /**
