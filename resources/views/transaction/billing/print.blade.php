@@ -381,12 +381,34 @@
             @php
                 $currencyName = $contract?->currency?->name ?? 'Rupiah Indonesia';
                 $currencyCode = $contract?->currency_code ?? 'IDR';
-                $gross = $contract?->gross_premium ?? ($billing->amount ?? 0);
-                $policyFee = 0; // Set sesuai data
+                
+                // Billing amount (gross premium untuk billing ini)
+                $billingAmount = $billing->amount ?? 0;
+                
+                $gross = $billingAmount;
+                $policyFee = $contract?->policy_fee ?? 0;
+                
+                // Extract installment number from billing number (e.g., BIB/D25/0001-INST1)
+                $billingNumber = $billing->number ?? $billing->billing_number ?? '';
+                $installmentNumber = 0;
+                if (preg_match('/-INST(\d+)/i', $billingNumber, $matches)) {
+                    $installmentNumber = (int)$matches[1];
+                }
+                
+                // Stamp duty
                 $stampDuty = $contract?->stamp_fee ?? 0;
+                
+                // Calculate net premium
+                if ($installmentNumber == 1) {
+                    // Installment 1: amount + policy_fee + stamp_fee
+                    $net = $billingAmount + $policyFee + $stampDuty;
+                } else {
+                    // Other installments: amount only
+                    $net = $billingAmount;
+                }
+                
                 $discountPercent = $contract?->discount ?? 0;
                 $discountAmount = ($gross * $discountPercent) / 100;
-                $net = $billing->amount ?? 0;
             @endphp
             
             <div class="premium-row">
@@ -397,33 +419,33 @@
             <div class="premium-row">
                 <div class="premium-label">{{-- Gross Premium --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
-                <div class="premium-value">{{ number_format($gross, 0, '.', ',') }},-</div>
+                <div class="premium-value">{{ number_format($gross, 2, ',', '.') }}</div>
             </div>
             
             <div class="premium-row">
                 <div class="premium-label">{{-- Policy/Endorsement Cost --}}</div>
-                <div class="premium-currency">{{ $currencyCode }}</div>
-                <div class="premium-value">{{ number_format($policyFee, 0, '.', ',') }},-</div>
+                <div class="premium-currency">{{ $installmentNumber == 1 ? $currencyCode : '' }}</div>
+                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($policyFee, 2, ',', '.') : '' }}</div>
             </div>
             
             <div class="premium-row">
                 <div class="premium-label">{{-- Stamp duty --}}</div>
-                <div class="premium-currency">{{ $currencyCode }}</div>
-                <div class="premium-value">{{ number_format($stampDuty, 0, '.', ',') }},-</div>
+                <div class="premium-currency">{{ $installmentNumber == 1 ? $currencyCode : '' }}</div>
+                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($stampDuty, 2, ',', '.') : '' }}</div>
             </div>
             
             @if($discountPercent > 0)
             <div class="premium-row">
                 <div class="premium-label">{{-- Discount {{ number_format($discountPercent, 2, ',', '.') }}% --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
-                <div class="premium-value">({{ number_format($discountAmount, 0, '.', ',') }}),-</div>
+                <div class="premium-value">({{ number_format($discountAmount, 2, ',', '.') }})</div>
             </div>
             @endif
             
             <div class="premium-row total">
                 <div class="premium-label">{{-- Net Premium --}}</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
-                <div class="premium-value">{{ number_format($net, 0, '.', ',') }},-</div>
+                <div class="premium-value">{{ number_format($net, 2, ',', '.') }}</div>
             </div>
             
             <div class="eoe-text">E. & O.E.</div>

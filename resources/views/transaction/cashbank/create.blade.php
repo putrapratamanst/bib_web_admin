@@ -74,7 +74,7 @@
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;" id="basic-addon1">Rp</span>
-                                <input type="text" name="amount" id="amount" class="form-control" required />
+                                <input type="text" name="amount" id="amount" class="form-control autonumeric" required />
                             </div>
                         </div>
                     </div>
@@ -128,6 +128,15 @@
     }, 1000);
 
     $(document).ready(function() {
+        // Initialize autoNumeric for amount field
+        new AutoNumeric('#amount', {
+            currencySymbol: '',
+            decimalCharacter: ',',
+            digitGroupSeparator: '.',
+            decimalPlaces: 2,
+            minimumValue: '0'
+        });
+
         $('#type').select2({
             theme: 'bootstrap-5',
             width: '100%',
@@ -291,8 +300,8 @@
                         if (response.data) {
                             var billing = response.data;
 
-                            // Auto-populate amount
-                            $('#amount').val(billing.amount);
+                            // Auto-populate amount with autoNumeric formatting
+                            AutoNumeric.getAutoNumericElement('#amount').set(billing.amount);
 
                             // Auto-populate contact if available
                             if (billing.debit_note && billing.debit_note.contract && billing.debit_note.contract.contact) {
@@ -311,11 +320,19 @@
 
         $("#formCreate").submit(function(e) {
             e.preventDefault();
+            
+            // Get raw value from autoNumeric
+            var formData = $(this).serializeArray();
+            var amountValue = AutoNumeric.getNumber('#amount');
+            
+            // Replace amount value with raw number
+            formData = formData.filter(item => item.name !== 'amount');
+            formData.push({name: 'amount', value: amountValue});
 
             $.ajax({
                 url: "{{ route('api.cash-banks.store') }}",
                 method: "POST",
-                data: $(this).serialize(),
+                data: $.param(formData),
                 beforeSend: function() {
                     $("#btnSubmit").attr("disabled", true);
                 },
