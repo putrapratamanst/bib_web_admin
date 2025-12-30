@@ -202,11 +202,19 @@
                             $pphPercent = 2;
                             $pph = $komisi * ($pphPercent / 100);
                             
-                            // Polis + stamp (+ policy fee jika installment pertama)
-                            $polisStamp = $contract->stamp_fee * ($percentage / 100);
+                            // Polis + stamp (hanya untuk installment 1)
+                            $polisStamp = 0;
+                            $stampFeeShare = $contract->stamp_fee * ($percentage / 100);
                             if ($cashout->installment_number == 1) {
+                                $polisStamp = $stampFeeShare;
                                 $policyFee = $contract->policy_fee ?? 0;
                                 $polisStamp += $policyFee;
+                            }
+                            
+                            // Total = amount - stamp_fee_share (jika bukan installment 1)
+                            $totalAmount = $cashout->amount;
+                            if ($cashout->installment_number != 1) {
+                                $totalAmount -= $stampFeeShare;
                             }
                         @endphp
                         <tr>
@@ -242,7 +250,7 @@
                     <tfoot class="table-secondary">
                         <tr>
                             <th colspan="6" class="text-end">Total Cashout Amount:</th>
-                            <th class="text-end text-primary">{{ $cashout->currency_code }} {{ $cashout->amount_formatted }}</th>
+                            <th class="text-end text-primary">{{ $cashout->currency_code }} {{ number_format($totalAmount, 2, ',', '.') }}</th>
                         </tr>
                     </tfoot>
                 </table>
