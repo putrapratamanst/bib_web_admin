@@ -292,10 +292,9 @@
                         <td class="col-header">Nilai (Rp.)</td>
                     </tr>
                     @php
-                        $creditDetails = $journalEntry->details->filter(fn($d) => $d->credit > 0);
+                        $creditDetails = $journalEntry->details->filter(fn($d) => $d->credit > 0)->values();
                         $creditRows = max(3, $creditDetails->count());
                     @endphp
-                    
                     @for($i = 0; $i < $creditRows; $i++)
                         @php
                             $detail = $creditDetails->get($i);
