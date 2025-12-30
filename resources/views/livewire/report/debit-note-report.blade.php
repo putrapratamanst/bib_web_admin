@@ -24,7 +24,7 @@
                         <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="contact_id" class="form-label">Contact</label>
-                                <select wire:model.live="contact_id" class="form-select" id="contact_id">
+                                <select wire:model.live="contact_id" class="form-select select2-contact" id="contact_id">
                                     <option value="">All Contacts</option>
                                     @foreach($contacts as $contact)
                                         <option value="{{ $contact->id }}">{{ $contact->display_name }}</option>
@@ -206,9 +206,20 @@
                                 $creditNotesAmount = $row->credit_notes_amount;
                                 $paymentAllocationsAmount = $row->payment_allocations_amount;
 
-       
+                                // Check if this is the first installment and add fees
+                                if ($billing && $billing->billing_number) {
+                                    preg_match('/-INST(\d+)/i', $billing->billing_number, $matches);
+                                    $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+                                    
+                                    if ($installmentNumber == 1) {
+                                        $policyFee = $debitNote->contract->policy_fee ?? 0;
+                                        $stampFee = $debitNote->contract->stamp_fee ?? 0;
+                                        $amount += $policyFee + $stampFee;
+                                    }
+                                }
+
                                 $creditApplied = $creditNotesAmount;
-                                $paymentApplied =  $paymentAllocationsAmount;
+                                $paymentApplied = $paymentAllocationsAmount;
                                 
                                 $outstandingAmount = $amount - $creditApplied - $paymentApplied;
                             @endphp
@@ -278,10 +289,9 @@
                                     <strong class="{{ $outstandingAmount > 0 ? 'text-danger' : 'text-success' }}">
                                         {{ $debitNote->currency_code }} {{ number_format($outstandingAmount, 2, ',', '.') }}
                                     </strong>
-                                    @if($creditApplied > 0 || $paymentApplied > 0)
+                                    @if($creditApplied > 0)
                                         <br><small class="text-muted">
-                                            CN: {{ number_format($creditApplied, 2, ',', '.') }} | 
-                                            PA: {{ number_format($paymentApplied, 2, ',', '.') }}
+                                            CN: {{ number_format($creditApplied, 2, ',', '.') }}
                                         </small>
                                     @endif
                                 </td>
@@ -329,6 +339,29 @@
 
     @push('scripts')
     <script>
+        // Initialize Select2 for contact dropdown
+        $(document).ready(function() {
+            $('.select2-contact').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'All Contacts'
+            });
+
+            // Handle Select2 change event and sync with Livewire
+            $('.select2-contact').on('change', function() {
+                @this.set('contact_id', $(this).val());
+            });
+
+            // Re-initialize Select2 after Livewire updates
+            Livewire.hook('message.processed', (message, component) => {
+                $('.select2-contact').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: 'All Contacts'
+                });
+            });
+        });
+
         // Handle file download
         window.addEventListener('downloadFile', event => {
             const url = event.detail[0].url;

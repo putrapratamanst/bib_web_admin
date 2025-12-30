@@ -134,14 +134,31 @@
                                     <td>{{ \Carbon\Carbon::parse($debitNoteBilling->due_date)->format('d M Y') }}</td>
                                     <td>{{ $debitNoteBilling->debitNote->contract->number ?? '-' }}</td>
                                     <td>{{ str_replace('INST', '', substr(strrchr($debitNoteBilling->billing_number, "-"), 1)) }}</td>
-                                    <td class="text-end">{{ $debitNoteBilling->debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNoteBilling->amount, 2, ',', '.') }}</td>
+                                    <td class="text-end">
+                                        @php
+                                            // Check if this is the first installment
+                                            preg_match('/-INST(\d+)/i', $debitNoteBilling->billing_number, $matches);
+                                            $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+                                            
+                                            $displayAmount = $debitNoteBilling->amount;
+                                            $displayRemainingAmount = $debitNoteBilling->remaining_amount;
+                                            
+                                            // Add policy fee and stamp fee for first installment only
+                                            if ($installmentNumber == 1) {
+                                                $policyFee = $debitNoteBilling->debitNote->contract->policy_fee ?? 0;
+                                                $stampFee = $debitNoteBilling->debitNote->contract->stamp_fee ?? 0;
+                                                $displayAmount += $policyFee + $stampFee;
+                                            }
+                                        @endphp
+                                        {{ $debitNoteBilling->debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }}
+                                    </td>
                                     <td class="text-end">
                                         <div>Allocated: {{ number_format($debitNoteBilling->allocated_amount, 2, ',', '.') }}</div>
-                                        <div class="text-muted">Available: {{ number_format($debitNoteBilling->remaining_amount, 2, ',', '.') }}</div>
+                                        <div class="text-muted">Available: {{ number_format($displayRemainingAmount, 2, ',', '.') }}</div>
                                     </td>
                                     <td>
                                         @php
-                                        $maxAllocation = min($totalAvailable, $debitNoteBilling->remaining_amount);
+                                        $maxAllocation = min($totalAvailable, $displayRemainingAmount);
                                         @endphp
                                         <div class="input-group">
                                             <input type="number"
@@ -150,7 +167,7 @@
                                                 value="{{ $maxAllocation }}"
                                                 max="{{ $maxAllocation }}"
                                                 data-cashbank-amount="{{ $totalAvailable }}"
-                                                data-billing-amount="{{ $debitNoteBilling->remaining_amount }}"
+                                                data-billing-amount="{{ $displayRemainingAmount }}"
                                                 step="0.01"
                                                 {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
                                             <button type="button"

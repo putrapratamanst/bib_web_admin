@@ -137,3 +137,14 @@ Ini adalah sistem manajemen asuransi berbasis web yang dibangun menggunakan Lara
 * Credit notes applied
 * Payment allocations
 * As-of-date calculations
+
+## Guardrails
+- Do not implement changes that could break other flows without addressing them.
+- If any related module is ambiguous, assume it is relevant and scan it anyway.
+- Prefer stable abstractions; avoid scattering logic across layers.
+- No silent behavior changes: document them.
+
+## Definition of Done
+A change is not "done" until:
+- Related modules have been scanned and accounted for
+- Behavior impact is documented

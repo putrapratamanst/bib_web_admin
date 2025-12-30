@@ -424,14 +424,14 @@
             
             <div class="premium-row">
                 <div class="premium-label">{{-- Policy/Endorsement Cost --}}</div>
-                <div class="premium-currency">{{ $installmentNumber == 1 ? $currencyCode : '' }}</div>
-                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($policyFee, 2, ',', '.') : '' }}</div>
+                <div class="premium-currency">{{  $currencyCode  }}</div>
+                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($policyFee, 2, ',', '.') : '0,-' }}</div>
             </div>
             
             <div class="premium-row">
                 <div class="premium-label">{{-- Stamp duty --}}</div>
-                <div class="premium-currency">{{ $installmentNumber == 1 ? $currencyCode : '' }}</div>
-                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($stampDuty, 2, ',', '.') : '' }}</div>
+                <div class="premium-currency">{{  $currencyCode  }}</div>
+                <div class="premium-value">{{ $installmentNumber == 1 ? number_format($stampDuty, 2, ',', '.') : '0,-' }}</div>
             </div>
             
             @if($discountPercent > 0)
