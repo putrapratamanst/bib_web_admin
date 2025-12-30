@@ -4,7 +4,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>Cashout Report
+                        <i class="fas fa-chart-bar me-2"></i>Laporan Hutang Asuransi
                     </h5>
                 </div>
                 <div class="card-body">
@@ -182,14 +182,14 @@
     <!-- Data Table -->
     <div class="card">
         <div class="card-header">
-            <h6 class="card-title mb-0">Cashout Details</h6>
+            <h6 class="card-title mb-0">Detail Hutang Asuransi</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Cashout Number</th>
+                            <th>Nomor Hutang</th>
                             <th>Billing Number</th>
                             <th>DN Number</th>
                             <th>Contract Number</th>
@@ -305,7 +305,7 @@
                                 <td colspan="13" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
-                                        <p>No cashouts found for the selected criteria.</p>
+                                        <p>Tidak ada data hutang asuransi untuk kriteria yang dipilih.</p>
                                     </div>
                                 </td>
                             </tr>

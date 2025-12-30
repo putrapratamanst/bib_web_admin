@@ -62,7 +62,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.cashouts.index') }}">
                                 <i class="fas fa-money-bill-wave me-1"></i>
-                                Cashouts <span class="badge bg-success">new</span>
+                                Hutang Asuransi <span class="badge bg-success">new</span>
                             </a>
                         </li>
                     </ul>
@@ -109,7 +109,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('report.cashout.index') }}">
                                 <i class="fas fa-money-bill-wave me-1"></i>
-                                Cashout Report <span class="badge bg-success">new</span>
+                                Laporan Hutang Asuransi <span class="badge bg-success">new</span>
                             </a>
                         </li>
                     </ul>

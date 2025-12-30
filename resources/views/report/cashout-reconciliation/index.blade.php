@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cashout Reconciliation Report')
+@section('title', 'Laporan Rekonsiliasi Hutang Asuransi')
 
 @section('content')
 <div class="container">
@@ -8,9 +8,9 @@
         <div class="card-header">
             <h5 class="card-title mb-0">
                 <i class="fas fa-balance-scale me-2"></i>
-                Cashout Reconciliation Report
+                Laporan Rekonsiliasi Hutang Asuransi
             </h5>
-            <small class="text-muted">Reconcile cashouts against journal entries and financial records</small>
+            <small class="text-muted">Rekonsiliasi hutang asuransi terhadap jurnal entri dan catatan keuangan</small>
         </div>
         <div class="card-body">
             <!-- Filters Form -->
@@ -58,7 +58,7 @@
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body">
-                            <h6 class="card-title">Total Cashouts</h6>
+                            <h6 class="card-title">Total Hutang Asuransi</h6>
                             <h4 id="totalCashouts">0</h4>
                             <small id="totalCashoutsAmount">IDR 0</small>
                         </div>
@@ -99,7 +99,7 @@
                     <table class="table table-striped table-bordered" id="cashout-reconciliation-table">
                         <thead class="table-header">
                             <tr>
-                                <th>Cashout Number</th>
+                                <th>Nomor Hutang</th>
                                 <th>Date</th>
                                 <th>Insurance</th>
                                 <th>Debit Note</th>

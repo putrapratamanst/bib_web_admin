@@ -189,7 +189,7 @@
 @push('scripts')
 <script>
     function postDebitNote() {
-        if (confirm('Are you sure you want to post this Debit Note? This will automatically create cashouts to insurance companies.')) {
+        if (confirm('Are you sure you want to post this Debit Note? This will automatically create Hutang Asuransi to insurance companies.')) {
             $('#btnPost').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Posting...');
 
             $.ajax({
@@ -229,8 +229,8 @@
 
     function postBillingToCashout(billingId) {
         Swal.fire({
-            title: 'Post Billing to Cashout',
-            text: 'Are you sure you want to post this billing to cashout? This will create a cashout entry.',
+            title: 'Post Billing ke Hutang Asuransi',
+            text: 'Are you sure you want to post this billing? This will create a Hutang Asuransi entry.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -258,7 +258,7 @@
                                     <div class="text-start">
                                         <p><strong>Message:</strong> ${response.message}</p>
                                         ${response.data && response.data.cashout ? 
-                                            `<p><strong>Cashout Number:</strong> ${response.data.cashout.number}</p>
+                                            `<p><strong>Nomor Hutang:</strong> ${response.data.cashout.number}</p>
                                              <p><strong>Amount:</strong> ${response.data.cashout.currency_code} ${parseFloat(response.data.cashout.amount).toLocaleString('id-ID', {minimumFractionDigits: 2})}</p>` 
                                             : ''
                                         }
@@ -276,11 +276,11 @@
                             // Re-enable button
                             $(`button[onclick="postBillingToCashout('${billingId}')"]`)
                                 .prop('disabled', false)
-                                .html('<i class="fas fa-paper-plane"></i> Post to Cashout');
+                                .html('<i class="fas fa-paper-plane"></i> Post ke Hutang Asuransi');
                         }
                     },
                     error: function(xhr) {
-                        let errorMessage = 'Failed to post billing to cashout';
+                        let errorMessage = 'Failed to post billing ke Hutang Asuransi';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }
@@ -288,7 +288,7 @@
                         // Re-enable button
                         $(`button[onclick="postBillingToCashout('${billingId}')"]`)
                             .prop('disabled', false)
-                            .html('<i class="fas fa-paper-plane"></i> Post to Cashout');
+                            .html('<i class="fas fa-paper-plane"></i> Post ke Hutang Asuransi');
                     }
                 });
             }

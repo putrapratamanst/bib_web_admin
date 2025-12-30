@@ -6,7 +6,7 @@
         <div class="card-header">
             <h5 class="card-title mb-0">
                 <i class="fas fa-money-bill-wave me-2"></i>
-                List of Cashouts
+                List of Hutang Asuransi
             </h5>
             <small class="text-muted">Manage payments to insurance companies</small>
         </div>
@@ -14,7 +14,7 @@
             <table class="table table-new table-hover table-striped table-bordered" id="cashout-table">
                 <thead class="table-header">
                     <tr>
-                        <th>Cashout Number</th>
+                        <th>Nomor Hutang</th>
                         <th>Date</th>
                         <th>Debit Note</th>
                         <th>Insurance Company</th>

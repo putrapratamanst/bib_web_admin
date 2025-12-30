@@ -67,7 +67,7 @@
                     @if($cashBank->type == 'receive')
                         Related Debit Note Billings
                     @else
-                        Related Cashouts
+                        Related Hutang Asuransi
                     @endif
                 </div>
                 <div class="card-body">
@@ -86,7 +86,7 @@
                     @else
                         @if($cashouts->isEmpty())
                         <div class="alert alert-warning">
-                            No pending cashouts found.
+                            No pending hutang asuransi found.
                         </div>
                         @endif
                     @endif
@@ -187,12 +187,12 @@
                         </table>
                         @endif
                     @else
-                        <!-- Cashouts Table -->
+                        <!-- Hutang Asuransi Table -->
                         @if(!$cashouts->isEmpty())
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Cashout Number</th>
+                                    <th>Nomor Hutang</th>
                                     <th>Insurance</th>
                                     <th>Date</th>
                                     <th>Due Date</th>
@@ -354,13 +354,13 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Cashout allocation saved successfully'
+                        text: 'Allocation saved successfully'
                     }).then(() => {
                         location.reload();
                     });
                 },
                 error: function(xhr) {
-                    let errorMessage = 'An error occurred while saving the cashout allocation';
+                    let errorMessage = 'An error occurred while saving the allocation';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
                     }

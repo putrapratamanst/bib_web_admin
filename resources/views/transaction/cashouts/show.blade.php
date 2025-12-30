@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Cashout')
+@section('title', 'Detail Hutang Asuransi')
 
 @section('content')
 <div class="container">
@@ -8,19 +8,19 @@
         <div class="card-header">
             <h5 class="card-title mb-0">
                 <i class="fas fa-money-bill-wave me-2"></i>
-                Cashout Details
+                Detail Hutang Asuransi
             </h5>
             <div class="float-end">
                 @if($cashout->status === 'pending')
                     <form method="POST" action="{{ route('transaction.cashouts.mark-paid', $cashout->id) }}" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark this cashout as paid?')">
+                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark this as paid?')">
                             <i class="fas fa-check me-1"></i> Mark as Paid
                         </button>
                     </form>
                     <form method="POST" action="{{ route('transaction.cashouts.mark-cancelled', $cashout->id) }}" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this cashout?')">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this?')">
                             <i class="fas fa-times me-1"></i> Cancel
                         </button>
                     </form>
@@ -30,10 +30,10 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <h6 class="text-muted mb-3">Cashout Information</h6>
+                    <h6 class="text-muted mb-3">Informasi Hutang Asuransi</h6>
                     
                     <div class="row mb-2">
-                        <div class="col-4"><strong>Cashout Number:</strong></div>
+                        <div class="col-4"><strong>Nomor Hutang:</strong></div>
                         <div class="col-8">{{ $cashout->number }}</div>
                     </div>
                     

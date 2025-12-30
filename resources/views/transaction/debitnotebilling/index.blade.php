@@ -19,7 +19,7 @@
                                 <th>Due Date</th>
                                 <th>Amount</th>
                                 <th>Status</th>
-                                <th>Posted to Cashout</th>
+                                <th>Posted ke Hutang Asuransi</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -60,7 +60,7 @@ $(document).ready(function() {
 });
 
 function postBillingToCashout(billingId) {
-    if (confirm('Are you sure you want to post this billing to cashout?')) {
+    if (confirm('Are you sure you want to post this billing ke Hutang Asuransi?')) {
         $.ajax({
             url: `/api/debit-note-billing/${billingId}/post-to-cashout`,
             method: "POST",

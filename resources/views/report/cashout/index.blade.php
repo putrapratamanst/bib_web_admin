@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cashout Report')
+@section('title', 'Laporan Hutang Asuransi')
 
 @section('content')
 <div class="container">
