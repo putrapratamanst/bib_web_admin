@@ -68,6 +68,11 @@ class PaymentAllocation extends Model
         return $this->belongsTo(DebitNote::class, 'debit_note_id', 'id');
     }
 
+    public function debitNoteBilling(): BelongsTo
+    {
+        return $this->belongsTo(DebitNoteBilling::class, 'debit_note_billing_id', 'id');
+    }
+
     public function cashout(): BelongsTo
     {
         return $this->belongsTo(Cashout::class, 'cashout_id', 'id');

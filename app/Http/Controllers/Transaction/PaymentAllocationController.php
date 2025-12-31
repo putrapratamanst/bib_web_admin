@@ -173,4 +173,60 @@ class PaymentAllocationController extends Controller
 
         return "{$prefix}-{$date}-" . str_pad($sequence, 6, '0', STR_PAD_LEFT);
     }
+
+    public function print($id)
+    {
+        $cashBank = CashBank::with(['contact', 'chartOfAccount', 'contraAccount'])->findOrFail($id);
+        
+        // Get allocations for this cash bank with billing details
+        $allocations = PaymentAllocation::where('cash_bank_id', $id)
+            ->whereNotNull('debit_note_billing_id')
+            ->with(['debitNoteBilling.debitNote'])
+            ->get();
+        
+        // Build description based on allocations
+        $description = $this->buildAllocationDescription($cashBank, $allocations);
+        
+        return view('transaction.paymentallocation.print', [
+            'cashBank' => $cashBank,
+            'allocations' => $allocations,
+            'allocationDescription' => $description
+        ]);
+    }
+
+    private function buildAllocationDescription($cashBank, $allocations)
+    {
+        $contactName = $cashBank->contact->display_name ?? '-';
+        
+        if ($allocations->isEmpty()) {
+            return "Pembayaran {$contactName} - Belum ada alokasi";
+        }
+        
+        // Group allocations by debit note
+        $groupedByDebitNote = $allocations->groupBy(function($alloc) {
+            return $alloc->debitNoteBilling->debitNote->number ?? '-';
+        });
+
+        $descriptions = [];
+        foreach ($groupedByDebitNote as $debitNoteNumber => $allocs) {
+            // Extract installment numbers from billing numbers
+            $installments = [];
+            foreach ($allocs as $alloc) {
+                $billingNumber = $alloc->debitNoteBilling->billing_number ?? '';
+                if (preg_match('/-INST(\d+)/i', $billingNumber, $matches)) {
+                    $installments[] = $matches[1];
+                }
+            }
+            
+            if (!empty($installments)) {
+                sort($installments);
+                $installmentStr = implode(', ', $installments);
+                $descriptions[] = "terhadap {$debitNoteNumber} installment {$installmentStr}";
+            } else {
+                $descriptions[] = "terhadap {$debitNoteNumber}";
+            }
+        }
+
+        return "Pembayaran {$contactName} " . implode(', ', $descriptions);
+    }
 }

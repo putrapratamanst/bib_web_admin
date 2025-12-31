@@ -199,7 +199,7 @@ class AdvanceController extends Controller
                 'cash_bank_id' => $request->cash_bank_id,
                 'debit_note_id' => null, // NULL karena ini advance
                 'allocation' => $request->allocation,
-                'status' => 'posted',
+                'status' => 'active',
                 'description' => $request->description,
             ]);
 
