@@ -70,7 +70,7 @@ class DebitNoteReport extends Component
 
     public function render()
     {
-        $query = DebitNote::with(['contact', 'contract.contractType', 'creditNotes', 'paymentAllocations', 'billings'])
+        $query = DebitNote::with(['contact', 'contract.contractType', 'creditNotes', 'paymentAllocations.cashBank.chartOfAccount', 'billings.paymentAllocations.cashBank.chartOfAccount'])
             ->when($this->date_from, function ($q) {
                 $q->whereDate('date', '>=', $this->date_from);
             })
@@ -118,22 +118,34 @@ class DebitNoteReport extends Component
                     
                     $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
 
+                    // Get bank info from payment allocations for this billing
+                    $bankInfo = $this->getBankInfoForBilling($billing);
+
                     $rows->push((object)[
                         'debit_note' => $dn,
                         'billing' => $billing,
                         'credit_notes_amount' => $creditNotesAmount,
                         'payment_allocations_amount' => $paymentForBilling,
+                        'bank_name' => $bankInfo['bank_name'],
+                        'bank_transaction_number' => $bankInfo['bank_transaction_number'],
+                        'bank_date' => $bankInfo['bank_date'],
                     ]);
                 }
             } else {
                 // No billing rows: treat allocation as total allocated on the debit note (unlinked allocations)
                 $totalAllocation = $dn->paymentAllocations->sum('allocation');
 
+                // Get bank info from payment allocations
+                $bankInfo = $this->getBankInfoFromAllocations($dn->paymentAllocations);
+
                 $rows->push((object)[
                     'debit_note' => $dn,
                     'billing' => null,
                     'credit_notes_amount' => $creditNotesAmount,
                     'payment_allocations_amount' => $totalAllocation,
+                    'bank_name' => $bankInfo['bank_name'],
+                    'bank_transaction_number' => $bankInfo['bank_transaction_number'],
+                    'bank_date' => $bankInfo['bank_date'],
                 ]);
             }
         }
@@ -182,6 +194,53 @@ class DebitNoteReport extends Component
             'contacts' => $contacts,
             'contractTypes' => $contractTypes
         ]);
+    }
+
+    private function getBankInfoForBilling($billing): array
+    {
+        $bankName = '';
+        $bankTransactionNumber = '';
+        $bankDate = null;
+
+        if ($billing->relationLoaded('paymentAllocations') && $billing->paymentAllocations->count()) {
+            // Get the first allocation with cash bank
+            foreach ($billing->paymentAllocations as $allocation) {
+                if ($allocation->cashBank) {
+                    $bankName = $allocation->cashBank->chartOfAccount->name ?? '';
+                    $bankTransactionNumber = $allocation->cashBank->number ?? '';
+                    $bankDate = $allocation->cashBank->date;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'bank_name' => $bankName,
+            'bank_transaction_number' => $bankTransactionNumber,
+            'bank_date' => $bankDate,
+        ];
+    }
+
+    private function getBankInfoFromAllocations($allocations): array
+    {
+        $bankName = '';
+        $bankTransactionNumber = '';
+        $bankDate = null;
+
+        foreach ($allocations as $allocation) {
+            if ($allocation->cashBank) {
+                $bankName = $allocation->cashBank->chartOfAccount->name ?? '';
+                $bankTransactionNumber = $allocation->cashBank->number ?? '';
+                $bankDate = $allocation->cashBank->date;
+                break;
+            }
+        }
+
+        return [
+            'bank_name' => $bankName,
+            'bank_transaction_number' => $bankTransactionNumber,
+            'bank_date' => $bankDate,
+        ];
     }
 
     private function calculateTotals()

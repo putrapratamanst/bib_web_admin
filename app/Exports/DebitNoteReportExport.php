@@ -35,7 +35,7 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
     public function collection()
     {
         // Load debit notes with related billings (relation must exist on the model)
-        $debitNotes = DebitNote::with(['contact', 'contract', 'creditNotes', 'paymentAllocations', 'billings'])
+        $debitNotes = DebitNote::with(['contact', 'contract', 'creditNotes', 'paymentAllocations.cashBank.chartOfAccount', 'billings.paymentAllocations.cashBank.chartOfAccount'])
             ->when($this->dateFrom, function ($q) {
                 $q->whereDate('date', '>=', $this->dateFrom);
             })
@@ -74,27 +74,85 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
                 foreach ($dn->billings as $billing) {
                     $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
 
+                    // Get bank info from payment allocations for this billing
+                    $bankInfo = $this->getBankInfoForBilling($billing);
+
                     $rows->push((object)[
                         'debit_note' => $dn,
                         'billing' => $billing,
                         'credit_notes_amount' => $creditNotesAmount,
                         'payment_allocations_amount' => $paymentForBilling,
+                        'bank_name' => $bankInfo['bank_name'],
+                        'bank_transaction_number' => $bankInfo['bank_transaction_number'],
+                        'bank_date' => $bankInfo['bank_date'],
                     ]);
                 }
             } else {
                 // No billing rows: treat allocation as total allocated on the debit note (unlinked allocations)
                 $totalAllocation = $dn->paymentAllocations->sum('allocation');
 
+                // Get bank info from payment allocations
+                $bankInfo = $this->getBankInfoFromAllocations($dn->paymentAllocations);
+
                 $rows->push((object)[
                     'debit_note' => $dn,
                     'billing' => null,
                     'credit_notes_amount' => $creditNotesAmount,
                     'payment_allocations_amount' => $totalAllocation,
+                    'bank_name' => $bankInfo['bank_name'],
+                    'bank_transaction_number' => $bankInfo['bank_transaction_number'],
+                    'bank_date' => $bankInfo['bank_date'],
                 ]);
             }
         }
 
         return $rows;
+    }
+
+    private function getBankInfoForBilling($billing): array
+    {
+        $bankName = '';
+        $bankTransactionNumber = '';
+        $bankDate = null;
+
+        if ($billing->relationLoaded('paymentAllocations') && $billing->paymentAllocations->count()) {
+            foreach ($billing->paymentAllocations as $allocation) {
+                if ($allocation->cashBank) {
+                    $bankName = $allocation->cashBank->chartOfAccount->name ?? '';
+                    $bankTransactionNumber = $allocation->cashBank->number ?? '';
+                    $bankDate = $allocation->cashBank->date;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'bank_name' => $bankName,
+            'bank_transaction_number' => $bankTransactionNumber,
+            'bank_date' => $bankDate,
+        ];
+    }
+
+    private function getBankInfoFromAllocations($allocations): array
+    {
+        $bankName = '';
+        $bankTransactionNumber = '';
+        $bankDate = null;
+
+        foreach ($allocations as $allocation) {
+            if ($allocation->cashBank) {
+                $bankName = $allocation->cashBank->chartOfAccount->name ?? '';
+                $bankTransactionNumber = $allocation->cashBank->number ?? '';
+                $bankDate = $allocation->cashBank->date;
+                break;
+            }
+        }
+
+        return [
+            'bank_name' => $bankName,
+            'bank_transaction_number' => $bankTransactionNumber,
+            'bank_date' => $bankDate,
+        ];
     }
 
     public function headings(): array
@@ -116,6 +174,9 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
             'Outstanding Amount',
             'Credit Notes',
             'Payment Allocations',
+            'Bank',
+            'No. Trans. Bank',
+            'Tgl Bank',
             'Created Date'
         ];
     }
@@ -164,19 +225,22 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
             number_format($outstandingAmount, 2, ',', '.'),
             number_format($creditApplied, 2, ',', '.'),
             number_format($paymentApplied, 2, ',', '.'),
+            $row->bank_name ?? '',
+            $row->bank_transaction_number ?? '',
+            $row->bank_date ? Carbon::parse($row->bank_date)->format('d/m/Y') : '',
             $debitNote->created_at ? $debitNote->created_at->format('d/m/Y H:i') : ''
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Auto-size columns A..Q (17 columns)
-        foreach (range('A', 'Q') as $column) {
+        // Auto-size columns A..T (20 columns)
+        foreach (range('A', 'T') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
         // Style header row
-        $sheet->getStyle('A1:Q1')->applyFromArray([
+        $sheet->getStyle('A1:T1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF']
@@ -199,7 +263,7 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
 
         // Add borders to all data
         $lastRow = $sheet->getHighestRow();
-        $sheet->getStyle('A1:Q' . $lastRow)->applyFromArray([
+        $sheet->getStyle('A1:T' . $lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,

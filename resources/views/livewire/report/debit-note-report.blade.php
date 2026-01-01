@@ -189,6 +189,9 @@
                             <th>Days Overdue</th>
                             <th>Amount</th>
                             <th>Outstanding</th>
+                            <th>Bank</th>
+                            <th>No. Trans. Bank</th>
+                            <th>Tgl Bank</th>
                             <!-- <th>Status</th> -->
                             <th>Posted</th>
                             <th>Actions</th>
@@ -295,6 +298,9 @@
                                         </small>
                                     @endif
                                 </td>
+                                <td>{{ $row->bank_name ?: '-' }}</td>
+                                <td>{{ $row->bank_transaction_number ?: '-' }}</td>
+                                <td>{{ $row->bank_date ? \Carbon\Carbon::parse($row->bank_date)->format('d/m/Y') : '-' }}</td>
                                 <!-- <td>
                                     <span class="badge bg-{{ $debitNote->status === 'active' ? 'success' : 'secondary' }}">
                                         {{ ucfirst($debitNote->status) }}
@@ -316,7 +322,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="13" class="text-center py-4">
+                                <td colspan="15" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
                                         <p>No debit notes found for the selected criteria.</p>
