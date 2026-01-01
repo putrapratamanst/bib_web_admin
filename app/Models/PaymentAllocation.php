@@ -52,6 +52,12 @@ class PaymentAllocation extends Model
         return $query->where('type', 'allocation')->whereNotNull('debit_note_id');
     }
 
+    // Scope for refund payments
+    public function scopeRefund($query)
+    {
+        return $query->where('type', 'refund');
+    }
+
     // Check if this is an advance payment
     public function isAdvance(): bool
     {

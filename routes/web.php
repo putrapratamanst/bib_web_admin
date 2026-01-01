@@ -102,6 +102,11 @@ Route::prefix('transaction')->group(function () {
     Route::get('/advances/create', [\App\Http\Controllers\Transaction\AdvanceController::class, 'create'])->name('transaction.advances.create');
     Route::get('/advances/{id}', [\App\Http\Controllers\Transaction\AdvanceController::class, 'show'])->name('transaction.advances.show');
 
+    // Refunds
+    Route::get('/refunds', [\App\Http\Controllers\Transaction\RefundController::class, 'index'])->name('transaction.refunds.index');
+    Route::get('/refunds/create', [\App\Http\Controllers\Transaction\RefundController::class, 'create'])->name('transaction.refunds.create');
+    Route::get('/refunds/{id}', [\App\Http\Controllers\Transaction\RefundController::class, 'show'])->name('transaction.refunds.show');
+
     // Cashouts
     Route::get('/cashouts', [\App\Http\Controllers\Transaction\CashoutController::class, 'index'])->name('transaction.cashouts.index');
     Route::get('/cashouts/{id}', [\App\Http\Controllers\Transaction\CashoutController::class, 'show'])->name('transaction.cashouts.show');

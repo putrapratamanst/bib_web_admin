@@ -56,7 +56,13 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.advances.index') }}">
                                 <i class="bi bi-cash-coin me-1"></i>
-                                Advance Payment <span class="badge bg-warning text-dark">new</span>
+                                Advance Payment
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('transaction.refunds.index') }}">
+                                <i class="bi bi-arrow-return-left me-1"></i>
+                                Refund
                             </a>
                         </li>
                         <li>

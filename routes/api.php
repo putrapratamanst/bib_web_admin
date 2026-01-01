@@ -63,6 +63,14 @@ Route::post('/advances', [\App\Http\Controllers\Api\AdvanceController::class, 's
 Route::get('/advances/{id}', [\App\Http\Controllers\Api\AdvanceController::class, 'show'])->name('api.advances.show');
 Route::delete('/advances/{id}', [\App\Http\Controllers\Api\AdvanceController::class, 'destroy'])->name('api.advances.destroy');
 
+// Refund
+Route::get('/refunds/datatables', [\App\Http\Controllers\Api\RefundController::class, 'datatables'])->name('api.refunds.datatables');
+Route::get('/refunds/advance/select2', [\App\Http\Controllers\Api\RefundController::class, 'advanceSelect2'])->name('api.refunds.advance.select2');
+Route::get('/refunds/advance/{id}', [\App\Http\Controllers\Api\RefundController::class, 'getAdvanceDetail'])->name('api.refunds.advance.detail');
+Route::post('/refunds', [\App\Http\Controllers\Api\RefundController::class, 'store'])->name('api.refunds.store');
+Route::get('/refunds/{id}', [\App\Http\Controllers\Api\RefundController::class, 'show'])->name('api.refunds.show');
+Route::delete('/refunds/{id}', [\App\Http\Controllers\Api\RefundController::class, 'destroy'])->name('api.refunds.destroy');
+
 // Contract
 Route::get('/contract', [\App\Http\Controllers\Api\ContractController::class, 'index'])->name('api.contracts.index');
 Route::get('/contract/datatables', [\App\Http\Controllers\Api\ContractController::class, 'datatables'])->name('api.contracts.datatables');
