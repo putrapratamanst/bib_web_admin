@@ -1,6 +1,30 @@
 @php
 use App\Helpers\TerbilangHelper;
 $total = $cashBank->amount;
+
+// Calculate Loss/Gain on Collection from allocations
+$lossOnCollection = 0;
+$gainOnCollection = 0;
+$totalArWriteOff = 0;
+
+foreach ($allocations as $allocation) {
+    if ($allocation->write_off_type === 'loss') {
+        $lossOnCollection += $allocation->write_off_amount;
+        $totalArWriteOff += $allocation->write_off_amount;
+    } elseif ($allocation->write_off_type === 'gain') {
+        $gainOnCollection += $allocation->write_off_amount;
+        $totalArWriteOff -= $allocation->write_off_amount;
+    }
+}
+
+// Total AR to credit = allocations + loss on collection - gain on collection
+$totalArCredit = $allocations->sum('allocation') + $totalArWriteOff;
+
+// Total Debit = Bank + Loss on Collection
+$totalDebit = $total + $lossOnCollection;
+
+// Total Credit = AR + Gain on Collection
+$totalCredit = $totalArCredit + $gainOnCollection;
 @endphp
 <!doctype html>
 <html lang="id">
@@ -150,37 +174,52 @@ $total = $cashBank->amount;
         <th>✓</th>
         <th>Nilai</th>
       </tr>
-      @php
-        $details = $cashBank->cashBankDetails;
-        $maxRows = max(count($details), 1);
-      @endphp
-      @for($i = 0; $i < $maxRows; $i++)
+      {{-- Row 1: Bank (Debit) dan AR/Piutang (Kredit) --}}
       <tr>
-        @if($i == 0)
         <td>{{ $cashBank->chartOfAccount->display_name ?? '-' }}</td>
         <td class="center">✓</td>
         <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
-        @else
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        @endif
-        @if($i == 0 && $cashBank->contraAccount)
+        @if($cashBank->contraAccount)
         <td>{{ $cashBank->contraAccount->display_name }}</td>
         <td class="center">✓</td>
-        <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
+        <td class="right">{{ number_format($totalArCredit, 2, ',', '.') }}</td>
         @else
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         @endif
       </tr>
-      @endfor
+      {{-- Row 2: Loss on Collection (Debit) jika ada --}}
+      @if($lossOnCollection > 0)
+      <tr>
+        <td>Loss on Collection</td>
+        <td class="center">✓</td>
+        <td class="right">{{ number_format($lossOnCollection, 2, ',', '.') }}</td>
+        @if($gainOnCollection > 0)
+        <td>Gain on Collection</td>
+        <td class="center">✓</td>
+        <td class="right">{{ number_format($gainOnCollection, 2, ',', '.') }}</td>
+        @else
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        @endif
+      </tr>
+      @elseif($gainOnCollection > 0)
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>Gain on Collection</td>
+        <td class="center">✓</td>
+        <td class="right">{{ number_format($gainOnCollection, 2, ',', '.') }}</td>
+      </tr>
+      @endif
       <tr>
         <td colspan="2" class="bold center">Jumlah</td>
-        <td class="right bold">{{ number_format($total, 2, ',', '.') }}</td>
+        <td class="right bold">{{ number_format($totalDebit, 2, ',', '.') }}</td>
         <td colspan="2" class="bold center">Jumlah</td>
-        <td class="right bold">{{ number_format($total, 2, ',', '.') }}</td>
+        <td class="right bold">{{ number_format($totalCredit, 2, ',', '.') }}</td>
       </tr>
     </table>
 

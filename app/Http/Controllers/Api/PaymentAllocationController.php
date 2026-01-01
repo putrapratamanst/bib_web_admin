@@ -383,4 +383,44 @@ class PaymentAllocationController extends Controller
 
         return $previousBillingsCount + 1;
     }
+
+    /**
+     * Update write off (Loss/Gain on Collection) for a payment allocation
+     */
+    public function writeOff(Request $request, $cashbankID)
+    {
+        try {
+            $request->validate([
+                'debit_note_billing_id' => 'required|exists:debit_note_billings,id',
+                'write_off_amount' => 'required|numeric|min:0',
+                'write_off_type' => 'required|in:none,loss,gain',
+            ]);
+
+            // Find existing allocation for this billing on this cash bank
+            $allocation = PaymentAllocation::where('cash_bank_id', $cashbankID)
+                ->where('debit_note_billing_id', $request->debit_note_billing_id)
+                ->first();
+
+            if (!$allocation) {
+                return response()->json([
+                    'message' => 'Allocation not found for this billing. Please save allocation first before applying write off.'
+                ], 404);
+            }
+
+            // Update write off fields
+            $allocation->write_off_amount = $request->write_off_amount;
+            $allocation->write_off_type = $request->write_off_type;
+            $allocation->save();
+
+            return response()->json([
+                'message' => 'Write off has been saved successfully',
+                'data' => $allocation
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while saving write off',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

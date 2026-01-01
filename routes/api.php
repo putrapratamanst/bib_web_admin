@@ -54,6 +54,7 @@ Route::post('/payment-allocation', [\App\Http\Controllers\Api\PaymentAllocationC
 Route::post('/payment-allocation/{cashbankID}', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankID'])->name('api.payment-allocations.storeByCashBankID');
 Route::post('/payment-allocation/{cashbankID}/store-all', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeAll'])->name('api.payment-allocations.storeAll');
 Route::post('/payment-allocation/{cashbankID}/cashout', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'storeByCashBankIDForCashout'])->name('api.payment-allocations.storeByCashBankIDForCashout');
+Route::post('/payment-allocation/{cashbankID}/write-off', [\App\Http\Controllers\Api\PaymentAllocationController::class, 'writeOff'])->name('api.payment-allocations.writeOff');
 
 // Advance
 Route::get('/advances/datatables', [\App\Http\Controllers\Api\AdvanceController::class, 'datatables'])->name('api.advances.datatables');

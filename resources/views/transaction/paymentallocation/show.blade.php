@@ -134,6 +134,7 @@
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
                                 <tr>
+                                    <th class="text-center" style="width: 40px;">✓</th>
                                     <th>Debit Note Number</th>
                                     <th>Number</th>
                                     <th>Date</th>
@@ -148,6 +149,43 @@
                             <tbody>
                                 @foreach($debitNoteBillings as $debitNoteBilling)
                                 <tr class="{{ $debitNoteBilling->allocated_amount > 0 ? 'table-success' : '' }}">
+                                    <td class="text-center align-middle">
+                                        @php
+                                        // Check if this is the first installment
+                                        preg_match('/-INST(\d+)/i', $debitNoteBilling->billing_number, $matches);
+                                        $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+                                        
+                                        $displayAmount = $debitNoteBilling->amount;
+                                        $displayRemainingAmount = $debitNoteBilling->remaining_amount;
+                                        
+                                        // Add policy fee and stamp fee for first installment only
+                                        if ($installmentNumber == 1) {
+                                            $policyFee = $debitNoteBilling->debitNote->contract->policy_fee ?? 0;
+                                            $stampFee = $debitNoteBilling->debitNote->contract->stamp_fee ?? 0;
+                                            $displayAmount += $policyFee + $stampFee;
+                                        }
+                                        
+                                        // Get existing write off data for this billing
+                                        $existingWriteOff = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                                            ->where('debit_note_billing_id', $debitNoteBilling->id)
+                                            ->first();
+                                        $isWriteOff = $existingWriteOff && $existingWriteOff->write_off_type !== 'none';
+                                        $writeOffAmount = $existingWriteOff->write_off_amount ?? 0;
+                                        $writeOffType = $existingWriteOff->write_off_type ?? 'none';
+                                        @endphp
+                                        @if($debitNoteBilling->allocated_amount > 0)
+                                        <input type="checkbox" 
+                                            class="form-check-input write-off-check" 
+                                            id="writeoff_{{ $debitNoteBilling->id }}"
+                                            data-billing-id="{{ $debitNoteBilling->id }}"
+                                            data-billing-amount="{{ $displayAmount }}"
+                                            data-allocated="{{ $debitNoteBilling->allocated_amount }}"
+                                            {{ $isWriteOff ? 'checked' : '' }}
+                                            title="{{ $isWriteOff ? ($writeOffType == 'loss' ? 'Loss: ' : 'Gain: ') . number_format($writeOffAmount, 2, ',', '.') : 'Klik untuk tutup selisih' }}">
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $debitNoteBilling->debitNote->number }}</td>
                                     <td>{{ $debitNoteBilling->billing_number }}</td>
                                     <td>{{ \Carbon\Carbon::parse($debitNoteBilling->date)->format('d M Y') }}</td>
@@ -155,21 +193,6 @@
                                     <td>{{ $debitNoteBilling->debitNote->contract->number ?? '-' }}</td>
                                     <td>{{ str_replace('INST', '', substr(strrchr($debitNoteBilling->billing_number, "-"), 1)) }}</td>
                                     <td class="text-end">
-                                        @php
-                                            // Check if this is the first installment
-                                            preg_match('/-INST(\d+)/i', $debitNoteBilling->billing_number, $matches);
-                                            $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
-                                            
-                                            $displayAmount = $debitNoteBilling->amount;
-                                            $displayRemainingAmount = $debitNoteBilling->remaining_amount;
-                                            
-                                            // Add policy fee and stamp fee for first installment only
-                                            if ($installmentNumber == 1) {
-                                                $policyFee = $debitNoteBilling->debitNote->contract->policy_fee ?? 0;
-                                                $stampFee = $debitNoteBilling->debitNote->contract->stamp_fee ?? 0;
-                                                $displayAmount += $policyFee + $stampFee;
-                                            }
-                                        @endphp
                                         {{ $debitNoteBilling->debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }}
                                     </td>
                                     <td class="text-end">
@@ -446,6 +469,109 @@
                 $(this).val(0);
             }
         });
+
+        // Handle write off checkbox
+        $('.write-off-check').on('change', function() {
+            const billingId = $(this).data('billing-id');
+            const billingAmount = parseFloat($(this).data('billing-amount'));
+            const allocatedAmount = parseFloat($(this).data('allocated'));
+            const isChecked = $(this).is(':checked');
+            const checkbox = $(this);
+
+            if (isChecked) {
+                // Calculate difference
+                const difference = billingAmount - allocatedAmount;
+                let writeOffType = 'none';
+                let writeOffAmount = Math.abs(difference);
+
+                if (difference > 0) {
+                    // Billing > Allocated = Loss on Collection
+                    writeOffType = 'loss';
+                } else if (difference < 0) {
+                    // Billing < Allocated = Gain on Collection  
+                    writeOffType = 'gain';
+                }
+
+                if (writeOffType === 'none') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Difference',
+                        text: 'Alokasi sudah sesuai dengan billing, tidak ada Loss/Gain on Collection.'
+                    });
+                    checkbox.prop('checked', false);
+                    return;
+                }
+
+                const typeLabel = writeOffType === 'loss' ? 'Loss on Collection' : 'Gain on Collection';
+                
+                Swal.fire({
+                    title: 'Konfirmasi Write Off',
+                    html: `<p>Billing Amount: <strong>Rp ${billingAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>
+                           <p>Allocated Amount: <strong>Rp ${allocatedAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>
+                           <p>Selisih akan dicatat sebagai:</p>
+                           <p><strong>${typeLabel}: Rp ${writeOffAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Write Off',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        saveWriteOff(billingId, writeOffAmount, writeOffType);
+                    } else {
+                        checkbox.prop('checked', false);
+                    }
+                });
+            } else {
+                // Remove write off
+                Swal.fire({
+                    title: 'Hapus Write Off?',
+                    text: 'Write off untuk billing ini akan dihapus.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        saveWriteOff(billingId, 0, 'none');
+                    } else {
+                        checkbox.prop('checked', true);
+                    }
+                });
+            }
+        });
+
+        function saveWriteOff(billingId, amount, type) {
+            $.ajax({
+                url: "{{ route('api.payment-allocations.writeOff', ['cashbankID' => $cashBank->id]) }}",
+                method: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    debit_note_billing_id: billingId,
+                    write_off_amount: amount,
+                    write_off_type: type
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Write off berhasil disimpan'
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Terjadi kesalahan saat menyimpan write off';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage
+                    });
+                }
+            });
+        }
     });
 </script>
 @endpush

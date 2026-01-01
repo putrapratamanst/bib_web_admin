@@ -19,6 +19,8 @@ class PaymentAllocation extends Model
         'cash_bank_id',
         'debit_note_id',
         'allocation',
+        'write_off_amount',
+        'write_off_type',
         'status',
         'debit_note_billing_id',
         'cashout_id',
@@ -29,15 +31,22 @@ class PaymentAllocation extends Model
 
     protected $casts = [
         'allocation' => 'decimal:2',
+        'write_off_amount' => 'decimal:2',
     ];
 
     protected $appends = [
         'allocation_formatted',
+        'write_off_amount_formatted',
     ];
 
     public function getAllocationFormattedAttribute(): string
     {
         return number_format($this->allocation, 2, ',', '.');
+    }
+
+    public function getWriteOffAmountFormattedAttribute(): string
+    {
+        return number_format($this->write_off_amount, 2, ',', '.');
     }
 
     // Scope for advance payments
