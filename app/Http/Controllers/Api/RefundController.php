@@ -35,7 +35,7 @@ class RefundController extends Controller
                 $showUrl = route('transaction.refunds.show', $allocation->id);
                 $actions = '<a href="' . $showUrl . '" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>';
                 
-                if ($allocation->status === 'active') {
+                if ($allocation->status === 'posted') {
                     $actions .= ' <button class="btn btn-sm btn-danger btn-void" data-id="' . $allocation->id . '"><i class="bi bi-x-circle"></i> Void</button>';
                 }
                 
@@ -66,10 +66,10 @@ class RefundController extends Controller
     {
         $search = $request->get('q');
         
-        // Get all active advances that can be refunded
+        // Get all posted advances that can be refunded
         $advances = PaymentAllocation::with(['cashBank.contact'])
             ->where('type', 'advance')
-            ->where('status', 'active')
+            ->where('status', 'posted')
             ->when($search, function ($query) use ($search) {
                 $query->whereHas('cashBank', function ($q) use ($search) {
                     $q->where('number', 'like', "%$search%")
@@ -81,11 +81,12 @@ class RefundController extends Controller
             ->get()
             ->map(function ($advance) {
                 // Calculate how much has been refunded from this advance
-                $totalRefunded = PaymentAllocation::where('type', 'refund')
+                // Refund disimpan negatif, jadi gunakan abs() untuk mendapat nilai positif
+                $totalRefunded = abs(PaymentAllocation::where('type', 'refund')
                     ->where('cash_bank_id', $advance->cash_bank_id)
-                    ->where('status', 'active')
+                    ->where('status', 'posted')
                     ->where('description', 'like', "%Advance ID: {$advance->id}%")
-                    ->sum('allocation');
+                    ->sum('allocation'));
                 
                 $availableForRefund = $advance->allocation - $totalRefunded;
                 
@@ -129,15 +130,16 @@ class RefundController extends Controller
         try {
             $advance = PaymentAllocation::with(['cashBank.contact', 'cashBank.chartOfAccount'])
                 ->where('type', 'advance')
-                ->where('status', 'active')
+                ->where('status', 'posted')
                 ->findOrFail($id);
 
             // Calculate how much has been refunded from this advance
-            $totalRefunded = PaymentAllocation::where('type', 'refund')
+            // Refund disimpan negatif, jadi gunakan abs() untuk mendapat nilai positif
+            $totalRefunded = abs(PaymentAllocation::where('type', 'refund')
                 ->where('cash_bank_id', $advance->cash_bank_id)
-                ->where('status', 'active')
+                ->where('status', 'posted')
                 ->where('description', 'like', "%Advance ID: {$advance->id}%")
-                ->sum('allocation');
+                ->sum('allocation'));
             
             $availableForRefund = $advance->allocation - $totalRefunded;
 
@@ -190,15 +192,16 @@ class RefundController extends Controller
         DB::beginTransaction();
         try {
             $advance = PaymentAllocation::where('type', 'advance')
-                ->where('status', 'active')
+                ->where('status', 'posted')
                 ->findOrFail($request->advance_id);
             
             // Calculate how much has been refunded from this advance
-            $totalRefunded = PaymentAllocation::where('type', 'refund')
+            // Refund disimpan negatif, jadi gunakan abs() untuk mendapat nilai positif
+            $totalRefunded = abs(PaymentAllocation::where('type', 'refund')
                 ->where('cash_bank_id', $advance->cash_bank_id)
-                ->where('status', 'active')
+                ->where('status', 'posted')
                 ->where('description', 'like', "%Advance ID: {$advance->id}%")
-                ->sum('allocation');
+                ->sum('allocation'));
             
             $availableForRefund = $advance->allocation - $totalRefunded;
             
@@ -216,12 +219,13 @@ class RefundController extends Controller
                 ? $request->description . ' | Advance ID: ' . $advance->id
                 : 'Refund from Advance ID: ' . $advance->id;
             
+            // Refund disimpan dengan nilai negatif untuk mengurangi total allocated
             $refund = PaymentAllocation::create([
                 'type' => 'refund',
                 'cash_bank_id' => $advance->cash_bank_id,
                 'debit_note_id' => null,
-                'allocation' => $request->refund_amount,
-                'status' => 'active',
+                'allocation' => -$request->refund_amount, // Negatif untuk mengurangi total allocated
+                'status' => 'posted',
                 'description' => $description,
             ]);
 

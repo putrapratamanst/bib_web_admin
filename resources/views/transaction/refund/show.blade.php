@@ -35,13 +35,13 @@
                     <table class="table table-bordered">
                         <tr>
                             <th width="40%">Refund Amount</th>
-                            <td class="text-danger fw-bold">Rp {{ number_format($refund->allocation, 2, ',', '.') }}</td>
+                            <td class="text-danger fw-bold">Rp {{ number_format(abs($refund->allocation), 2, ',', '.') }}</td>
                         </tr>
                         <tr>
                             <th>Status</th>
                             <td>
-                                @if($refund->status === 'active')
-                                    <span class="badge bg-success">Active</span>
+                                @if($refund->status === 'posted')
+                                    <span class="badge bg-success">Posted</span>
                                 @elseif($refund->status === 'void')
                                     <span class="badge bg-danger">Void</span>
                                 @else
@@ -61,7 +61,7 @@
                 </div>
             </div>
 
-            @if($refund->status === 'active')
+            @if($refund->status === 'posted')
             <div class="mt-3">
                 <button type="button" class="btn btn-danger" id="btnVoid">
                     <i class="bi bi-x-circle"></i> Void Refund

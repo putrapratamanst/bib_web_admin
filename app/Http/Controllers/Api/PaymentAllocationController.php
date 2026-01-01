@@ -67,12 +67,19 @@ class PaymentAllocationController extends Controller
                     continue;
                 }
 
+                // Get existing posted allocations for this cash bank
+                $cashBank = CashBank::find($cashBankId);
+                $existingAllocated = PaymentAllocation::where('cash_bank_id', $cashBankId)
+                    ->where('status', 'posted')
+                    ->sum('allocation');
+                $availableAmount = $cashBank->amount - $existingAllocated;
+
                 $allocationSums[$cashBankId] = ($allocationSums[$cashBankId] ?? 0) + $allocationAmount;
-                if ($allocationSums[$cashBankId] > CashBank::find($cashBankId)->amount) {
+                if ($allocationSums[$cashBankId] > $availableAmount) {
                     return response()->json([
                         'errors' => [
                             'allocation' => [
-                                'Total allocation for Cash Bank exceeds available amount.'
+                                'Total allocation for Cash Bank exceeds available amount. Available: Rp ' . number_format($availableAmount, 2, ',', '.')
                             ]
                         ]
                     ], 400);
@@ -140,8 +147,9 @@ class PaymentAllocationController extends Controller
                 })
                 ->sortBy('due_date');
 
-            // Get total allocated amount for this cash bank
+            // Get total allocated amount for this cash bank (only posted allocations)
             $totalAllocated = PaymentAllocation::where('cash_bank_id', $cashbankID)
+                ->where('status', 'posted')
                 ->sum('allocation');
 
             $availableAmount = $cashBank->amount - $totalAllocated;
@@ -196,8 +204,9 @@ class PaymentAllocationController extends Controller
                 ->findOrFail($request->debit_note_billing_id);
             $debitNoteId = $billing->debit_note_id;
 
-            // Get total allocated amount for this cash bank
+            // Get total allocated amount for this cash bank (only posted allocations)
             $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
+                ->where('status', 'posted')
                 ->sum('allocation');
 
                 // Check if allocation exceeds cash bank amount
@@ -292,8 +301,9 @@ class PaymentAllocationController extends Controller
 
             $cashBank = CashBank::findOrFail($request->cash_bank_id);
 
-            // Get total allocated amount for this cash bank
+            // Get total allocated amount for this cash bank (only posted allocations)
             $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
+                ->where('status', 'posted')
                 ->sum('allocation');
 
             // Check if allocation exceeds cash bank amount

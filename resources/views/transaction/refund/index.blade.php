@@ -43,10 +43,11 @@
                     data: 'allocation', 
                     name: 'allocation',
                     render: function(data) {
+                        // Refund disimpan negatif, tampilkan nilai absolut
                         return 'Rp ' + new Intl.NumberFormat('id-ID', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
-                        }).format(data);
+                        }).format(Math.abs(data));
                     }
                 },
                 { data: 'description', name: 'description', defaultContent: '-' },
@@ -55,7 +56,7 @@
                     name: 'status',
                     render: function(data) {
                         let badge = 'secondary';
-                        if (data === 'active') badge = 'success';
+                        if (data === 'posted') badge = 'success';
                         if (data === 'void') badge = 'danger';
                         return '<span class="badge bg-' + badge + '">' + data + '</span>';
                     }

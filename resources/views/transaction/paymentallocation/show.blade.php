@@ -75,8 +75,8 @@
                 </div>
                 <div class="card-body">
                     @php
-                    // Total allocated from THIS cash bank (include allocations even for billings we filtered out)
-                    $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->sum('allocation');
+                    // Total allocated from THIS cash bank (only posted allocations)
+                    $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->where('status', 'posted')->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
                     @endphp
                     

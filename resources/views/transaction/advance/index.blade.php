@@ -55,7 +55,7 @@
                     name: 'status',
                     render: function(data) {
                         let badge = 'secondary';
-                        if (data === 'active') badge = 'success';
+                        if (data === 'posted') badge = 'success';
                         if (data === 'void') badge = 'danger';
                         return '<span class="badge bg-' + badge + '">' + data + '</span>';
                     }
@@ -70,7 +70,7 @@
                                 <i class="bi bi-eye"></i>
                             </a>
                         `;
-                        if (row.status === 'active') {
+                        if (row.status === 'posted') {
                             actions += `
                                 <button class="btn btn-danger btn-sm" onclick="voidAdvance('${data}')">
                                     <i class="bi bi-x-circle"></i> Void
