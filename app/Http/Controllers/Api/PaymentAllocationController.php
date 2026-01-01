@@ -42,6 +42,21 @@ class PaymentAllocationController extends Controller
             ->addColumn('contact_name', function (CashBank $cashBank) {
                 return $cashBank->contact->display_name;
             })
+            ->addColumn('available_for_allocation', function (CashBank $cashBank) {
+                return $cashBank->available_for_allocation;
+            })
+            ->addColumn('available_for_allocation_formatted', function (CashBank $cashBank) {
+                return $cashBank->available_for_allocation_formatted;
+            })
+            ->addColumn('is_fully_allocated', function (CashBank $cashBank) {
+                return $cashBank->available_for_allocation <= 0;
+            })
+            ->addColumn('has_advance', function (CashBank $cashBank) {
+                return $cashBank->paymentAllocations()
+                    ->where('type', 'advance')
+                    ->where('status', 'posted')
+                    ->exists();
+            })
             ->filterColumn('contact_name', function ($query, $keyword) {
                 $query->whereHas('contact', function ($query) use ($keyword) {
                     $query->where('display_name', 'like', "%$keyword%");

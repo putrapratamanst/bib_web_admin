@@ -13,20 +13,29 @@
             <input type="hidden" name="debit_note_id" value="{{ $debitNote->id }}">
             <div class="card-body">
 
+                {{-- Calculate fees for installments --}}
+                @php
+                    $policyFee = $debitNote->contract->policy_fee ?? 0;
+                    $stampFee = $debitNote->contract->stamp_fee ?? 0;
+                    $totalFees = $policyFee + $stampFee;
+                    $baseInstallmentAmount = $debitNote->installment > 0 ? $debitNote->amount / $debitNote->installment : $debitNote->amount;
+                    $firstInstallmentAmount = $baseInstallmentAmount + $totalFees;
+                @endphp
+
                 {{-- Display Debit Note Amount Information --}}
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
                     <strong><i class="fas fa-info-circle"></i> Billing Amount Information</strong>
                     <div class="mt-2">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small><strong>Total Debit Note Amount:</strong></small><br>
                                 <strong>{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small><strong>Total Billed:</strong></small><br>
                                 <strong id="totalBilled">0.00 {{ $debitNote->currency_code }}</strong>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small><strong>Remaining Available:</strong></small><br>
                                 <strong id="remainingAmount">{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
                             </div>
@@ -34,6 +43,26 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+
+                {{-- Policy Fee & Stamp Fee Information --}}
+                @if($totalFees > 0 && $debitNote->installment > 1)
+                <div class="alert alert-warning" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Informasi Fee</strong>
+                    <div class="mt-2">
+                        <p class="mb-1">Installment pertama akan ditambahkan dengan:</p>
+                        <ul class="mb-0">
+                            <li><strong>Policy Fee:</strong> {{ number_format($policyFee, 2, ',', '.') }} {{ $debitNote->currency_code }}</li>
+                            <li><strong>Stamp Fee:</strong> {{ number_format($stampFee, 2, ',', '.') }} {{ $debitNote->currency_code }}</li>
+                            <li><strong>Total Fees:</strong> {{ number_format($totalFees, 2, ',', '.') }} {{ $debitNote->currency_code }}</li>
+                        </ul>
+                        <hr class="my-2">
+                        <small>
+                            <strong>Base Amount per Installment:</strong> {{ number_format($baseInstallmentAmount, 2, ',', '.') }} {{ $debitNote->currency_code }}<br>
+                            <strong>Installment 1 (+ Fees):</strong> {{ number_format($firstInstallmentAmount, 2, ',', '.') }} {{ $debitNote->currency_code }}
+                        </small>
+                    </div>
+                </div>
+                @endif
 
                 {{-- Display Error Messages --}}
                 @if(session('error'))
@@ -67,8 +96,22 @@
                 @if ($debitNote->installment > 0)
                     {{-- Looping sesuai jumlah installment --}}
                     @for ($i = 1; $i <= $debitNote->installment; $i++)
-                        <div class="row border p-3 mb-3 rounded">
-                            <h6 class="mb-3">Installment {{ $i }}</h6>
+                        @php
+                            // Hitung amount untuk setiap installment
+                            $installmentAmount = $baseInstallmentAmount;
+                            if ($i == 1 && $totalFees > 0) {
+                                $installmentAmount = $firstInstallmentAmount;
+                            }
+                        @endphp
+                        <div class="row border p-3 mb-3 rounded {{ $i == 1 && $totalFees > 0 ? 'border-warning' : '' }}">
+                            <h6 class="mb-3">
+                                Installment {{ $i }}
+                                @if($i == 1 && $totalFees > 0)
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="fas fa-plus-circle"></i> Termasuk Policy Fee & Stamp Fee
+                                    </span>
+                                @endif
+                            </h6>
 
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
@@ -102,11 +145,21 @@
 
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
-                                    <label for="amount_{{ $i }}" class="form-label">Amount <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control autonumeric @error('amount.' . ($i-1)) is-invalid @enderror" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1)) }}">
+                                    <label for="amount_{{ $i }}" class="form-label">
+                                        Amount <sup class="text-danger">*</sup>
+                                        @if($i == 1 && $totalFees > 0)
+                                            <small class="text-warning">(incl. fees)</small>
+                                        @endif
+                                    </label>
+                                    <input type="text" class="form-control autonumeric @error('amount.' . ($i-1)) is-invalid @enderror" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1), $installmentAmount) }}">
                                     @error('amount.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    @if($i == 1 && $totalFees > 0)
+                                        <small class="text-muted">
+                                            Base: {{ number_format($baseInstallmentAmount, 2, ',', '.') }} + Fees: {{ number_format($totalFees, 2, ',', '.') }}
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
                         </div>

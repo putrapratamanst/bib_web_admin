@@ -78,7 +78,24 @@
                     // Total allocated from THIS cash bank (only posted allocations)
                     $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->where('status', 'posted')->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
+                    $isFullyAllocated = $totalAvailable <= 0;
+                    $hasAdvance = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                        ->where('type', 'advance')
+                        ->where('status', 'posted')
+                        ->exists();
                     @endphp
+                    
+                    @if($hasAdvance)
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-lock-fill"></i>
+                        <strong>Advance Applied!</strong> Cash bank ini sudah diterapkan untuk Advance Payment dan tidak bisa dialokasikan untuk pembayaran lain.
+                    </div>
+                    @elseif($isFullyAllocated)
+                    <div class="alert alert-secondary mb-3">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>Fully Allocated!</strong> Cash bank ini sudah dialokasikan sepenuhnya.
+                    </div>
+                    @endif
                     
                     @if($cashBank->type == 'receive')
                         @if($debitNoteBillings->isEmpty())
