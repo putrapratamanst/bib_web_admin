@@ -159,11 +159,11 @@
                                         $displayRemainingAmount = $debitNoteBilling->remaining_amount;
                                         
                                         // Add policy fee and stamp fee for first installment only
-                                        if ($installmentNumber == 1) {
-                                            $policyFee = $debitNoteBilling->debitNote->contract->policy_fee ?? 0;
-                                            $stampFee = $debitNoteBilling->debitNote->contract->stamp_fee ?? 0;
-                                            $displayAmount += $policyFee + $stampFee;
-                                        }
+                                        //if ($installmentNumber == 1) {
+                                          //  $policyFee = $debitNoteBilling->debitNote->contract->policy_fee ?? 0;
+                                            // $stampFee = $debitNoteBilling->debitNote->contract->stamp_fee ?? 0;
+                                            // $displayAmount += $policyFee + $stampFee;
+                                        // } 
                                         
                                         // Get existing write off data for this billing
                                         $existingWriteOff = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
@@ -180,6 +180,8 @@
                                             data-billing-id="{{ $debitNoteBilling->id }}"
                                             data-billing-amount="{{ $displayAmount }}"
                                             data-allocated="{{ $debitNoteBilling->allocated_amount }}"
+                                            data-cashbank-total="{{ $cashBank->amount }}"
+                                            data-cashbank-available="{{ $totalAvailable }}"
                                             {{ $isWriteOff ? 'checked' : '' }}
                                             title="{{ $isWriteOff ? ($writeOffType == 'loss' ? 'Loss: ' : 'Gain: ') . number_format($writeOffAmount, 2, ',', '.') : 'Klik untuk tutup selisih' }}">
                                         @else
@@ -479,40 +481,60 @@
             const checkbox = $(this);
 
             if (isChecked) {
-                // Calculate difference
-                const difference = billingAmount - allocatedAmount;
+                // Get additional data
+                const cashBankTotal = parseFloat($(this).data('cashbank-total'));
+                const cashBankAvailable = parseFloat($(this).data('cashbank-available'));
+                
+                // Calculate difference between billing and allocated
+                const billingDifference = billingAmount - allocatedAmount;
+                
                 let writeOffType = 'none';
-                let writeOffAmount = Math.abs(difference);
+                let writeOffAmount = 0;
 
-                if (difference > 0) {
-                    // Billing > Allocated = Loss on Collection
+                if (billingDifference > 0) {
+                    // Billing > Allocated = Loss on Collection (customer bayar kurang)
                     writeOffType = 'loss';
-                } else if (difference < 0) {
-                    // Billing < Allocated = Gain on Collection  
+                    writeOffAmount = billingDifference;
+                } else if (billingDifference < 0) {
+                    // Allocated > Billing = Gain on Collection (customer bayar lebih dari billing ini)
                     writeOffType = 'gain';
+                    writeOffAmount = Math.abs(billingDifference);
+                } else if (cashBankAvailable > 0) {
+                    // Billing == Allocated tapi masih ada sisa cash bank
+                    // Ini berarti customer bayar lebih dari total tagihan = Gain on Collection
+                    writeOffType = 'gain';
+                    writeOffAmount = cashBankAvailable;
                 }
 
                 if (writeOffType === 'none') {
                     Swal.fire({
                         icon: 'info',
                         title: 'No Difference',
-                        text: 'Alokasi sudah sesuai dengan billing, tidak ada Loss/Gain on Collection.'
+                        text: 'Alokasi sudah sesuai dengan billing dan tidak ada sisa cash bank.'
                     });
                     checkbox.prop('checked', false);
                     return;
                 }
 
                 const typeLabel = writeOffType === 'loss' ? 'Loss on Collection' : 'Gain on Collection';
+                const explanation = writeOffType === 'loss' 
+                    ? 'Customer membayar kurang dari tagihan'
+                    : (billingDifference < 0 
+                        ? 'Alokasi lebih besar dari tagihan' 
+                        : 'Sisa cash bank yang tidak dialokasikan');
                 
                 Swal.fire({
-                    title: 'Konfirmasi Write Off',
+                    title: 'Konfirmasi',
                     html: `<p>Billing Amount: <strong>Rp ${billingAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>
                            <p>Allocated Amount: <strong>Rp ${allocatedAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>
+                           ${cashBankAvailable > 0 && billingDifference === 0 ? '<p>Sisa Cash Bank: <strong>Rp ' + cashBankAvailable.toLocaleString('id-ID', {minimumFractionDigits: 2}) + '</strong></p>' : ''}
+                           <hr>
+                           <p><small>${explanation}</small></p>
                            <p>Selisih akan dicatat sebagai:</p>
                            <p><strong>${typeLabel}: Rp ${writeOffAmount.toLocaleString('id-ID', {minimumFractionDigits: 2})}</strong></p>`,
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Write Off',
+                    confirmButtonText: 'Ya, Simpan',
                     cancelButtonText: 'Batal',
                 }).then((result) => {
                     if (result.isConfirmed) {

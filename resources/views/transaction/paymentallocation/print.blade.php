@@ -2,10 +2,13 @@
 use App\Helpers\TerbilangHelper;
 $total = $cashBank->amount;
 
-// Calculate Loss/Gain on Collection from allocations
+// Calculate Loss/Gain on Collection from allocations (yang sudah di-tick)
 $lossOnCollection = 0;
 $gainOnCollection = 0;
 $totalArWriteOff = 0;
+
+// Calculate Kekurangan Bayar Premi (yang belum di-tick tapi ada selisih)
+$kekuranganBayarPremi = 0;
 
 foreach ($allocations as $allocation) {
     if ($allocation->write_off_type === 'loss') {
@@ -14,17 +17,41 @@ foreach ($allocations as $allocation) {
     } elseif ($allocation->write_off_type === 'gain') {
         $gainOnCollection += $allocation->write_off_amount;
         $totalArWriteOff -= $allocation->write_off_amount;
+    } else {
+        // write_off_type = 'none' - belum di-tick, hitung kekurangan
+        // Get billing amount for this allocation
+        $billing = $allocation->debitNoteBilling;
+        if ($billing) {
+            // Check if this is first installment for policy/stamp fee
+            preg_match('/-INST(\d+)/i', $billing->billing_number, $matches);
+            $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+            
+            $billingAmount = floatval($billing->amount);
+            
+            // Add policy fee and stamp fee for first installment only
+            //if ($installmentNumber == 1 && $billing->debitNote && $billing->debitNote->contract) {
+              //  $policyFee = $billing->debitNote->contract->policy_fee ?? 0;
+                //$stampFee = $billing->debitNote->contract->stamp_fee ?? 0;
+                //$billingAmount += $policyFee + $stampFee;
+            //} 
+            
+            // Calculate difference (billing - allocated)
+            $difference = $billingAmount - floatval($allocation->allocation);
+            if ($difference > 0) {
+                $kekuranganBayarPremi += $difference;
+            }
+        }
     }
 }
 
 // Total AR to credit = allocations + loss on collection - gain on collection
 $totalArCredit = $allocations->sum('allocation') + $totalArWriteOff;
 
-// Total Debit = Bank + Loss on Collection
-$totalDebit = $total + $lossOnCollection;
+// Total Debit = Bank + Loss on Collection + Kekurangan Bayar Premi
+$totalDebit = $total + $lossOnCollection + $kekuranganBayarPremi;
 
 // Total Credit = AR + Gain on Collection
-$totalCredit = $totalArCredit + $gainOnCollection;
+$totalCredit = $totalArCredit + $gainOnCollection + $kekuranganBayarPremi;
 @endphp
 <!doctype html>
 <html lang="id">
@@ -213,6 +240,17 @@ $totalCredit = $totalArCredit + $gainOnCollection;
         <td>Gain on Collection</td>
         <td class="center">✓</td>
         <td class="right">{{ number_format($gainOnCollection, 2, ',', '.') }}</td>
+      </tr>
+      @endif
+      {{-- Row 3: Kekurangan Bayar Premi (Debit) jika tidak di-tick dan ada selisih --}}
+      @if($kekuranganBayarPremi > 0)
+      <tr>
+        <td>Kekurangan Bayar Premi</td>
+        <td class="center">✓</td>
+        <td class="right">{{ number_format($kekuranganBayarPremi, 2, ',', '.') }}</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
       @endif
       <tr>

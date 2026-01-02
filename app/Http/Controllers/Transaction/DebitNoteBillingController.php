@@ -44,8 +44,8 @@ class DebitNoteBillingController extends Controller
                 // 'status.*' => 'required|in:unpaid,paid,overdue',
             ]);
 
-            // Get the debit note to check amount limit
-            $debitNote = DebitNote::findOrFail($request->debit_note_id);
+            // Get the debit note with contract to check amount limit
+            $debitNote = DebitNote::with('contract')->findOrFail($request->debit_note_id);
             
             // Calculate total billing amount being added
             $totalNewBillingAmount = 0;
@@ -68,7 +68,27 @@ class DebitNoteBillingController extends Controller
                 $debitNoteBilling->billing_number = $billingNumber;
                 $debitNoteBilling->date = $request->date[$i];
                 $debitNoteBilling->due_date = $request->due_date[$i];
-                $debitNoteBilling->amount = $request->amount[$i];
+                
+                // Calculate amount with policy_fee + stamp_fee for first installment
+                $amount = floatval($request->amount[$i]);
+                
+                // Check if this is installment 1 (first billing)
+                $isFirstInstallment = false;
+                if (preg_match('/-INST(\d+)/i', $billingNumber, $matches)) {
+                    $isFirstInstallment = ((int)$matches[1] === 1);
+                } else {
+                    // If no INST pattern, check if this is the first entry in the array
+                    $isFirstInstallment = ($i === 0);
+                }
+                
+                // Add policy_fee and stamp_fee for first installment
+                if ($isFirstInstallment && $debitNote->contract) {
+                    $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
+                    $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
+                    $amount += $policyFee + $stampFee;
+                }
+                
+                $debitNoteBilling->amount = $amount;
                 $debitNoteBilling->status = 'pending'; // default status is pending
                 
                 if (!$debitNoteBilling->save()) {

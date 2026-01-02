@@ -215,18 +215,21 @@ class PaymentAllocationController extends Controller
             $cashBank = CashBank::findOrFail($request->cash_bank_id);
 
             // Get debit_note_id from billing
-            $billing = DebitNoteBilling::with('debitNote')
+            $billing = DebitNoteBilling::with(['debitNote.contract'])
                 ->findOrFail($request->debit_note_billing_id);
             $debitNoteId = $billing->debit_note_id;
+
+            // Use allocation amount directly (policy_fee + stamp_fee already included in billing amount)
+            $allocationAmount = floatval($request->allocation);
 
             // Get total allocated amount for this cash bank (only posted allocations)
             $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
                 ->where('status', 'posted')
                 ->sum('allocation');
 
-                // Check if allocation exceeds cash bank amount
-            if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
-                if ($totalAllocated + $request->allocation > $cashBank->amount) {
+            // Check if allocation exceeds cash bank amount
+            if ($allocationAmount >= ($cashBank->amount - $totalAllocated)) {
+                if ($totalAllocated + $allocationAmount > $cashBank->amount) {
                     return response()->json([
                         'message' => sprintf(
                             'Total allocation amount cannot exceed cash bank amount. Already allocated: %s, Available: %s',
@@ -240,7 +243,7 @@ class PaymentAllocationController extends Controller
             $allocation = PaymentAllocation::create([
                 'cash_bank_id' => $request->cash_bank_id,
                 'debit_note_id' => $debitNoteId,
-                'allocation' => $request->allocation,
+                'allocation' => $allocationAmount,
                 'status' => 'posted',
                 'debit_note_billing_id' => $request->debit_note_billing_id,
                 // 'created_by' => auth()->id(),

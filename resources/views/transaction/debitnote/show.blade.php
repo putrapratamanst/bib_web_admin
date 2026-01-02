@@ -141,11 +141,11 @@
                                     $displayAmount = $billing->amount;
                                     
                                     // Add policy fee and stamp fee for first installment only
-                                    if ($installmentNumber == 1) {
-                                        $policyFee = $debitNote->contract->policy_fee ?? 0;
-                                        $stampFee = $debitNote->contract->stamp_fee ?? 0;
-                                        $displayAmount += $policyFee + $stampFee;
-                                    }
+                                    // if ($installmentNumber == 1) {
+                                      //  $policyFee = $debitNote->contract->policy_fee ?? 0;
+                                        //$stampFee = $debitNote->contract->stamp_fee ?? 0;
+                                        //$displayAmount += $policyFee + $stampFee;
+                                    //}
                                 @endphp
                                 {{ $debitNote->currency_code }} {{ number_format($displayAmount, 2, ',', '.') }}
                             </td>

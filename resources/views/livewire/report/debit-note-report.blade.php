@@ -214,11 +214,11 @@
                                     preg_match('/-INST(\d+)/i', $billing->billing_number, $matches);
                                     $installmentNumber = isset($matches[1]) ? (int)$matches[1] : 0;
                                     
-                                    if ($installmentNumber == 1) {
-                                        $policyFee = $debitNote->contract->policy_fee ?? 0;
-                                        $stampFee = $debitNote->contract->stamp_fee ?? 0;
-                                        $amount += $policyFee + $stampFee;
-                                    }
+                                // if ($installmentNumber == 1) {
+                                  //      $policyFee = $debitNote->contract->policy_fee ?? 0;
+                                    //    $stampFee = $debitNote->contract->stamp_fee ?? 0;
+                                      //  $amount += $policyFee + $stampFee;
+                                   // } 
                                 }
 
                                 $creditApplied = $creditNotesAmount;
