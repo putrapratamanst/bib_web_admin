@@ -23,7 +23,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required readonly>
+                            <input type="text" name="number" id="number" class="form-control" required>
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">

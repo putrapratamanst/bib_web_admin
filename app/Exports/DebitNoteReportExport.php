@@ -63,16 +63,10 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
         foreach ($debitNotes as $dn) {
             $creditNotesAmount = $dn->creditNotes->sum('amount');
 
-            // Group allocations by billing id so we can attribute allocations to each billing row
-            // key = debit_note_billing_id, value = sum of allocation
-            $allocationsByBilling = $dn->paymentAllocations->groupBy('debit_note_billing_id')
-                ->map(function ($group) {
-                    return $group->sum('allocation');
-                });
-
             if ($dn->relationLoaded('billings') && $dn->billings->count()) {
                 foreach ($dn->billings as $billing) {
-                    $paymentForBilling = $allocationsByBilling->get($billing->id) ?? 0;
+                    // Get payment allocations directly from billing relation
+                    $paymentForBilling = $billing->paymentAllocations->sum('allocation');
 
                     // Get bank info from payment allocations for this billing
                     $bankInfo = $this->getBankInfoForBilling($billing);
@@ -201,7 +195,8 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
         $creditApplied = $creditNotesAmount;
         $paymentApplied =  $paymentAllocationsAmount;
 
-        $outstandingAmount = $amount - $creditApplied;
+        // Outstanding = Amount - Credit Notes - Payment Allocations
+        $outstandingAmount = $amount - $creditApplied - $paymentApplied;
 
         // Convert to IDR if currency is not IDR
         $amountInIdr = $debitNote->currency_code === 'IDR'
@@ -210,7 +205,7 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $debitNote->number,
-            $billing ? ($billing->number ?? $billing->id ?? '') : '',
+            $billing ? ($billing->billing_number ?? $billing->id ?? '') : '',
             $debitNote->contract ? $debitNote->contract->number : '',
             $debitNote->contact ? $debitNote->contact->display_name : '',
             $debitNote->date ? Carbon::parse($debitNote->date)->format('d/m/Y') : '',

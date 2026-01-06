@@ -50,6 +50,7 @@ class DebitNoteController extends Controller
         
         // Validation
         $validator = Validator::make($request->all(), [
+            'number' => 'required|string|max:255|unique:debit_notes,number',
             'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
             'billing_address_id' => 'required|exists:billing_addresses,id',
@@ -73,12 +74,9 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
             
-            // Generate debit note number dengan format BIB/D24/08-2384
-            $newNumber = 'BIB/D' . date('y') . '/' . str_pad(DebitNote::count() + 1, 4, '0', STR_PAD_LEFT);
-            
             // Create Debit Note
             $debitNote = DebitNote::create([
-                'number' => $newNumber,
+                'number' => $request->number,
                 'contact_id' => $request->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,

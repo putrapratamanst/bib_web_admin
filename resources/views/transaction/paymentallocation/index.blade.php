@@ -18,6 +18,7 @@
                         <th>Amount</th>
                         <th>Available</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
             </table>
@@ -79,6 +80,17 @@
                             return '<span class="badge bg-secondary">Fully Allocated</span>';
                         }
                         return '<span class="badge bg-success-subtle text-success border border-success">Available</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        var printUrl = row.type === 'receive' 
+                            ? '{{ route("transaction.payment-allocations.print", ":id") }}'.replace(':id', row.id)
+                            : '{{ route("transaction.payment-allocations.print-payment", ":id") }}'.replace(':id', row.id);
+                        return '<a href="' + printUrl + '" class="btn btn-sm btn-outline-primary" target="_blank" title="Print"><i class="bi bi-printer"></i></a>';
                     }
                 }
             ],

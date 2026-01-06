@@ -38,15 +38,15 @@
                 @endif
 
                 <div class="row">
-                    <!-- <div class="col-md-4 col-lg-3">
+                    <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">DN Number<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control @error('number') is-invalid @enderror" name="number" id="number" value="{{ old('number') }}" placeholder="Auto generated">
+                            <input type="text" class="form-control @error('number') is-invalid @enderror" name="number" id="number" value="{{ old('number') }}" placeholder="Enter DN Number" required>
                             @error('number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div> -->
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="contract_id" class="form-label">Placing<sup class="text-danger">*</sup></label>

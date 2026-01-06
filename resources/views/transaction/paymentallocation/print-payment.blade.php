@@ -33,23 +33,25 @@ foreach ($allocations as $allocation) {
     }
 }
 
-// Jurnal Penerimaan - jumlahkan per kolom yang ditampilkan
+// For payment journal, the logic is reversed from receive journal
+// Debit = Contra Account (AP/Hutang/expense)
+// Credit = Bank + Gain on Forex
 
-// Total AR to credit = total allocation saja
-$totalArCredit = $totalAllocation;
+// Total AP to debit = total allocation + gain (karena gain = hutang yang bertambah karena lebih bayar)
+$totalApDebit = $totalAllocation + $gainOnForex;
 
-// Total Debit = Bank + Loss on Forex + Kekurangan Bayar Premi
-$totalDebit = $total + $lossOnForex + $kekuranganBayarPremi;
+// Total Debit = AP + Loss on Forex + Kekurangan Bayar Premi
+$totalDebit = $totalApDebit + $lossOnForex + $kekuranganBayarPremi;
 
-// Total Credit = AR + Gain on Forex (tanpa Kekurangan karena tidak ditampilkan di kolom kredit)
-$totalCredit = $totalArCredit + $gainOnForex;
+// Total Credit = Bank + Gain on Forex + Kekurangan Bayar Premi
+$totalCredit = $total + $gainOnForex + $kekuranganBayarPremi;
 @endphp
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Jurnal Penerimaan - {{ $cashBank->number }}</title>
+  <title>Jurnal Pembayaran - {{ $cashBank->number }}</title>
   <style>
     * {
       margin: 0;
@@ -158,7 +160,7 @@ $totalCredit = $totalArCredit + $gainOnForex;
   <!-- ===== HEADER ===== -->
   <div class="header">
     <div class="company">PT. BRILLIANT INSURANCE BROKERS</div>
-    <div class="title">JURNAL PENERIMAAN</div>
+    <div class="title">JURNAL PEMBAYARAN</div>
   </div>
 
   <!-- ===== CONTENT ===== -->
@@ -173,7 +175,7 @@ $totalCredit = $totalArCredit + $gainOnForex;
           <td width="35%">{{ $cashBank->number }}</td>
         </tr>
         <tr>
-          <td class="bold">Diterima dari</td>
+          <td class="bold">Dibayar kepada</td>
           <td colspan="3">{{ $cashBank->contact->display_name }}</td>
         </tr>
       </table>
@@ -192,22 +194,22 @@ $totalCredit = $totalArCredit + $gainOnForex;
         <th>✓</th>
         <th>Nilai</th>
       </tr>
-      {{-- Row 1: Bank (Debit) dan AR/Piutang (Kredit) --}}
+      {{-- Row 1: AP/Hutang (Debit) dan Bank (Kredit) --}}
       <tr>
-        <td>{{ $cashBank->chartOfAccount->display_name ?? '-' }}</td>
-        <td class="center">✓</td>
-        <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
         @if($cashBank->contraAccount)
         <td>{{ $cashBank->contraAccount->display_name }}</td>
         <td class="center">✓</td>
-        <td class="right">{{ number_format($totalArCredit, 2, ',', '.') }}</td>
+        <td class="right">{{ number_format($totalApDebit, 2, ',', '.') }}</td>
         @else
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         @endif
+        <td>{{ $cashBank->chartOfAccount->display_name ?? '-' }}</td>
+        <td class="center">✓</td>
+        <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
       </tr>
-      {{-- Row 2: Loss on Forex (Debit) jika ada --}}
+      {{-- Row 2: Loss on Forex (Debit) atau Gain on Forex (Kredit) --}}
       @if($lossOnForex > 0)
       <tr>
         <td>Loss on Forex Different Rate</td>
@@ -266,7 +268,7 @@ $totalCredit = $totalArCredit + $gainOnForex;
 
   <!-- ===== FOOTER ===== -->
   <div class="footer">
-    PT. BRILLIANT INSURANCE BROKERS • Jurnal Penerimaan • {{ \Carbon\Carbon::parse($cashBank->date)->format('d/m/Y') }}<br/>
+    PT. BRILLIANT INSURANCE BROKERS • Jurnal Pembayaran • {{ \Carbon\Carbon::parse($cashBank->date)->format('d/m/Y') }}<br/>
     Rukan Botanic Junction, Mega Kebon Jeruk Blok I 10 No. 60, Joglo - Jakarta Barat 11640 Telp.: 021-5890 8403, 2254 2676, 2568 0394 Email : admin@brilliantinsbrokers.com
   </div>
   </div>

@@ -52,8 +52,9 @@ class DebitNoteController extends Controller
         // Replace request data with cleaned data
         $request->merge($cleanedData);
         // Validation
+
         $validator = Validator::make($request->all(), [
-            // 'debit_note_number' => 'required|string|max:255|unique:debit_notes,debit_note_number',
+            'number' => 'required|string|max:255|unique:debit_notes,number',
             'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
             'date' => 'required|date',
@@ -75,12 +76,10 @@ class DebitNoteController extends Controller
 
         try {
             DB::beginTransaction();
-            //generate debit note number dengan format BIB/D24/08-2384
-            $newNumber = 'BIB/D' . date('y') . '/' . str_pad(DebitNote::count() + 1, 4, '0', STR_PAD_LEFT);
-            $request->merge(['debit_note_number' => $newNumber]);
+
             // Create Debit Note
             $debitNote = DebitNote::create([
-                'number' => $request->debit_note_number,
+                'number' => $request->number,
                 'contact_id' => $request->contact_id,
                 'contract_id' => $request->contract_id,
                 'date' => $request->date,

@@ -6,9 +6,15 @@
         <div class="card-header">
             Cash & Bank Detail
             <div class="float-end">
+                @if($cashBank->type == 'receive')
                 <a href="{{ route('transaction.payment-allocations.print', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
-                    <i class="bi bi-printer"></i> Print
+                    <i class="bi bi-printer"></i> Print Jurnal Penerimaan
                 </a>
+                @else
+                <a href="{{ route('transaction.payment-allocations.print-payment', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
+                    <i class="bi bi-printer"></i> Print Jurnal Pembayaran
+                </a>
+                @endif
                 <a href="{{ route('transaction.payment-allocations.index') }}" class="btn btn-secondary btn-sm">
                     Back
                 </a>
@@ -516,7 +522,7 @@
                     return;
                 }
 
-                const typeLabel = writeOffType === 'loss' ? 'Loss on Collection' : 'Gain on Collection';
+                const typeLabel = writeOffType === 'loss' ? 'Loss on Forex Different Rate' : 'Gain on Forex Different Rate';
                 const explanation = writeOffType === 'loss' 
                     ? 'Customer membayar kurang dari tagihan'
                     : (billingDifference < 0 
