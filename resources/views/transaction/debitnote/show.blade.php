@@ -95,20 +95,16 @@
                 <a href="{{ route('transaction.debit-notes.index') }}" class="btn btn-secondary">Back</a>
 
                 @if(!$debitNote->is_posted && $debitNote->status === 'active')
-                @if ($debitNote->installment == 0)
-                <button type="button" class="btn btn-primary" onclick="postDebitNote()" id="btnPost">
-                    <i class="fas fa-paper-plane me-1"></i> Post Debit Note
-                </button>
-                @endif
+                {{-- Post button removed - use billing instead --}}
                 @endif
             </div>
         </form>
     </div>
-    @if ($debitNote->installment > 0)
+    @if ($debitNote->installment >= 0)
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>List Billing</span>
-            @if ($debitNote->debitNoteBillings->count() < $debitNote->installment)
+            @if ($debitNote->installment == 0 || $debitNote->debitNoteBillings->count() < $debitNote->installment)
                 <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
                 @endif
         </div>

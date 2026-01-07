@@ -149,6 +149,14 @@ class DebitNoteReport extends Component
                 ]);
             }
         }
+
+        // Filter out rows with outstanding = 0
+        $rows = $rows->filter(function ($row) {
+            $amount = $row->billing ? $row->billing->amount : $row->debit_note->amount;
+            $outstanding = $amount - $row->credit_notes_amount - $row->payment_allocations_amount;
+            return $outstanding != 0;
+        });
+
         // Manual pagination for the flattened rows
         $perPage = 50;
         $page = $this->page ?: 1;

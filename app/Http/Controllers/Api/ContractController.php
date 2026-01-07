@@ -63,6 +63,7 @@ class ContractController extends Controller
 
         $query = Contract::with(['contact'])
             ->where('status', 'active')
+            ->where('approval_status', 'approved')
             ->where(function ($q) use ($search) {
                 if ($search) {
                     $q->where('number', 'like', "%{$search}%")

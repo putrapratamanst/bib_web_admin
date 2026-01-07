@@ -116,10 +116,11 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="billing_number_{{ $i }}" class="form-label">Billing Number <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control @error('billing_number.' . ($i-1)) is-invalid @enderror" name="billing_number[]" id="billing_number_{{ $i }}" value="{{ old('billing_number.' . ($i-1), $debitNote->number . '-INST' . $i) }}">
+                                    <input type="text" class="form-control @error('billing_number.' . ($i-1)) is-invalid @enderror" name="billing_number[]" id="billing_number_{{ $i }}" value="{{ old('billing_number.' . ($i-1), $debitNote->number . '-INST' . $i) }}" readonly style="background-color: #e9ecef;">
                                     @error('billing_number.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="text-muted">Auto-generated</small>
                                 </div>
                             </div>
 
@@ -170,10 +171,11 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="billing_number" class="form-label">Billing Number <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control @error('billing_number.0') is-invalid @enderror" name="billing_number[]" id="billing_number" value="{{ old('billing_number.0') }}">
+                                <input type="text" class="form-control @error('billing_number.0') is-invalid @enderror" name="billing_number[]" id="billing_number" value="{{ old('billing_number.0', $debitNote->number . '-INST1') }}" readonly style="background-color: #e9ecef;">
                                 @error('billing_number.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">Auto-generated</small>
                             </div>
                         </div>
                         <div class="col-md-4 col-lg-3">

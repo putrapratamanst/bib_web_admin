@@ -537,6 +537,10 @@
             calculateDiscount();
         });
 
+        $("#policy_fee").on("change", function() {
+            calculateDiscount();
+        });
+
         // Calculate period duration
         function calculatePeriodDuration() {
             var startDate = $("#period_start").datepicker('getDate');
@@ -654,6 +658,7 @@
         var grossPremium = 0;
         var discount = 0;
         var stampFee = 0;
+        var policyFee = 0;
         var discountAmount = 0;
         var netPremium = 0;
 
@@ -669,11 +674,15 @@
             stampFee = $("#stamp_fee").autoNumeric('get');
         }
 
+        if ($("#policy_fee").val() != "") {
+            policyFee = $("#policy_fee").autoNumeric('get');
+        }
+
         if (discount > 0) {
             discountAmount = grossPremium * discount / 100;
         }
 
-        netPremium = parseFloat(grossPremium) - parseFloat(discountAmount) + parseFloat(stampFee);
+        netPremium = parseFloat(grossPremium) - parseFloat(discountAmount) + parseFloat(policyFee) + parseFloat(stampFee);
 
         $("#discount_amount").autoNumeric('set', discountAmount);
         $("#amount").autoNumeric('set', netPremium);

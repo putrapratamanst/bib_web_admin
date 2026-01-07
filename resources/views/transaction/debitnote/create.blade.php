@@ -110,7 +110,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3">
+                    <div class="col-md-4 col-lg-3" id="installment-field" style="display: none;">
                         <div class="mb-3">
                             <label for="installment" class="form-label">Installment<sup class="text-danger">*</sup></label>
                             <input type="number" class="form-control @error('installment') is-invalid @enderror" name="installment" id="installment" value="{{ old('installment', 0) }}" min="0" max="12" required>
@@ -351,8 +351,19 @@ $(document).ready(function() {
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
                             $('#installment').val(contract.installment_count);
                             console.log('Installment set to:', contract.installment_count);
+                            
+                            // Hide installment field if installment is 0 or 1
+                            if (contract.installment_count === 0 || contract.installment_count === 1) {
+                                $('#installment-field').hide();
+                                $('#installment').prop('required', false);
+                            } else {
+                                $('#installment-field').show();
+                                $('#installment').prop('required', true);
+                            }
                         } else {
                             console.log('Installment count not found in contract data');
+                            $('#installment-field').hide();
+                            $('#installment').prop('required', false);
                         }
                         
                         // Wait a bit for AutoNumeric to be ready, then update values
@@ -422,6 +433,8 @@ $(document).ready(function() {
         $('#billing_address_id').val(null).trigger('change').prop('disabled', true);
         $('#currency').val('').trigger('change');
         $('#installment').val('0');
+        $('#installment-field').hide();
+        $('#installment').prop('required', false);
         setTimeout(function() {
             try {
                 $('#exchange_rate').autoNumeric('set', '1');
