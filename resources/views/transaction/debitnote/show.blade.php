@@ -25,7 +25,7 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contact" class="form-label">Contact<sup class="text-danger">*</sup></label>
+                            <label for="contact" class="form-label">Billing Contact<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly id="contact" value="{{ $debitNote->contract->contact->display_name }}">
                         </div>
                     </div>

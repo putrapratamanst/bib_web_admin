@@ -60,9 +60,9 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contact_id" class="form-label">Contact<sup class="text-danger">*</sup></label>
+                            <label for="contact_id" class="form-label">Billing Contact<sup class="text-danger">*</sup></label>
                             <select class="form-select select2 @error('contact_id') is-invalid @enderror" name="contact_id" id="contact_id" required>
-                                <option value="">Select Contact</option>
+                                <option value="">Select Billing Contact</option>
                             </select>
                             @error('contact_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -239,7 +239,7 @@ $(document).ready(function() {
     // Initialize Select2 for contact selection
     $('#contact_id').select2({
         theme: 'bootstrap-5',
-        placeholder: 'Select Contact',
+        placeholder: 'Select Billing Contact',
         allowClear: true,
         ajax: {
             url: '{{ route("api.contacts.select2") }}',
