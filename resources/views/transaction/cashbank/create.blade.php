@@ -22,6 +22,16 @@
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
+                            <label for="transaction_type" class="form-label">Transaction Type<sup class="text-danger">*</sup></label>
+                            <select name="transaction_type" id="transaction_type" class="form-control">
+                                <option value=""></option>
+                                <option value="bank_transaction">Bank Transaction</option>
+                                <option value="bank_to_account">Bank to Account</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
                             <label for="contact_id" id="labelContact" class="form-label">Contact<sup class="text-danger">*</sup></label>
                             <select name="contact_id" id="contact_id" class="form-control">
                                 <option value=""></option>
@@ -38,7 +48,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3" id="contra_account_wrapper" style="display: none;">
                         <div class="mb-3">
                             <label for="contra_account_id" class="form-label">Contra Account<sup class="text-danger">*</sup></label>
                             <select name="contra_account_id" id="contra_account_id" class="form-control">
@@ -147,6 +157,30 @@
                 placeholder: '-- select type --',
             });
             console.log('Type select2 initialized');
+        } catch(e) {
+            console.error('Type select2 error:', e);
+        }
+
+        // Initialize Transaction Type select2
+        try {
+            $('#transaction_type').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: '-- select transaction type --',
+            });
+            console.log('Transaction Type select2 initialized');
+
+            // Show/hide contra account based on transaction type
+            $('#transaction_type').on('change', function() {
+                var transactionType = $(this).val();
+                if (transactionType === 'bank_to_account') {
+                    $('#contra_account_wrapper').show();
+                } else {
+                    $('#contra_account_wrapper').hide();
+                    // Clear contra account selection when hidden
+                    $('#contra_account_id').val(null).trigger('change');
+                }
+            });
         } catch(e) {
             console.error('Type select2 error:', e);
         }

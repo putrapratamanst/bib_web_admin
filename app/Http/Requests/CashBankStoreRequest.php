@@ -17,12 +17,13 @@ class CashBankStoreRequest extends FormRequest
     {
         return [
             'type' => 'required|in:receive,pay',
+            'transaction_type' => 'required|in:bank_transaction,bank_to_account',
             'number' => 'required|max:50|unique:cash_banks,number',
             'contact_id' => 'required|exists:contacts,id',
             'date' => 'required|date',
             //required|exists:chart_of_accounts,id add must string
             'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
-            'contra_account_id' => 'required|exists:chart_of_accounts,id',
+            'contra_account_id' => 'nullable|required_if:transaction_type,bank_to_account|exists:chart_of_accounts,id',
             'amount' => 'required|numeric',
             'description' => 'nullable|max:255',
             'reference' => 'nullable|max:50',
@@ -36,6 +37,8 @@ class CashBankStoreRequest extends FormRequest
         return [
             'type.required' => 'Type is required',
             'type.in' => 'Type must be receive or pay',
+            'transaction_type.required' => 'Transaction Type is required',
+            'transaction_type.in' => 'Transaction Type must be bank transaction or bank to account',
             'number.required' => 'Number is required',
             'number.max' => 'Number may not be greater than 50 characters',
             'number.unique' => 'Number has already been taken',
@@ -45,6 +48,8 @@ class CashBankStoreRequest extends FormRequest
             'date.date' => 'Date must be a valid date',
             'chart_of_account_id.required' => 'Chart of account is required',
             'chart_of_account_id.exists' => 'Chart of account is not exists',
+            'contra_account_id.required_if' => 'Contra account is required for Bank to Account transaction',
+            'contra_account_id.exists' => 'Contra account is not exists',
             'amount.required' => 'Amount is required',
             'amount.numeric' => 'Amount must be a number',
             'description.max' => 'Description may not be greater than 255 characters',

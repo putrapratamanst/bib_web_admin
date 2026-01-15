@@ -117,19 +117,10 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="coverage_amount" class="form-label">Coverage Amount<sup class="text-danger">*</sup></label>
+                            <label for="coverage_amount" class="form-label">Total Sum Insured (TSI)<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
                                 <input type="text" name="coverage_amount" id="coverage_amount" class="form-control autonumeric" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
                             </div>
                         </div>
                     </div>
@@ -164,19 +155,28 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="amount" id="amount" class="form-control autonumeric" required readonly />
+                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" />
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" />
+                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
+                                <input type="text" name="amount" id="amount" class="form-control autonumeric" required readonly />
                             </div>
                         </div>
                     </div>
@@ -404,7 +404,7 @@
                 },
                 success: function(response) {
                     console.log('Contract created successfully:', response);
-                    
+
                     // Upload documents if any
                     uploadDocuments(response.data.id, function(uploadSuccess) {
                         if (uploadSuccess || uploadSuccess === undefined) {
@@ -414,7 +414,7 @@
                             if (files.length > 0) {
                                 message += '\nDocuments uploaded successfully!';
                             }
-                            
+
                             Swal.fire({
                                 text: message,
                                 icon: "success",
@@ -545,11 +545,11 @@
         function calculatePeriodDuration() {
             var startDate = $("#period_start").datepicker('getDate');
             var endDate = $("#period_end").datepicker('getDate');
-            
+
             if (startDate && endDate) {
                 var timeDiff = endDate.getTime() - startDate.getTime();
                 var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                
+
                 if (daysDiff >= 0) {
                     $("#period_duration").val(daysDiff + " days");
                 } else {
@@ -577,12 +577,12 @@
             if (files.length > 0) {
                 preview.append('<div class="mt-3"><strong>Selected files:</strong></div>');
                 preview.append('<ul class="list-group mt-2" id="fileList"></ul>');
-                
+
                 let fileList = $("#fileList");
                 for (let i = 0; i < files.length; i++) {
                     let file = files[i];
                     let fileSize = (file.size / (1024 * 1024)).toFixed(2);
-                    
+
                     if (fileSize > 10) {
                         fileList.append('<li class="list-group-item text-danger">' + file.name + ' (' + fileSize + 'MB) - <strong>Exceeds 10MB limit</strong></li>');
                     } else {
@@ -643,7 +643,9 @@
         $.ajax({
             url: "{{ route('api.contracts.generate-number') }}",
             method: "GET",
-            data: { contract_type_id: contractTypeId },
+            data: {
+                contract_type_id: contractTypeId
+            },
             success: function(response) {
                 $("#number").val(response.data.number);
             },
@@ -744,7 +746,7 @@
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
                     console.error('Validation errors:', xhr.responseJSON.errors);
                 }
-                
+
                 // Show error to user
                 Swal.fire({
                     title: 'Document Upload Failed',
@@ -752,7 +754,7 @@
                     icon: 'warning',
                     confirmButtonText: 'OK'
                 });
-                
+
                 callback(false);
             },
         });

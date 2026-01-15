@@ -20,6 +20,7 @@ class CashBank extends Model
 
     protected $fillable = [
         'type',
+        'transaction_type',
         'number',
         'contact_id',
         'date',

@@ -25,6 +25,17 @@
                             </select>
                         </div>
                     </div>
+                        <div class="col-lg-3 col-md-4">
+                            <div class="mb-0">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-control select2">
+                                    <option value="">All</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
                 </div>
             </div>
         </div>
@@ -58,6 +69,7 @@
                 url: "{{ route('api.contracts.datatables') }}",
                 data: function(d) {
                     d.contract_type = $('#contract_type').val();
+                        d.status = $('#status').val();
                 },
             },
             columns: [{
@@ -136,6 +148,10 @@
         $('#contract_type').on('change', function() {
             table.draw();
         });
+
+            $('#status').on('change', function() {
+                table.draw();
+            });
     });
 </script>
 @endpush

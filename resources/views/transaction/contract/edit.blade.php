@@ -130,7 +130,7 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="coverage_amount" class="form-label">Coverage Amount<sup class="text-danger">*</sup></label>
+                            <label for="coverage_amount" class="form-label">Total Sum Insured (TSI)<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
                                 <input type="text" name="coverage_amount" id="coverage_amount" class="form-control autonumeric" value="{{ $contract->coverage_amount }}" required />

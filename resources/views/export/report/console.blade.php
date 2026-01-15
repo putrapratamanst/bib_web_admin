@@ -34,7 +34,7 @@
                     <th rowspan="2" class="text-center align-middle">Period Start</th>
                     <th rowspan="2" class="text-center align-middle">Period End</th>
                     <th colspan="4" class="text-center align-middle">Special Table Marine Cargo</th>
-                    <th rowspan="2" class="text-center align-middle">Coverage Amount</th>
+                    <th rowspan="2" class="text-center align-middle">Total Sum Insured (TSI)</th>
                     <th rowspan="2" class="text-center align-middle">Gross Premium</th>
                     <th colspan="2" class="text-center align-middle">Discount</th>
                     <th rowspan="2" class="text-center align-middle">Stamp Fee</th>

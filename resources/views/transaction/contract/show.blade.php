@@ -99,7 +99,7 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="coverage_amount" class="form-label">Coverage Amount<sup class="text-danger">*</sup></label>
+                            <label for="coverage_amount" class="form-label">Total Sum Insured (TSI)<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;">Rp</span>
                                 <input readonly type="text" value="{{ $contract->coverage_amount_formatted }}" class="form-control" name="coverage_amount" id="coverage_amount" />

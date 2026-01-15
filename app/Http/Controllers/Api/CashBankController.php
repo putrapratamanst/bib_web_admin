@@ -67,11 +67,12 @@ class CashBankController extends Controller
             // Create CashBank
             $cashBank = CashBank::create([
                 'type' => $data['type'],
+                'transaction_type' => $data['transaction_type'],
                 'number' => $data['number'],
                 'contact_id' => $data['contact_id'],
                 'date' => $data['date'],
                 'chart_of_account_id' => $data['chart_of_account_id'],
-                'contra_account_id' => $data['contra_account_id'],
+                'contra_account_id' => $data['transaction_type'] === 'bank_to_account' ? $data['contra_account_id'] : null,
                 'amount' => $data['amount'],
                 'description' => $data['description'],
                 'status' => $data['status'],

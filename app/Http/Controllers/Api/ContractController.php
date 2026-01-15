@@ -40,6 +40,10 @@ class ContractController extends Controller
                     $query->where('contract_type_id', $request->contract_type);
                 }
 
+                if ($request->has('status') && $request->status != '') {
+                    $query->where('approval_status', $request->status);
+                }
+
                 $searchValue = $request->get('search')['value'] ?? null;
                 if ($searchValue) {
                     $query->where(function($q) use ($searchValue) {
