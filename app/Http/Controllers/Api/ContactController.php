@@ -23,7 +23,14 @@ class ContactController extends Controller
 
     public function datatables()
     {
-        $contacts = Contact::orderBy('display_name', 'asc')->get();
+        $type = request('type');
+        $query = Contact::query()->orderBy('display_name', 'asc');
+        if ($type) {
+            $query->whereHas('contactTypes', function($q) use ($type) {
+                $q->where('type', $type);
+            });
+        }
+        $contacts = $query->get();
 
         $contacts->makeHidden('contact_types');
 

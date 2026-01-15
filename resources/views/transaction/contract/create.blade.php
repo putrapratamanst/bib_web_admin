@@ -60,8 +60,8 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="policy_number" class="form-label">Policy Number</label>
-                            <input type="text" name="policy_number" id="policy_number" class="form-control" />
+                            <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
+                            <input type="text" name="policy_number" id="policy_number" class="form-control" required />
                         </div>
                     </div>
                 </div>

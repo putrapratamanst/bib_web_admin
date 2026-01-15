@@ -12,6 +12,16 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <select id="filter-type" class="form-select">
+                        <option value="">-- Filter Type Contact --</option>
+                        @foreach(\App\Models\ContactType::select('type')->distinct()->get() as $ct)
+                            <option value="{{ $ct->type }}">{{ ucfirst($ct->type) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <table class="table table-new table-hover table-striped table-bordered" id="contact-table">
                 <thead class="table-header">
                     <tr>
@@ -29,10 +39,15 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#contact-table').DataTable({
+        var table = $('#contact-table').DataTable({
             processing: true,
             serverSide: true,
-            ajax: "{{ route('api.contacts.datatables') }}",
+            ajax: {
+                url: "{{ route('api.contacts.datatables') }}",
+                data: function(d) {
+                    d.type = $('#filter-type').val();
+                }
+            },
             columns: [
                 { 
                     data: 'display_name', 
@@ -45,15 +60,13 @@
                     data: 'contact_group',
                 },
                 {
-                    /*
-                    "type": [
-                        "client"
-                    ],
-                    show data from type only first
-                    */
                     data: 'type[0]',
                 }
             ]
+        });
+
+        $('#filter-type').on('change', function() {
+            table.ajax.reload();
         });
     });
 </script>
