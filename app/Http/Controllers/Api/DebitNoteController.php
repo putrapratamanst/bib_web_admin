@@ -53,7 +53,7 @@ class DebitNoteController extends Controller
             'number' => 'required|string|max:255|unique:debit_notes,number',
             'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
-            'billing_address_id' => 'required|exists:billing_addresses,id',
+            // 'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             'created_at' => 'nullable|date',

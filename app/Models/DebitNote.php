@@ -21,7 +21,7 @@ class DebitNote extends Model
     protected $fillable = [
         'contract_id',
         'contact_id',
-        'billing_address_id',
+        // 'billing_address_id',
         'number',
         'date',
         'due_date',

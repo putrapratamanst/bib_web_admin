@@ -21,6 +21,7 @@ class Contract extends Model
         'policy_number',
         'policy_fee',
         'contact_id',
+        'billing_address_id',
         'period_start',
         'period_end',
         'currency_code',
@@ -146,6 +147,11 @@ class Contract extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'contact_id', 'id');
+    }
+
+    public function billingAddress(): BelongsTo
+    {
+        return $this->belongsTo(BillingAddress::class, 'billing_address_id', 'id');
     }
 
     public function contractReference(): BelongsTo

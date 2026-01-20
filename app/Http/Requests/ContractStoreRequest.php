@@ -31,6 +31,7 @@ class ContractStoreRequest extends FormRequest
             'policy_number' => 'required|max:150',
             'policy_fee' => 'nullable|numeric',
             'contact_id' => 'required|exists:contacts,id',
+            'billing_address_id' => 'nullable|exists:billing_addresses,id',
             'period_start' => 'required|date',
             'period_end' => 'required|date',
             'currency_code' => 'required|exists:currencies,code',

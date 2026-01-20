@@ -37,6 +37,12 @@
                             <input readonly type="text" value="{{ $contract->contact->display_name }}" class="form-control">
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label class="form-label">Billing Address</label>
+                            <input readonly type="text" value="{{ $contract->billingAddress ? $contract->billingAddress->name . ($contract->billingAddress->address ? ' - ' . $contract->billingAddress->address : '') : '-' }}" class="form-control">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

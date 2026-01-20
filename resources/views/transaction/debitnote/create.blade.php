@@ -69,7 +69,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3">
+                    <!-- <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required disabled>
@@ -79,7 +79,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="row">

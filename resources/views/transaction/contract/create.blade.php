@@ -41,6 +41,14 @@
                             </select>
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="billing_address_id" class="form-label">Billing Address</label>
+                            <select name="billing_address_id" id="billing_address_id" class="form-control select2" data-placeholder="-- select billing address --">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="col-lg-3" style="display: none;" id="covered-item-field">
                         <div class="mb-3">
@@ -334,6 +342,55 @@
             },
         });
 
+            // Initialize Select2 for billing address
+            $('#billing_address_id').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: '-- select billing address --',
+                allowClear: true,
+                ajax: {
+                    url: '{{ route("api.billing-addresses.select2") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        const contactId = $('#contact_id').val();
+                        return {
+                            search: params.term,
+                            page: params.page || 1,
+                            contact_id: contactId
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.data,
+                            pagination: {
+                                more: data.pagination && data.pagination.more
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+                    if (data.is_primary) {
+                        return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
+                    }
+                    return data.text;
+                },
+                templateSelection: function(data) {
+                    if (!data.id) return data.text;
+                    if (data.is_primary) {
+                        return data.text + ' ★';
+                    }
+                    return data.text;
+                }
+            });
+
+            // Reset billing address when contact changes
+            $('#contact_id').on('change', function() {
+                $('#billing_address_id').val(null).trigger('change');
+            });
+
         $("#currency_code").on("change", function() {
             var currencyCode = $(this).val();
             $(".curr-code").text(currencyCode);
@@ -341,6 +398,19 @@
 
         $("#formCreate").submit(function(e) {
             e.preventDefault();
+
+            // Validate billing address
+            var billingAddressId = $('#billing_address_id').val();
+            console.log('DEBUG billing_address_id:', billingAddressId);
+            if (!billingAddressId) {
+                Swal.fire({
+                    text: 'Billing address tidak ditemukan untuk kontak ini. Silakan cek data kontak.',
+                    icon: 'error',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                });
+                return;
+            }
 
             var details = [];
             $('#tableDetails tbody tr').each(function() {
@@ -379,6 +449,7 @@
                 policy_number: $("#policy_number").val(),
                 policy_fee: $("#policy_fee").autoNumeric('get'),
                 contact_id: $("#contact_id").val(),
+                billing_address_id: billingAddressId,
                 endorsements: endorsements,
                 period_start: $("#period_start").val(),
                 period_end: $("#period_end").val(),

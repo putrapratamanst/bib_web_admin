@@ -33,7 +33,7 @@ class ContractController extends Controller
                 return $c->contractType->name;
             })
             ->addColumn('contact', function (Contract $c) {
-                return $c->contact->display_name;
+                return $c->contact ? $c->contact->display_name : '-';
             })
             ->filter(function ($query) use ($request) {
                 if ($request->has('contract_type') && $request->contract_type != '') {
@@ -167,7 +167,6 @@ class ContractController extends Controller
     {
         try {
             $data = $request->validated();
-            
             $contract = Contract::create([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
@@ -189,6 +188,7 @@ class ContractController extends Controller
                 'status' => 'active',
                 'covered_item' => $data['covered_item'],
                 'approval_status' => 'pending',
+                'billing_address_id' => $data['billing_address_id'] ?? null,
                 // 'created_by' => auth()->id()
             ]);
 
@@ -314,7 +314,6 @@ class ContractController extends Controller
             }
 
             $data = $request->validated();
-            
             $contract->update([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
@@ -335,6 +334,7 @@ class ContractController extends Controller
                 'memo' => $data['memo'],
                 'covered_item' => $data['covered_item'],
                 'approval_status' => 'pending', // Reset to pending when updated
+                'billing_address_id' => $data['billing_address_id'] ?? null,
             ]);
 
             // Delete existing details and recreate

@@ -29,12 +29,12 @@
                             <input type="text" class="form-control" readonly id="contact" value="{{ $debitNote->contract->contact->display_name }}">
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3">
+                    <!-- <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly id="billing_address_id" value="{{ $debitNote->billingAddress?->name ?? '-' }}">
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="row">
