@@ -40,9 +40,9 @@
                         <div class="mb-3">
                             <label for="type" class="form-label">Type<sup class="text-danger">*</sup></label>
                             <select class="form-select" required id="type" name="type">
-                                <option value="client" {{ $contact->type == 'client' ? 'selected' : '' }}>Client</option>
-                                <option value="agent" {{ $contact->type == 'agent' ? 'selected' : '' }}>Agent</option>
-                                <option value="insurance" {{ $contact->type == 'insurance' ? 'selected' : '' }}>Insurance</option>
+                                <option value="client" {{ in_array('client', $contact->type) ? 'selected' : '' }}>Client</option>
+                                <option value="agent" {{ in_array('agent', $contact->type) ? 'selected' : '' }}>Agent</option>
+                                <option value="insurance" {{ in_array('insurance', $contact->type) ? 'selected' : '' }}>Insurance</option>
                             </select>
                         </div>
                     </div>
