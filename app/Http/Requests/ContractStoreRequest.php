@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class ContractStoreRequest extends FormRequest
 {
@@ -33,7 +34,16 @@ class ContractStoreRequest extends FormRequest
             'contact_id' => 'required|exists:contacts,id',
             'billing_address_id' => 'nullable|exists:billing_addresses,id',
             'period_start' => 'required|date',
-            'period_end' => 'required|date',
+            'period_end' => [
+                Rule::requiredIf(function () {
+                    $contractTypeId = $this->input('contract_type_id');
+                    if (!$contractTypeId) return true; // required if not selected
+                    $contractType = \App\Models\ContractType::find($contractTypeId);
+                    return !in_array($contractType->name ?? '', ['MARINE CARGO EXPORT INSURANCE', 'MARINE CARGO IMPORT INSURANCE']);
+                }),
+                'nullable',
+                'date',
+            ],
             'currency_code' => 'required|exists:currencies,code',
             'exchange_rate' => 'nullable|numeric',
             'coverage_amount' => 'required|numeric',

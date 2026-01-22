@@ -29,6 +29,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/contacts', [\App\Http\Controllers\Master\ContactController::class, 'index'])->name('master.contacts.index');
     Route::get('/contacts/create', [\App\Http\Controllers\Master\ContactController::class, 'create'])->name('master.contacts.create');
     Route::get('/contacts/{id}', [\App\Http\Controllers\Master\ContactController::class, 'show'])->name('master.contacts.show');
+
+    // Currency
+    Route::get('/currencies/datatables', [\App\Http\Controllers\Master\CurrencyController::class, 'datatables'])->name('master.currencies.datatables');
+    Route::resource('/currencies', \App\Http\Controllers\Master\CurrencyController::class, ['as' => 'master']);
 });
 
 // route group transaction

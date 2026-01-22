@@ -84,7 +84,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_end" class="form-label">Period End<sup class="text-danger">*</sup></label>
-                            <input type="text" name="period_end" id="period_end" class="form-control datepicker" required>
+                            <input type="text" name="period_end" id="period_end" class="form-control datepicker">
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -316,6 +316,8 @@
     var rowNumber = 1;
 
     $(document).ready(function() {
+        // Set default required for period_end
+        $('#period_end').prop('required', true);
         $('#contact_id').select2({
             theme: 'bootstrap-5',
             width: '100%',
@@ -627,7 +629,7 @@
                     $("#period_duration").val("Invalid date range");
                 }
             } else {
-                $("#period_duration").val("0 days");
+                $("#period_duration").val("0");
             }
         }
 
@@ -763,7 +765,9 @@
 
     $('#contract_type_id').on('change', function() {
         const selectedVal = $(this).val();
+        const selectedText = $(this).find('option:selected').text();
         const $coveredItemField = $('#covered-item-field');
+        const $periodEndField = $('#period_end');
 
         if (selectedVal == 1 || selectedVal == 14) {
             $coveredItemField.show();
@@ -771,6 +775,15 @@
         } else {
             $coveredItemField.hide();
             $coveredItemField.find('input, select, textarea').val('').prop('required', false);
+        }
+
+        // For Marine Cargo Export & Import, make period_end not required
+        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE') {
+            $periodEndField.prop('required', false);
+            $periodEndField.closest('.mb-3').find('label sup').hide(); // Hide the asterisk
+        } else {
+            $periodEndField.prop('required', true);
+            $periodEndField.closest('.mb-3').find('label sup').show(); // Show the asterisk
         }
     });
 

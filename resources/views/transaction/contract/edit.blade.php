@@ -96,13 +96,13 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_end" class="form-label">Period End<sup class="text-danger">*</sup></label>
-                            <input type="text" name="period_end" id="period_end" class="form-control datepicker" value="{{ $contract->period_end ? $contract->period_end->format('d-m-Y') : '' }}" required>
+                            <input type="text" name="period_end" id="period_end" class="form-control datepicker" value="{{ $contract->period_end ? $contract->period_end->format('d-m-Y') : '' }}">
                         </div>
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_duration" class="form-label">Period Duration</label>
-                            <input type="text" id="period_duration" class="form-control" readonly style="background-color: #e9ecef;" value="{{ $contract->period_start->diffInDays($contract->period_end) }} days">
+                            <input type="text" id="period_duration" class="form-control" readonly style="background-color: #e9ecef;" value="{{ $contract->period_end ? $contract->period_start->diffInDays($contract->period_end) . ' days' : '0' }}">
                             <small class="text-muted">Auto-calculated</small>
                         </div>
                     </div>
@@ -738,7 +738,9 @@
 
     $('#contract_type_id').on('change', function() {
         const selectedVal = $(this).val();
+        const selectedText = $(this).find('option:selected').text();
         const $coveredItemField = $('#covered-item-field');
+        const $periodEndField = $('#period_end');
 
         if (selectedVal == 1 || selectedVal == 14) {
             $coveredItemField.show();
@@ -746,6 +748,15 @@
         } else {
             $coveredItemField.hide();
             $coveredItemField.find('input, select, textarea').val('').prop('required', false);
+        }
+
+        // For Marine Cargo Export & Import, make period_end not required
+        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE') {
+            $periodEndField.prop('required', false);
+            $periodEndField.closest('.mb-3').find('label sup').hide(); // Hide the asterisk
+        } else {
+            $periodEndField.prop('required', true);
+            $periodEndField.closest('.mb-3').find('label sup').show(); // Show the asterisk
         }
     });
 
@@ -764,7 +775,7 @@
                 $("#period_duration").val("Invalid date range");
             }
         } else {
-            $("#period_duration").val("0 days");
+            $("#period_duration").val("0");
         }
     }
 

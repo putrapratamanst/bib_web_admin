@@ -66,7 +66,7 @@ class BillingAddressController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'contact_id' => 'required|exists:contacts,id',
-            'name' => 'required|max:100',
+            'name' => 'required|max:300',
             'address' => 'required',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',

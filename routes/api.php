@@ -32,6 +32,14 @@ Route::get('/contact/select2', [\App\Http\Controllers\Api\ContactController::cla
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->name('api.contacts.store');
 Route::put('/contact/{id}', [\App\Http\Controllers\Api\ContactController::class, 'update'])->name('api.contacts.update');
 
+// Currency
+Route::get('/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'index'])->name('api.currencies.index');
+Route::get('/currency/datatables', [\App\Http\Controllers\Api\CurrencyController::class, 'datatables'])->name('api.currencies.datatables');
+Route::get('/currency/select2', [\App\Http\Controllers\Api\CurrencyController::class, 'select2'])->name('api.currencies.select2');
+Route::post('/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'store'])->name('api.currencies.store');
+Route::put('/currency/{currency}', [\App\Http\Controllers\Api\CurrencyController::class, 'update'])->name('api.currencies.update');
+Route::delete('/currency/{currency}', [\App\Http\Controllers\Api\CurrencyController::class, 'destroy'])->name('api.currencies.destroy');
+
 // Billing Address
 Route::get('/contact/{contactId}/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.index');
 Route::get('/billing-address/select2', [\App\Http\Controllers\Api\BillingAddressController::class, 'select2'])->name('api.billing-addresses.select2');

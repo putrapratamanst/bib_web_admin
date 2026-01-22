@@ -76,7 +76,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_duration" class="form-label">Period Duration</label>
-                            <input readonly type="text" value="{{ $contract->period_start->diffInDays($contract->period_end) }} days" class="form-control" style="background-color: #e9ecef;">
+                            <input readonly type="text" value="{{ $contract->period_end ? $contract->period_start->diffInDays($contract->period_end) . ' days' : '0' }}" class="form-control" style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-lg-3">

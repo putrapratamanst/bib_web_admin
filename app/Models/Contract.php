@@ -128,7 +128,7 @@ class Contract extends Model
     {
         // check if null
         if ($this->period_end == null) {
-            return 'not set';
+            return '';
         }
 
         return $this->period_end->format('d M Y');

@@ -17,8 +17,8 @@ class ContactStoreRequest extends FormRequest
     {
         return [
             'contact_group_id' => 'required|exists:contact_groups,id',
-            'display_name' => 'required|max:100',
-            'name' => 'nullable|min:1|max:100',
+            'display_name' => 'required|max:300',
+            'name' => 'nullable|min:1|max:300',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
             'billing_name' => 'nullable|max:100',
@@ -35,9 +35,9 @@ class ContactStoreRequest extends FormRequest
             'contact_group_id.required' => 'Contact group is required',
             'contact_group_id.exists' => 'Contact group is invalid',
             'display_name.required' => 'Display name is required',
-            'display_name.max' => 'Display name may not be greater than 100 characters',
+            'display_name.max' => 'Display name may not be greater than 300 characters',
             'name.min' => 'Name may not be less than 1 character',
-            'name.max' => 'Name may not be greater than 100 characters',
+            'name.max' => 'Name may not be greater than 300 characters',
             'email.email' => 'Email must be a valid email address',
             'email.max' => 'Email may not be greater than 100 characters',
             'phone.max' => 'Phone may not be greater than 20 characters',
