@@ -24,20 +24,21 @@ class ContactController extends Controller
     public function datatables()
     {
         $type = request('type');
-        $query = Contact::query()->orderBy('display_name', 'asc');
+        $query = Contact::query()
+            ->select(['id', 'display_name', 'contact_group_id'])
+            ->with(['contactGroup', 'contactTypes'])
+            ->orderBy('display_name', 'asc');
         if ($type) {
             $query->whereHas('contactTypes', function($q) use ($type) {
                 $q->where('type', $type);
             });
         }
-        $contacts = $query->get();
 
-        $contacts->makeHidden('contact_types');
-
-        return DataTables::of($contacts)
+        return DataTables::of($query)
             ->addColumn('contact_group', function(Contact $c) {
                 return $c->contactGroup ? $c->contactGroup->name : '';
             })
+            ->only(['id', 'display_name', 'type', 'contact_group'])
             ->make(true);
     }
 
