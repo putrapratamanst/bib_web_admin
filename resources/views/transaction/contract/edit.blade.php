@@ -758,6 +758,11 @@
             $periodEndField.prop('required', true);
             $periodEndField.closest('.mb-3').find('label sup').show(); // Show the asterisk
         }
+
+        // Generate new placing number when placing type changes
+        if (selectedVal) {
+            generateContractNumber(selectedVal);
+        }
     });
 
     // Calculate period duration
@@ -922,6 +927,22 @@
             preview.append('<div class="alert alert-secondary py-2"><i class="bi bi-file"></i> ' + fileName + ' (' + fileSize + ')</div>');
         }
     });
+
+    function generateContractNumber(contractTypeId) {
+        $.ajax({
+            url: "{{ route('api.contracts.generate-number') }}",
+            method: "GET",
+            data: {
+                contract_type_id: contractTypeId
+            },
+            success: function(response) {
+                $("#number").val(response.data.number);
+            },
+            error: function(xhr) {
+                console.error('Failed to generate contract number:', xhr);
+            }
+        });
+    }
 </script>
 @endpush
 
