@@ -60,7 +60,7 @@
                     data: 'contact_group',
                 },
                 {
-                    data: 'type[0]',
+                    data: 'type',
                 }
             ]
         });

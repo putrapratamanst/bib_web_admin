@@ -39,7 +39,7 @@ class ContractStoreRequest extends FormRequest
                     $contractTypeId = $this->input('contract_type_id');
                     if (!$contractTypeId) return true; // required if not selected
                     $contractType = \App\Models\ContractType::find($contractTypeId);
-                    return !in_array($contractType->name ?? '', ['MARINE CARGO EXPORT INSURANCE', 'MARINE CARGO IMPORT INSURANCE']);
+                    return !in_array($contractType->name ?? '', ['MARINE CARGO EXPORT INSURANCE', 'MARINE CARGO IMPORT INSURANCE', 'IN LAND TRANSIT INSURANCE']);
                 }),
                 'nullable',
                 'date',

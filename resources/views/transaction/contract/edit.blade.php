@@ -751,7 +751,7 @@
         }
 
         // For Marine Cargo Export & Import, make period_end not required
-        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE') {
+        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE' || selectedText === 'IN LAND TRANSIT INSURANCE') {
             $periodEndField.prop('required', false);
             $periodEndField.closest('.mb-3').find('label sup').hide(); // Hide the asterisk
         } else {

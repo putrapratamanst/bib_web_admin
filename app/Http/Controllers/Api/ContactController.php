@@ -25,7 +25,6 @@ class ContactController extends Controller
     {
         $type = request('type');
         $query = Contact::query()
-            ->select(['id', 'display_name', 'contact_group_id'])
             ->with(['contactGroup', 'contactTypes'])
             ->orderBy('display_name', 'asc');
         if ($type) {
@@ -34,12 +33,20 @@ class ContactController extends Controller
             });
         }
 
-        return DataTables::of($query)
-            ->addColumn('contact_group', function(Contact $c) {
-                return $c->contactGroup ? $c->contactGroup->name : '';
-            })
-            ->only(['id', 'display_name', 'type', 'contact_group'])
-            ->make(true);
+        $results = $query->get()->map(function($contact) {
+            $typeValue = $contact->contactTypes->isNotEmpty() ? $contact->contactTypes->first()->type : '';
+            
+            return [
+                'id' => $contact->id,
+                'display_name' => $contact->display_name,
+                'contact_group_id' => $contact->contact_group_id,
+                'contact_group' => $contact->contactGroup ? $contact->contactGroup->name : '',
+                'type' => $typeValue,
+                'debug_contact_types_count' => $contact->contactTypes->count()
+            ];
+        });
+
+        return DataTables::of($results)->make(true);
     }
 
     public function select2(Request $request)

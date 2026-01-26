@@ -23,8 +23,11 @@ class BillingAddressController extends Controller
 
     public function select2(Request $request)
     {
-        $search = $request->get('q', '');
+        $search = $request->get('search', $request->get('q', ''));
         $contactId = $request->get('contact_id', '');
+        $page = $request->get('page', 1);
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
 
         $query = BillingAddress::query();
 
@@ -40,8 +43,11 @@ class BillingAddressController extends Controller
             });
         }
 
+        $total = $query->count();
         $addresses = $query->orderBy('is_primary', 'desc')
             ->orderBy('created_at', 'asc')
+            ->offset($offset)
+            ->limit($limit)
             ->get();
 
         $data = $addresses->map(function ($address) {
@@ -58,7 +64,10 @@ class BillingAddressController extends Controller
         });
 
         return response()->json([
-            'data' => $data
+            'data' => $data,
+            'pagination' => [
+                'more' => ($offset + $limit) < $total
+            ]
         ]);
     }
 

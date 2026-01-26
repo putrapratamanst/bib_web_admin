@@ -344,54 +344,54 @@
             },
         });
 
-            // Initialize Select2 for billing address
-            $('#billing_address_id').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: '-- select billing address --',
-                allowClear: true,
-                ajax: {
-                    url: '{{ route("api.billing-addresses.select2") }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        const contactId = $('#contact_id').val();
-                        return {
-                            search: params.term,
-                            page: params.page || 1,
-                            contact_id: contactId
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.data,
-                            pagination: {
-                                more: data.pagination && data.pagination.more
-                            }
-                        };
-                    },
-                    cache: true
+        // Initialize Select2 for billing address
+        $('#billing_address_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select billing address --',
+            allowClear: true,
+            ajax: {
+                url: '{{ route("api.billing-addresses.select2") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    const contactId = $('#contact_id').val();
+                    return {
+                        search: params.term,
+                        page: params.page || 1,
+                        contact_id: contactId
+                    };
                 },
-                templateResult: function(data) {
-                    if (!data.id) return data.text;
-                    if (data.is_primary) {
-                        return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
-                    }
-                    return data.text;
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination && data.pagination.more
+                        }
+                    };
                 },
-                templateSelection: function(data) {
-                    if (!data.id) return data.text;
-                    if (data.is_primary) {
-                        return data.text + ' ★';
-                    }
-                    return data.text;
+                cache: true
+            },
+            templateResult: function(data) {
+                if (!data.id) return data.text;
+                if (data.is_primary) {
+                    return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
                 }
-            });
+                return data.text;
+            },
+            templateSelection: function(data) {
+                if (!data.id) return data.text;
+                if (data.is_primary) {
+                    return data.text + ' ★';
+                }
+                return data.text;
+            }
+        });
 
-            // Reset billing address when contact changes
-            $('#contact_id').on('change', function() {
-                $('#billing_address_id').val(null).trigger('change');
-            });
+        // Reset billing address when contact changes
+        $('#contact_id').on('change', function() {
+            $('#billing_address_id').val(null).trigger('change');
+        });
 
         $("#currency_code").on("change", function() {
             var currencyCode = $(this).val();
@@ -778,7 +778,7 @@
         }
 
         // For Marine Cargo Export & Import, make period_end not required
-        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE') {
+        if (selectedText === 'MARINE CARGO EXPORT INSURANCE' || selectedText === 'MARINE CARGO IMPORT INSURANCE' || selectedText === 'IN LAND TRANSIT INSURANCE') {
             $periodEndField.prop('required', false);
             $periodEndField.closest('.mb-3').find('label sup').hide(); // Hide the asterisk
         } else {
