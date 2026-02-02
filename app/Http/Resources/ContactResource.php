@@ -15,6 +15,7 @@ class ContactResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            'billing_addresses' => $this->whenLoaded('billingAddresses'),
             'created_by' => $this->createdBy ? $this->createdBy->name : null,
             'updated_by' => $this->updatedBy ? $this->updatedBy->name : null,
             'created_at' => $this->created_at,

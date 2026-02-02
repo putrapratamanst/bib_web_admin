@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CreditNoteApprovalRequest;
 use App\Http\Resources\DebitNoteResource;
 use App\Models\DebitNote;
 use App\Models\DebitNoteDetail;
@@ -31,11 +32,35 @@ class DebitNoteController extends Controller
             ->addColumn('is_posted', function(DebitNote $b) {
                 return $b->is_posted ? 'Yes' : 'No';
             })
+            ->addColumn('approval_status_badge', function (DebitNote $b) {
+                return $b->approval_status_badge;
+            })
+            ->addColumn('actions', function (DebitNote $b) {
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . route('transaction.debit-notes.show', $b->id) . '" class="btn btn-sm btn-outline-primary">View</a>';
+                
+                // Only show approve/reject buttons for approvers
+                if ($b->canBeApproved() && auth()->user()->canApproveCreditNotes()) {
+                    $actions .= '<button class="btn btn-sm btn-success approve-btn" data-id="' . $b->id . '">Approve</button>';
+                    $actions .= '<button class="btn btn-sm btn-danger reject-btn" data-id="' . $b->id . '">Reject</button>';
+                }
+                
+                // if ($b->canBePrinted()) {
+                //     $actions .= '<button class="btn btn-sm btn-secondary print-btn" data-id="' . $b->id . '">Print</button>';
+                // }
+                
+                $actions .= '</div>';
+                return $actions;
+            })
+            ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);
     }
 
     public function store(Request $request)
     {
+        // Debug: Log incoming data
+        \Log::info('DebitNote Store Request Data:', $request->all());
+        
         // Clean up comma-separated numbers
         $cleanedData = $request->all();
         if (isset($cleanedData['exchange_rate'])) {
@@ -48,12 +73,13 @@ class DebitNoteController extends Controller
         // Replace request data with cleaned data
         $request->merge($cleanedData);
         
+        \Log::info('Billing Address ID from request:', ['billing_address_id' => $request->billing_address_id]);
+        
         // Validation
         $validator = Validator::make($request->all(), [
             'number' => 'required|string|max:255|unique:debit_notes,number',
-            'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
-            // 'billing_address_id' => 'required|exists:billing_addresses,id',
+            'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             'created_at' => 'nullable|date',
@@ -74,10 +100,13 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
             
+            // Get contact_id from billing_address
+            $billingAddress = \App\Models\BillingAddress::findOrFail($request->billing_address_id);
+            
             // Create Debit Note
             $debitNote = DebitNote::create([
                 'number' => $request->number,
-                'contact_id' => $request->contact_id,
+                'contact_id' => $billingAddress->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
@@ -87,9 +116,11 @@ class DebitNoteController extends Controller
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'status' => 'active',
+                'approval_status' => 'pending', // Default approval status for new debit notes
                 'installment' => $request->installment,
                 'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
+                'created_by' => auth()->id(),
             ]);
 
             // Create Debit Note Details
@@ -125,7 +156,7 @@ class DebitNoteController extends Controller
 
     public function show($id)
     {
-        $debitNote = DebitNote::with(['contract', 'debitNoteDetails', 'cashouts'])->findOrFail($id);
+        $debitNote = DebitNote::with(['contract', 'billingAddress', 'debitNoteDetails', 'cashouts'])->findOrFail($id);
         
         return response()->json([
             'data' => new DebitNoteResource($debitNote)
@@ -175,6 +206,78 @@ class DebitNoteController extends Controller
             return response()->json([
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
                 'success' => false
+            ], 500);
+        }
+    }
+
+    public function approve(CreditNoteApprovalRequest $request, $id)
+    {
+        try {
+            // Check if user has approver role
+            if (!auth()->user()->canApproveCreditNotes()) {
+                return response()->json([
+                    'message' => 'You are not authorized to approve Debit Notes. Only users with approver role can perform this action.'
+                ], 403);
+            }
+
+            $debitNote = DebitNote::findOrFail($id);
+            
+            if (!$debitNote->canBeApproved()) {
+                return response()->json([
+                    'message' => 'Debit Note cannot be approved in current status.'
+                ], 400);
+            }
+
+            $debitNote->update([
+                'approval_status' => 'approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'approval_notes' => $request->input('notes'),
+            ]);
+
+            return response()->json([
+                'message' => 'Debit Note has been approved successfully.',
+                'data' => new DebitNoteResource($debitNote->fresh())
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reject(CreditNoteApprovalRequest $request, $id)
+    {
+        try {
+            // Check if user has approver role
+            if (!auth()->user()->canApproveCreditNotes()) {
+                return response()->json([
+                    'message' => 'You are not authorized to reject Debit Notes. Only users with approver role can perform this action.'
+                ], 403);
+            }
+
+            $debitNote = DebitNote::findOrFail($id);
+            
+            if (!$debitNote->canBeApproved()) {
+                return response()->json([
+                    'message' => 'Debit Note cannot be rejected in current status.'
+                ], 400);
+            }
+
+            $debitNote->update([
+                'approval_status' => 'rejected',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'approval_notes' => $request->input('notes', 'Rejected'),
+            ]);
+
+            return response()->json([
+                'message' => 'Debit Note has been rejected.',
+                'data' => new DebitNoteResource($debitNote->fresh())
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
             ], 500);
         }
     }

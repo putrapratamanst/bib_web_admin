@@ -21,7 +21,7 @@ class DebitNote extends Model
     protected $fillable = [
         'contract_id',
         'contact_id',
-        // 'billing_address_id',
+        'billing_address_id',
         'number',
         'date',
         'due_date',
@@ -30,6 +30,10 @@ class DebitNote extends Model
         'exchange_rate',
         'amount',
         'status',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
         'is_posted',
         'created_by',
         'updated_by',
@@ -40,6 +44,7 @@ class DebitNote extends Model
         'due_date' => 'date',
         'exchange_rate' => 'decimal:2',
         'amount' => 'decimal:2',
+        'approved_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -47,6 +52,8 @@ class DebitNote extends Model
         'due_date_formatted',
         'exchange_rate_formatted',
         'amount_formatted',
+        'approved_at_formatted',
+        'approval_status_badge',
         'is_posted',
     ];
 
@@ -80,6 +87,11 @@ class DebitNote extends Model
         return $this->belongsTo(User::class, 'updated_by', 'id');
     }
 
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'id');
+    }
+
     public function debitNoteDetails(): HasMany
     {
         return $this->hasMany(DebitNoteDetail::class, 'debit_note_id', 'id');
@@ -103,6 +115,33 @@ class DebitNote extends Model
     public function getAmountFormattedAttribute(): string
     {
         return number_format($this->amount, 2, ".", ",");
+    }
+
+    public function getApprovedAtFormattedAttribute(): ?string
+    {
+        return $this->approved_at ? $this->approved_at->format('d M Y H:i') : null;
+    }
+
+    public function getApprovalStatusBadgeAttribute(): string
+    {
+        return match($this->approval_status) {
+            'pending' => '<span class="badge bg-warning">Pending</span>',
+            'approved' => '<span class="badge bg-success">Approved</span>',
+            'rejected' => '<span class="badge bg-danger">Rejected</span>',
+            default => '<span class="badge bg-secondary">Unknown</span>',
+        };
+    }
+
+    // Check if debit note can be printed/exported
+    public function canBePrinted(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    // Check if debit note can be approved
+    public function canBeApproved(): bool
+    {
+        return $this->approval_status === 'pending';
     }
 
     public function creditNotes(): HasMany

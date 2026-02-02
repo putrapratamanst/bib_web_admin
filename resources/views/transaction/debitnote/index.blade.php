@@ -22,8 +22,8 @@
                         <th>Installment</th>
                         <th>Amount</th>
                         <th>Status</th>
-                        <!-- <th>Posted</th>
-                        <th>Action</th> -->
+                        <th>Approval Status</th>
+                        <th width="200px">Actions</th>
                     </tr>
                 </thead>
             </table>
@@ -41,17 +41,16 @@
             ajax: {
                 url: "{{ route('api.debit-notes.datatables') }}",
             },
-            columns: [
-                { 
-                    data: 'number', 
+            columns: [{
+                    data: 'number',
                     name: 'number',
                     render: function(data, type, row) {
                         return '<a href="{{ route("transaction.debit-notes.show", "") }}/' + row.id + '">' + data + '</a>';
                     }
                 },
-                { 
-                    data: 'date', 
-                    name: 'date', 
+                {
+                    data: 'date',
+                    name: 'date',
                     render: function(data, type, row) {
                         if (!data) return '';
                         var date = new Date(data);
@@ -61,8 +60,8 @@
                         return day + '-' + month + '-' + year;
                     }
                 },
-                { 
-                    data: 'due_date', 
+                {
+                    data: 'due_date',
                     name: 'due_date',
                     render: function(data, type, row) {
                         if (!data) return '';
@@ -73,17 +72,17 @@
                         return day + '-' + month + '-' + year;
                     }
                 },
-                { 
-                    data: 'contract', 
-                    name: 'contract' 
+                {
+                    data: 'contract',
+                    name: 'contract'
                 },
-                { 
-                    data: 'installment', 
-                    name: 'installment' 
+                {
+                    data: 'installment',
+                    name: 'installment'
                 },
-                { 
-                    data: 'amount', 
-                    name: 'amount', 
+                {
+                    data: 'amount',
+                    name: 'amount',
                     className: 'text-end',
                     render: function(data, type, row) {
                         return parseFloat(data).toLocaleString('de-DE', {
@@ -92,19 +91,98 @@
                         });
                     }
                 },
-                { 
-                    data: 'status', 
+                {
+                    data: 'status',
                     name: 'status',
                     render: function(data, type, row) {
                         let badgeClass = 'bg-secondary';
                         if (data === 'active') badgeClass = 'bg-success';
                         else if (data === 'draft') badgeClass = 'bg-warning';
                         else if (data === 'cancelled') badgeClass = 'bg-danger';
-                        
+
                         return '<span class="badge ' + badgeClass + '">' + data.charAt(0).toUpperCase() + data.slice(1) + '</span>';
                     }
                 },
+                {
+                    data: 'approval_status_badge',
+                    name: 'approval_status',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'actions',
+                    name: 'actions',
+                    orderable: false,
+                    searchable: false
+                }
             ]
+        });
+
+        // Handle approve button click
+        $(document).on('click', '.approve-btn', function() {
+            const debitNoteId = $(this).data('id');
+            const notes = prompt('Enter approval notes (optional):');
+
+            if (confirm('Are you sure you want to approve this Debit Note?')) {
+                $.ajax({
+                    url: `/api/debit-note/${debitNoteId}/approve`,
+                    type: 'POST',
+                    data: {
+                        notes: notes,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        alert('Debit Note approved successfully!');
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let message = 'Error: ';
+                        if (xhr.status === 403) {
+                            message += 'You are not authorized to perform this action. Only users with approver role can approve Debit Notes.';
+                        } else {
+                            message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                        }
+                        alert(message);
+                    }
+                });
+            }
+        });
+
+        // Handle reject button click
+        $(document).on('click', '.reject-btn', function() {
+            const debitNoteId = $(this).data('id');
+            const notes = prompt('Enter rejection reason:');
+
+            if (notes && confirm('Are you sure you want to reject this Debit Note?')) {
+                $.ajax({
+                    url: `/api/debit-note/${debitNoteId}/reject`,
+                    type: 'POST',
+                    data: {
+                        notes: notes,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        alert('Debit Note rejected!');
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let message = 'Error: ';
+                        if (xhr.status === 403) {
+                            message += 'You are not authorized to perform this action. Only users with approver role can reject Debit Notes.';
+                        } else {
+                            message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                        }
+                        alert(message);
+                    }
+                });
+            }
+        });
+
+        // Handle print button click
+        $(document).on('click', '.print-btn', function() {
+            const debitNoteId = $(this).data('id');
+            alert('Print functionality will be implemented here');
+            // TODO: Implement actual print functionality
         });
     });
 
@@ -131,7 +209,7 @@
                         Swal.showLoading();
                     }
                 });
-                
+
                 $.ajax({
                     url: `/api/debit-note/${debitNoteId}/post`,
                     method: "POST",

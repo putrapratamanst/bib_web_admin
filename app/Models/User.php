@@ -45,4 +45,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Check if user has approver role
+     */
+    public function isApprover(): bool
+    {
+        return $this->role === 'approver';
+    }
+
+    /**
+     * Check if user can approve credit notes
+     */
+    public function canApproveCreditNotes(): bool
+    {
+        return $this->isApprover();
+    }
 }

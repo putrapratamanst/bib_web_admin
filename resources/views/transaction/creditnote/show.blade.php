@@ -4,7 +4,16 @@
 <div class="container">
     <div class="card">
         <div class="card-header">
-            Add New Credit Note
+            Credit Note Details
+            <div class="float-end">
+                @if($creditNote->canBePrinted())
+                    <button class="btn btn-success btn-sm" onclick="printCreditNote()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                @else
+                    <span class="badge bg-warning">Approval Required</span>
+                @endif
+            </div>
         </div>        
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
@@ -67,11 +76,139 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <input type="text" class="form-control" readonly name="status" id="status" value="{{ ucfirst($creditNote->status) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approval_status" class="form-label">Approval Status</label>
+                            <div class="form-control-plaintext">
+                                {!! $creditNote->approval_status_badge !!}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if($creditNote->approval_status !== 'pending')
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approved_by" class="form-label">{{ ucfirst($creditNote->approval_status) }} By</label>
+                            <input type="text" class="form-control" readonly value="{{ $creditNote->approvedBy->name ?? 'N/A' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approved_at" class="form-label">{{ ucfirst($creditNote->approval_status) }} At</label>
+                            <input type="text" class="form-control" readonly value="{{ $creditNote->approved_at_formatted ?? 'N/A' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                @if($creditNote->approval_notes)
+                <div class="row">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="mb-3">
+                            <label for="approval_notes" class="form-label">Approval Notes</label>
+                            <textarea class="form-control" readonly rows="3">{{ $creditNote->approval_notes }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                @endif
             </div>
             <div class="card-footer">
-                <a href="{{ route('transaction.credit-notes.index') }}" class="btn btn-secondary">Cancel</a>
+                <a href="{{ route('transaction.credit-notes.index') }}" class="btn btn-secondary">Back to List</a>
+                
+                @if($creditNote->canBeApproved() && auth()->user()->canApproveCreditNotes())
+                    <button type="button" class="btn btn-success" onclick="approveCreditNote('{{ $creditNote->id }}')">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectCreditNote('{{ $creditNote->id }}')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                @elseif($creditNote->canBeApproved() && !auth()->user()->canApproveCreditNotes())
+                    <span class="text-muted"><i class="fas fa-info-circle"></i> Only users with approver role can approve this Credit Note</span>
+                @endif
+                
+                @if($creditNote->canBePrinted())
+                    <button type="button" class="btn btn-primary" onclick="printCreditNote('{{ $creditNote->id }}')">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                @endif
             </div>
         </form>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function approveCreditNote(creditNoteId) {
+    const notes = prompt('Enter approval notes (optional):');
+    
+    if (confirm('Are you sure you want to approve this Credit Note?')) {
+        $.ajax({
+            url: `/api/credit-note/${creditNoteId}/approve`,
+            type: 'POST',
+            data: {
+                notes: notes,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                alert('Credit Note approved successfully!');
+                location.reload();
+            },
+            error: function(xhr) {
+                let message = 'Error: ';
+                if (xhr.status === 403) {
+                    message += 'You are not authorized to perform this action. Only users with approver role can approve Credit Notes.';
+                } else {
+                    message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                }
+                alert(message);
+            }
+        });
+    }
+}
+
+function rejectCreditNote(creditNoteId) {
+    const notes = prompt('Enter rejection reason:');
+    
+    if (notes && confirm('Are you sure you want to reject this Credit Note?')) {
+        $.ajax({
+            url: `/api/credit-note/${creditNoteId}/reject`,
+            type: 'POST',
+            data: {
+                notes: notes,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                alert('Credit Note rejected!');
+                location.reload();
+            },
+            error: function(xhr) {
+                let message = 'Error: ';
+                if (xhr.status === 403) {
+                    message += 'You are not authorized to perform this action. Only users with approver role can reject Credit Notes.';
+                } else {
+                    message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                }
+                alert(message);
+            }
+        });
+    }
+}
+
+function printCreditNote(creditNoteId) {
+    // TODO: Implement actual print functionality
+    alert('Print functionality will be implemented here');
+    // window.open(`/transaction/credit-notes/${creditNoteId}/print`, '_blank');
+}
+</script>
+@endpush

@@ -7,6 +7,15 @@
     <div class="card">
         <div class="card-header">
             Detail Debit Note
+            <div class="float-end">
+                @if($debitNote->canBePrinted())
+                    <button class="btn btn-success btn-sm" onclick="printDebitNote()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                @else
+                    <span class="badge bg-warning">Approval Required</span>
+                @endif
+            </div>
         </div>
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
@@ -25,16 +34,10 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contact" class="form-label">Billing Contact<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly id="contact" value="{{ $debitNote->contract->contact->display_name }}">
+                            <label for="billing_address" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" readonly id="billing_address" value="{{ $debitNote->billingAddress?->address ?? '-' }}">
                         </div>
                     </div>
-                    <!-- <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly id="billing_address_id" value="{{ $debitNote->billingAddress?->name ?? '-' }}">
-                        </div>
-                    </div> -->
                 </div>
 
                 <div class="row">
@@ -90,9 +93,71 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <input type="text" class="form-control" readonly name="status" id="status" value="{{ ucfirst($debitNote->status) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approval_status" class="form-label">Approval Status</label>
+                            <div class="form-control-plaintext">
+                                {!! $debitNote->approval_status_badge !!}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if($debitNote->approval_status !== 'pending')
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approved_by" class="form-label">{{ ucfirst($debitNote->approval_status) }} By</label>
+                            <input type="text" class="form-control" readonly value="{{ $debitNote->approvedBy->name ?? 'N/A' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approved_at" class="form-label">{{ ucfirst($debitNote->approval_status) }} At</label>
+                            <input type="text" class="form-control" readonly value="{{ $debitNote->approved_at_formatted ?? 'N/A' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                @if($debitNote->approval_notes)
+                <div class="row">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="mb-3">
+                            <label for="approval_notes" class="form-label">Approval Notes</label>
+                            <textarea class="form-control" readonly rows="3">{{ $debitNote->approval_notes }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                @endif
             </div>
             <div class="card-footer">
                 <a href="{{ route('transaction.debit-notes.index') }}" class="btn btn-secondary">Back</a>
+                
+                @if($debitNote->canBeApproved() && auth()->user()->canApproveCreditNotes())
+                    <button type="button" class="btn btn-success" onclick="approveDebitNote('{{ $debitNote->id }}')">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectDebitNote('{{ $debitNote->id }}')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                @elseif($debitNote->canBeApproved() && !auth()->user()->canApproveCreditNotes())
+                    <span class="text-muted"><i class="fas fa-info-circle"></i> Only users with approver role can approve this Debit Note</span>
+                @endif
+                
+                @if($debitNote->canBePrinted())
+                    <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                @endif
 
                 @if(!$debitNote->is_posted && $debitNote->status === 'active')
                 {{-- Post button removed - use billing instead --}}
@@ -326,6 +391,68 @@
 
     function printBilling(billingId) {
         window.open(`/transaction/billings/print/${billingId}`, '_blank');
+    }
+
+    function approveDebitNote(debitNoteId) {
+        const notes = prompt('Enter approval notes (optional):');
+        
+        if (confirm('Are you sure you want to approve this Debit Note?')) {
+            $.ajax({
+                url: `/api/debit-note/${debitNoteId}/approve`,
+                type: 'POST',
+                data: {
+                    notes: notes,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    alert('Debit Note approved successfully!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    let message = 'Error: ';
+                    if (xhr.status === 403) {
+                        message += 'You are not authorized to perform this action. Only users with approver role can approve Debit Notes.';
+                    } else {
+                        message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                    }
+                    alert(message);
+                }
+            });
+        }
+    }
+
+    function rejectDebitNote(debitNoteId) {
+        const notes = prompt('Enter rejection reason:');
+        
+        if (notes && confirm('Are you sure you want to reject this Debit Note?')) {
+            $.ajax({
+                url: `/api/debit-note/${debitNoteId}/reject`,
+                type: 'POST',
+                data: {
+                    notes: notes,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    alert('Debit Note rejected!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    let message = 'Error: ';
+                    if (xhr.status === 403) {
+                        message += 'You are not authorized to perform this action. Only users with approver role can reject Debit Notes.';
+                    } else {
+                        message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                    }
+                    alert(message);
+                }
+            });
+        }
+    }
+
+    function printDebitNote(debitNoteId) {
+        // TODO: Implement actual print functionality
+        alert('Print functionality will be implemented here');
+        // window.open(`/transaction/debit-notes/${debitNoteId}/print`, '_blank');
     }
 
 </script>

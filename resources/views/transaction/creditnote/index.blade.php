@@ -22,6 +22,8 @@
                         <th>Currency</th>
                         <th>Amount</th>
                         <th>Status</th>
+                        <th>Approval Status</th>
+                        <th width="200px">Actions</th>
                     </tr>
                 </thead>
             </table>
@@ -64,13 +66,99 @@
                     orderable: false,
                     searchable: false
                 },
-                { 
-                    data: 'status', 
+                {
+                    data: 'status',
                     name: 'status',
+                    render: function(data, type, row) {
+                        let badgeClass = 'bg-secondary';
+                        if (data === 'active') badgeClass = 'bg-success';
+                        else if (data === 'draft') badgeClass = 'bg-warning';
+                        else if (data === 'cancelled') badgeClass = 'bg-danger';
+
+                        return '<span class="badge ' + badgeClass + '">' + data.charAt(0).toUpperCase() + data.slice(1) + '</span>';
+                    }
+                },
+                { 
+                    data: 'approval_status_badge', 
+                    name: 'approval_status',
                     orderable: false,
+                    searchable: false
+                },
+                { 
+                    data: 'actions', 
+                    name: 'actions',
+                    orderable: false,
+                    searchable: false
                 }
             ]
         });
+        
+        // Handle approve button click
+        $(document).on('click', '.approve-btn', function() {
+            const creditNoteId = $(this).data('id');
+            const notes = prompt('Enter approval notes (optional):');
+            
+            if (confirm('Are you sure you want to approve this Credit Note?')) {
+                $.ajax({
+                    url: `/api/credit-note/${creditNoteId}/approve`,
+                    type: 'POST',
+                    data: {
+                        notes: notes,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        alert('Credit Note approved successfully!');
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let message = 'Error: ';
+                        if (xhr.status === 403) {
+                            message += 'You are not authorized to perform this action. Only users with approver role can approve Credit Notes.';
+                        } else {
+                            message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                        }
+                        alert(message);
+                    }
+                });
+            }
+        });
+        
+        // Handle reject button click
+        $(document).on('click', '.reject-btn', function() {
+            const creditNoteId = $(this).data('id');
+            const notes = prompt('Enter rejection reason:');
+            
+            if (notes && confirm('Are you sure you want to reject this Credit Note?')) {
+                $.ajax({
+                    url: `/api/credit-note/${creditNoteId}/reject`,
+                    type: 'POST',
+                    data: {
+                        notes: notes,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        alert('Credit Note rejected!');
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let message = 'Error: ';
+                        if (xhr.status === 403) {
+                            message += 'You are not authorized to perform this action. Only users with approver role can reject Credit Notes.';
+                        } else {
+                            message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                        }
+                        alert(message);
+                    }
+                });
+            }
+        });
+        
+        // Handle print button click
+        // $(document).on('click', '.print-btn', function() {
+        //     const creditNoteId = $(this).data('id');
+        //     alert('Print functionality will be implemented here');
+        //     // TODO: Implement actual print functionality
+        // });
     });
 </script>
 @endpush

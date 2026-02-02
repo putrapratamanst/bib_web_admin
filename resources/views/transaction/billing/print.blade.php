@@ -336,26 +336,26 @@
             @endphp
             
             <div class="desc-row">
-                <div class="desc-label">{{-- Policy No --}}</div>
-                <div class="desc-colon">{{-- : --}}</div>
+                <div class="desc-label">Policy No </div>
+                <div class="desc-colon">:</div>
                 <div class="desc-value">{{ $policyNumber }} (No End. {{ $endorsementNumber }})</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">{{-- Period --}}</div>
-                <div class="desc-colon">{{-- : --}}</div>
+                <div class="desc-label">Periode polis</div>
+                <div class="desc-colon">:</div>
                 <div class="desc-value">{{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">{{-- Sum Insured --}}</div>
-                <div class="desc-colon">{{-- : --}}</div>
+                <div class="desc-label">Total Sum Insured</div>
+                <div class="desc-colon">:</div>
                 <div class="desc-value">{{ $contract?->currency_code ?? 'IDR' }}  {{ number_format($contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
             </div>
             
             <div class="desc-row">
-                <div class="desc-label">{{-- REMARKS --}}</div>
-                <div class="desc-colon">{{-- : --}}</div>
+                <div class="desc-label">Tipe asuransi</div>
+                <div class="desc-colon">:</div>
                 <div class="desc-value">{{ $coverageName }}</div>
             </div>
             
@@ -417,33 +417,33 @@
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">{{-- Gross Premium --}}</div>
+                <div class="premium-label">Gross Premium</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($gross, 2, ',', '.') }}</div>
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">{{-- Policy/Endorsement Cost --}}</div>
+                <div class="premium-label">Policy Cost</div>
                 <div class="premium-currency">{{  $currencyCode  }}</div>
                 <div class="premium-value">{{ $installmentNumber == 1 ? number_format($policyFee, 2, ',', '.') : '0,-' }}</div>
             </div>
             
             <div class="premium-row">
-                <div class="premium-label">{{-- Stamp duty --}}</div>
+                <div class="premium-label">Stamp duty</div>
                 <div class="premium-currency">{{  $currencyCode  }}</div>
                 <div class="premium-value">{{ $installmentNumber == 1 ? number_format($stampDuty, 2, ',', '.') : '0,-' }}</div>
             </div>
             
             @if($discountPercent > 0)
             <div class="premium-row">
-                <div class="premium-label">{{-- Discount {{ number_format($discountPercent, 2, ',', '.') }}% --}}</div>
+                <div class="premium-label">Discount {{ number_format($discountPercent, 2, ',', '.') }}%</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">({{ number_format($discountAmount, 2, ',', '.') }})</div>
             </div>
             @endif
             
             <div class="premium-row total">
-                <div class="premium-label">{{-- Net Premium --}}</div>
+                <div class="premium-label">Nett Premium</div>
                 <div class="premium-currency">{{ $currencyCode }}</div>
                 <div class="premium-value">{{ number_format($net, 2, ',', '.') }}</div>
             </div>

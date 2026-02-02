@@ -75,7 +75,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" readonly style="background-color: #e9ecef;" required />
+                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" style="background-color: #e9ecef;" required />
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -363,6 +363,10 @@
     });
 
     var rowNumber = {{ count($contract->details) }};
+    
+    // Store original values to restore when user reverts to original placing type
+    var originalContractTypeId = "{{ $contract->contract_type_id }}";
+    var originalPlacingNumber = "{{ $contract->number }}";
 
     $(document).ready(function() {
         $('#contact_id').select2({
@@ -761,7 +765,13 @@
 
         // Generate new placing number when placing type changes
         if (selectedVal) {
-            generateContractNumber(selectedVal);
+            // If user returns to original contract type, restore original number
+            if (selectedVal === originalContractTypeId) {
+                $("#number").val(originalPlacingNumber);
+            } else {
+                // Generate new number for different contract type
+                generateContractNumber(selectedVal);
+            }
         }
     });
 

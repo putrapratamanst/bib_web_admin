@@ -12,6 +12,13 @@ class DebitNoteResource extends JsonResource
         return [
             'id' => $this->id,
             'contract' => new ContractResource($this->contract),
+            'billing_address' => $this->whenLoaded('billingAddress', function() {
+                return [
+                    'id' => $this->billingAddress->id,
+                    'address' => $this->billingAddress->address,
+                    'is_primary' => $this->billingAddress->is_primary,
+                ];
+            }),
             'number' => $this->number,
             'date' => $this->date,
             'due_date' => $this->due_date ?? null,
@@ -20,6 +27,14 @@ class DebitNoteResource extends JsonResource
             'exchange_rate' => $this->exchange_rate,
             'amount' => $this->amount,
             'status' => $this->status,
+            'approval_status' => $this->approval_status,
+            'approval_status_badge' => $this->approval_status_badge,
+            'approved_by' => $this->approvedBy ? $this->approvedBy->name : null,
+            'approved_at' => $this->approved_at,
+            'approved_at_formatted' => $this->approved_at_formatted,
+            'approval_notes' => $this->approval_notes,
+            'can_be_approved' => $this->canBeApproved(),
+            'can_be_printed' => $this->canBePrinted(),
             'created_by' => $this->createdBy ? $this->createdBy->name : null,
             'updated_by' => $this->updatedBy ? $this->updatedBy->name : null,
         ];

@@ -100,7 +100,7 @@ class ContractController extends Controller
     public function show($id)
     {
         $contract = Contract::with([
-            'contact', 
+            'contact.billingAddresses', 
             'contractType', 
             'details.insurance', 
             'endorsements.contractReference:id,number,contact_id', 

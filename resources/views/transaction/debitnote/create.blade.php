@@ -60,11 +60,11 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="contact_id" class="form-label">Billing Contact<sup class="text-danger">*</sup></label>
-                            <select class="form-select select2 @error('contact_id') is-invalid @enderror" name="contact_id" id="contact_id" required>
-                                <option value="">Select Billing Contact</option>
+                            <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
+                            <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
+                                <option value="">Select Billing Address</option>
                             </select>
-                            @error('contact_id')
+                            @error('billing_address_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -236,33 +236,6 @@ $(document).ready(function() {
         }
     });
 
-    // Initialize Select2 for contact selection
-    $('#contact_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Select Billing Contact',
-        allowClear: true,
-        ajax: {
-            url: '{{ route("api.contacts.select2") }}',
-            dataType: 'json',
-            delay: 250,
-            data: function (params) {
-                return {
-                    search: params.term,
-                    page: params.page || 1
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: data.data,
-                    pagination: {
-                        more: data.pagination && data.pagination.more
-                    }
-                };
-            },
-            cache: true
-        }
-    });
-
     // Initialize Select2 for billing address selection
     $('#billing_address_id').select2({
         theme: 'bootstrap-5',
@@ -273,7 +246,6 @@ $(document).ready(function() {
         },
         templateResult: function(data) {
             if (!data.id) return data.text;
-            
             if (data.is_primary) {
                 return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
             }
@@ -281,7 +253,6 @@ $(document).ready(function() {
         },
         templateSelection: function(data) {
             if (!data.id) return data.text;
-            
             if (data.is_primary) {
                 return data.text + ' ★';
             }
@@ -292,11 +263,11 @@ $(document).ready(function() {
             dataType: 'json',
             delay: 250,
             data: function (params) {
-                const contactId = $('#contact_id').val();
+                const contractId = $('#contract_id').val();
                 return {
                     search: params.term,
                     page: params.page || 1,
-                    contact_id: contactId
+                    contract_id: contractId
                 };
             },
             processResults: function (data) {
@@ -316,15 +287,12 @@ $(document).ready(function() {
         const contractId = e.params.data.id;
         const contractText = e.params.data.text;
         console.log('Contract selected:', contractId, contractText);
-        
         // Enable billing address dropdown when contract is selected
         $('#billing_address_id').prop('disabled', false).val(null).trigger('change');
-        
         if (contractId) {
             // Get contract details - use the correct API endpoint
             const apiUrl = `/api/contract/${contractId}`;
             console.log('Making API call to:', apiUrl);
-            
             $.get(apiUrl)
                 .done(function(response) {
                     console.log('API Response:', response);
@@ -332,27 +300,28 @@ $(document).ready(function() {
                         const contract = response.data;
                         console.log('Contract data:', contract);
                         
-                        // Auto-select contact if available
-                        if (contract.contact && contract.contact.id) {
-                            // Clear existing options and add the selected contact
-                            $('#contact_id').empty().append(
-                                new Option(contract.contact.display_name || contract.contact.name, contract.contact.id, true, true)
-                            ).trigger('change.select2');
-                            console.log('Contact selected:', contract.contact.display_name || contract.contact.name);
+                        // Auto-select billing address from contact if available
+                        if (contract.contact && contract.contact.billing_addresses) {
+                            // Find primary billing address or use first one
+                            let primaryAddress = contract.contact.billing_addresses.find(addr => addr.is_primary);
+                            let addressToUse = primaryAddress || contract.contact.billing_addresses[0];
+                            
+                            if (addressToUse) {
+                                $('#billing_address_id').empty().append(
+                                    new Option(addressToUse.address, addressToUse.id, true, true)
+                                ).trigger('change.select2');
+                                console.log('Billing address auto-selected:', addressToUse.address);
+                            }
                         }
-                        
                         // Update currency if available
                         if (contract.currency_code) {
                             $('#currency').val(contract.currency_code).trigger('change');
                             console.log('Currency set to:', contract.currency_code);
                         }
-                        
                         // Update installment count if available (use installment_count from API)
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
                             $('#installment').val(contract.installment_count);
                             console.log('Installment set to:', contract.installment_count);
-                            
-                            // Hide installment field if installment is 0 or 1
                             if (contract.installment_count === 0 || contract.installment_count === 1) {
                                 $('#installment-field').hide();
                                 $('#installment').prop('required', false);
@@ -365,10 +334,7 @@ $(document).ready(function() {
                             $('#installment-field').hide();
                             $('#installment').prop('required', false);
                         }
-                        
-                        // Wait a bit for AutoNumeric to be ready, then update values
                         setTimeout(function() {
-                            // Update exchange rate if available (convert string to number)
                             if (contract.exchange_rate) {
                                 const exchangeRateValue = parseFloat(contract.exchange_rate);
                                 console.log('Trying to set exchange rate:', exchangeRateValue, 'from', contract.exchange_rate);
@@ -388,8 +354,6 @@ $(document).ready(function() {
                             } else {
                                 console.log('Exchange rate not found in contract data');
                             }
-                            
-                            // Update amount from contract total premium (convert string to number)
                             if (contract.amount) {
                                 const amountValue = parseFloat(contract.amount);
                                 console.log('Trying to set amount:', amountValue, 'from', contract.amount);
@@ -409,7 +373,7 @@ $(document).ready(function() {
                             } else {
                                 console.log('Amount not found in contract data');
                             }
-                        }, 200); // Increased timeout to ensure AutoNumeric is ready
+                        }, 200);
                     }
                 })
                 .fail(function(xhr) {
@@ -448,14 +412,7 @@ $(document).ready(function() {
     });
 
     // Handle contact selection change
-    $('#contact_id').on('change', function() {
-        const contactId = $(this).val();
-        if (contactId) {
-            // Filter contracts by selected contact
-            $('#contract_id').val(null).trigger('change');
-            // You can add logic here to filter contract dropdown based on contact
-        }
-    });
+    // Remove contact_id change handler since we no longer use contact_id
 
     // Handle currency change
     $('#currency').on('change', function() {
@@ -544,6 +501,7 @@ $(document).ready(function() {
         }
         
         console.log('Form submit - Exchange rate:', exchangeRate, 'Amount:', amount);
+        console.log('Billing Address ID:', $('#billing_address_id').val());
         
         // Convert date format from d-m-Y to Y-m-d for API
         function convertDateFormat(dateStr) {
@@ -562,6 +520,7 @@ $(document).ready(function() {
         formData.set('date', convertDateFormat($('#date').val()));
         formData.set('due_date', convertDateFormat($('#due_date').val()));
         formData.set('created_at', convertDateFormat($('#created_at').val()));
+        formData.set('billing_address_id', $('#billing_address_id').val());
         $.ajax({
             url: '{{ route("api.debit-notes.store") }}',
             method: 'POST',
