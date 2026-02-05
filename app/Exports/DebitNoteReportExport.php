@@ -19,15 +19,19 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
     protected $dateTo;
     protected $contactId;
     protected $status;
+    protected $approvalStatus;
+    protected $contractTypeId;
     protected $currencyCode;
     protected $isPosted;
 
-    public function __construct($dateFrom = null, $dateTo = null, $contactId = null, $status = null, $currencyCode = null, $isPosted = null)
+    public function __construct($dateFrom = null, $dateTo = null, $contactId = null, $status = null, $approvalStatus = null, $contractTypeId = null, $currencyCode = null, $isPosted = null)
     {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
         $this->contactId = $contactId;
         $this->status = $status;
+        $this->approvalStatus = $approvalStatus;
+        $this->contractTypeId = $contractTypeId;
         $this->currencyCode = $currencyCode;
         $this->isPosted = $isPosted;
     }
@@ -47,6 +51,14 @@ class DebitNoteReportExport implements FromCollection, WithHeadings, WithMapping
             })
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
+            })
+            ->when($this->approvalStatus, function ($q) {
+                $q->where('approval_status', $this->approvalStatus);
+            })
+            ->when($this->contractTypeId, function ($q) {
+                $q->whereHas('contract', function ($q) {
+                    $q->where('contract_type_id', $this->contractTypeId);
+                });
             })
             ->when($this->currencyCode, function ($q) {
                 $q->where('currency_code', $this->currencyCode);

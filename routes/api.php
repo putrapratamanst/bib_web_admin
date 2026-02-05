@@ -18,6 +18,8 @@ Route::get('/chart-of-account', [\App\Http\Controllers\Api\ChartOfAccountControl
 Route::get('/chart-of-account/datatables', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'datatables'])->name('api.chart-of-accounts.datatables');
 Route::get('/chart-of-account/select2', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'select2'])->name('api.chart-of-accounts.select2');
 Route::post('/chart-of-account', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'store'])->name('api.chart-of-accounts.store');
+Route::get('/chart-of-account/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'show'])->name('api.chart-of-accounts.show');
+Route::put('/chart-of-account/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'update'])->name('api.chart-of-accounts.update');
 
 // Contact Group
 Route::get('/contact-group', [\App\Http\Controllers\Api\ContactGroupController::class, 'index'])->name('api.contact-groups.index');
@@ -40,6 +42,10 @@ Route::post('/currency', [\App\Http\Controllers\Api\CurrencyController::class, '
 Route::put('/currency/{currency}', [\App\Http\Controllers\Api\CurrencyController::class, 'update'])->name('api.currencies.update');
 Route::delete('/currency/{currency}', [\App\Http\Controllers\Api\CurrencyController::class, 'destroy'])->name('api.currencies.destroy');
 
+// Contract Type
+Route::get('/contract-types', [\App\Http\Controllers\Api\ContractTypeController::class, 'index'])->name('api.contract-types.index');
+Route::get('/contract-types/select2', [\App\Http\Controllers\Api\ContractTypeController::class, 'select2'])->name('api.contract-types.select2');
+
 // Billing Address
 Route::get('/contact/{contactId}/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.index');
 Route::get('/billing-address/select2', [\App\Http\Controllers\Api\BillingAddressController::class, 'select2'])->name('api.billing-addresses.select2');
@@ -53,6 +59,7 @@ Route::get('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, '
 Route::get('/cash-bank/datatables', [\App\Http\Controllers\Api\CashBankController::class, 'datatables'])->name('api.cash-banks.datatables');
 Route::get('/cash-bank/{id}', [\App\Http\Controllers\Api\CashBankController::class, 'show'])->name('api.cash-banks.show');
 Route::post('/cash-bank', [\App\Http\Controllers\Api\CashBankController::class, 'store'])->name('api.cash-banks.store');
+Route::put('/cash-bank/{id}', [\App\Http\Controllers\Api\CashBankController::class, 'update'])->name('api.cash-banks.update');
 
 
 // Payment Allocation

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CashBankStoreRequest;
+use App\Http\Requests\CashBankUpdateRequest;
 use App\Http\Resources\CashBankResource;
 use App\Models\CashBank;
 use App\Models\CashBankDetail;
@@ -83,6 +84,45 @@ class CashBankController extends Controller
                 'message' => 'Data has been created',
                 'data' => new CashBankResource($cashBank->load('cashBankDetails.debitNote'))
             ], 201);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'errors' => [
+                    'message' => [
+                        'Something went wrong: ' . $e->getMessage()
+                    ]
+                ]
+            ], 500);
+        }
+    }
+
+    public function update(CashBankUpdateRequest $request, $id)
+    {
+        try {
+            $cashBank = CashBank::findOrFail($id);
+            $data = $request->validated();
+
+            $data['date'] = date('Y-m-d', strtotime($data['date']));
+
+            // Update CashBank
+            $cashBank->update([
+                'type' => $data['type'],
+                'transaction_type' => $data['transaction_type'],
+                'number' => $data['number'],
+                'contact_id' => $data['contact_id'],
+                'date' => $data['date'],
+                'chart_of_account_id' => $data['chart_of_account_id'],
+                'contra_account_id' => $data['transaction_type'] === 'bank_to_account' ? $data['contra_account_id'] : null,
+                'amount' => $data['amount'],
+                'description' => $data['description'],
+                'status' => $data['status'],
+                // 'updated_by' => auth()->id()
+            ]);
+
+            return response()->json([
+                'message' => 'Data has been updated',
+                'data' => new CashBankResource($cashBank->fresh()->load('cashBankDetails.debitNote'))
+            ]);
         }
         catch (\Exception $e) {
             return response()->json([

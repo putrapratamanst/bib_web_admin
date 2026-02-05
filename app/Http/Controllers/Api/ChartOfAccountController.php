@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CoaStoreRequest;
+use App\Http\Requests\CoaUpdateRequest;
 use App\Http\Resources\ChartOfAccountResource;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
@@ -67,6 +68,42 @@ class ChartOfAccountController extends Controller
                 'message' => 'Data has been created',
                 'data' => new ChartOfAccountResource($chartOfAccount)
             ], 201);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $chartOfAccount = ChartOfAccount::with('accountCategory')->findOrFail($id);
+            
+            return response()->json([
+                'data' => new ChartOfAccountResource($chartOfAccount)
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Data not found'
+            ], 404);
+        }
+    }
+
+    public function update(CoaUpdateRequest $request, $id)
+    {
+        try {
+            $chartOfAccount = ChartOfAccount::findOrFail($id);
+            $data = $request->validated();
+
+            $chartOfAccount->update($data);
+
+            return response()->json([
+                'message' => 'Data has been updated',
+                'data' => new ChartOfAccountResource($chartOfAccount->fresh())
+            ]);
         }
         catch (\Exception $e) {
             return response()->json([

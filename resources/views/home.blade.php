@@ -67,6 +67,22 @@
             </div>
         </div> -->
         <div class="col-md-4">
+            <div class="card border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Pending Approvals</h6>
+                            <h3 class="mb-0" id="pendingApprovals">-</h3>
+                            <small class="text-muted">Debit Notes awaiting approval</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-file-invoice-dollar fa-3x text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
             <div class="card border-start border-info border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -292,6 +308,16 @@ function loadDashboardStats() {
         data: { length: 1 },
         success: function(response) {
             $('#totalClients').text(response.recordsTotal || 0);
+        }
+    });
+
+    // Load Pending Approvals (Debit Notes)
+    $.ajax({
+        url: "{{ route('api.debit-notes.datatables') }}",
+        method: "GET",
+        data: { approval_status: 'pending', length: 1 },
+        success: function(response) {
+            $('#pendingApprovals').text(response.recordsTotal || 0);
         }
     });
 

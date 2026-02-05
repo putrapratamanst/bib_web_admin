@@ -12,6 +12,44 @@
             </div>
         </div>
         <div class="card-body">
+            <!-- Filter Section -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="status-filter" class="form-label">Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="draft">Draft</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="approval-status-filter" class="form-label">Approval Status</label>
+                    <select class="form-select" id="approval-status-filter">
+                        <option value="">All Approval Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="insurance-type-filter" class="form-label">Insurance Type</label>
+                    <select class="form-select" id="insurance-type-filter">
+                        <option value="">All Types</option>
+                        <!-- Options will be loaded via AJAX -->
+                    </select>
+                </div>
+                <!-- <div class="col-md-3">
+                    <label for="posted-filter" class="form-label">Posted Status</label>
+                    <select class="form-select" id="posted-filter">
+                        <option value="">All</option>
+                        <option value="1">Posted</option>
+                        <option value="0">Not Posted</option>
+                    </select>
+                </div> -->
+            </div>
+            
             <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
                 <thead class="table-header">
                     <tr>
@@ -19,7 +57,7 @@
                         <th>Date</th>
                         <th>Due Date</th>
                         <th>Placing</th>
-                        <th>Installment</th>
+                        <th>Insurance Type</th>
                         <th>Amount</th>
                         <th>Status</th>
                         <th>Approval Status</th>
@@ -35,11 +73,20 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Load insurance types for filter
+        loadInsuranceTypes();
+        
         var table = $('#dn-table').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
                 url: "{{ route('api.debit-notes.datatables') }}",
+                data: function(d) {
+                    d.status = $('#status-filter').val();
+                    d.approval_status = $('#approval-status-filter').val();
+                    d.insurance_type = $('#insurance-type-filter').val();
+                    d.is_posted = $('#posted-filter').val();
+                }
             },
             columns: [{
                     data: 'number',
@@ -77,8 +124,11 @@
                     name: 'contract'
                 },
                 {
-                    data: 'installment',
-                    name: 'installment'
+                    data: 'insurance_type',
+                    name: 'insurance_type',
+                    render: function(data, type, row) {
+                        return data ? '<span class="badge bg-info">' + data + '</span>' : '-';
+                    }
                 },
                 {
                     data: 'amount',
@@ -116,6 +166,11 @@
                     searchable: false
                 }
             ]
+        });
+
+        // Handle filter changes
+        $('#status-filter, #approval-status-filter, #insurance-type-filter, #posted-filter').on('change', function() {
+            table.ajax.reload();
         });
 
         // Handle approve button click
@@ -249,6 +304,22 @@
                         Swal.fire('Error!', errorMessage, 'error');
                     }
                 });
+            }
+        });
+    }
+
+    function loadInsuranceTypes() {
+        $.ajax({
+            url: "{{ route('api.contract-types.index') }}",
+            method: "GET",
+            success: function(contractTypes) {
+                const select = $('#insurance-type-filter');
+                contractTypes.forEach(function(type) {
+                    select.append(`<option value="${type.id}">${type.name}</option>`);
+                });
+            },
+            error: function() {
+                console.log('Failed to load contract types');
             }
         });
     }

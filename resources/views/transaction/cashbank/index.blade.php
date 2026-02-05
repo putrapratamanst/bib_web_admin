@@ -21,7 +21,6 @@
                         <th>Date</th>
                         <th>Currency</th>
                         <th>Amount</th>
-                        <th width="100">Action</th>
                     </tr>
                 </thead>
             </table>
@@ -40,7 +39,8 @@
             columns: [
                 { data: 'number', name: 'number', 
                     render: function(data, type, row) {
-                        return '<a href="{{ route('transaction.cash-banks.index') }}/' + row.id + '">' + data + '</a>';
+                        var url = "{{ url('transaction/cash-banks') }}/" + row.id + "/edit";
+                        return '<a href="' + url + '" class="text-primary fw-bold">' + data + '</a>';
                  },
                 },
                 { 
@@ -56,21 +56,7 @@
                 { data: 'contact_name', name: 'contact_name' },
                 { data: 'display_date', name: 'date', className: 'text-start' },
                 { data: 'currency_code', name: 'currency_code', className: 'text-start' },
-                { data: 'display_amount', name: 'amount', className: 'text-end' },
-                { 
-                    data: 'id', 
-                    name: 'action',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        let actions = '<div class="btn-group btn-group-sm" role="group">';
-                        actions += '<a href="{{ route('transaction.cash-banks.index') }}/' + data + '" class="btn btn-info btn-sm me-1" title="View"><i class="bi bi-eye"></i></a>';
-                        // Print button moved to payment allocation
-                        // actions += '<a href="{{ route('transaction.cash-banks.index') }}/' + data + '/print" class="btn btn-primary btn-sm" title="Print" target="_blank"><i class="bi bi-printer"></i></a>';
-                        actions += '</div>';
-                        return actions;
-                    }
-                }
+                { data: 'display_amount', name: 'amount', className: 'text-end' }
             ]
         });
     });

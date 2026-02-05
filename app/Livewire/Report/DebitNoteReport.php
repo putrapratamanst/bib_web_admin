@@ -19,6 +19,7 @@ class DebitNoteReport extends Component
     public $as_of_date;
     public $contact_id = '';
     public $status = '';
+    public $approval_status = '';
     public $contract_type_id = '';
     public $is_posted = '';
     public $page = 1;
@@ -58,6 +59,11 @@ class DebitNoteReport extends Component
         $this->resetPage();
     }
 
+    public function updatingApprovalStatus()
+    {
+        $this->resetPage();
+    }
+
     public function updatingContractTypeId()
     {
         $this->resetPage();
@@ -82,6 +88,9 @@ class DebitNoteReport extends Component
             })
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
+            })
+            ->when($this->approval_status, function ($q) {
+                $q->where('approval_status', $this->approval_status);
             })
             ->when($this->contract_type_id, function ($q) {
                 $q->whereHas('contract', function ($q) {
@@ -181,6 +190,9 @@ class DebitNoteReport extends Component
                 ->when($this->status, function ($q) {
                     $q->where('status', $this->status);
                 })
+                ->when($this->approval_status, function ($q) {
+                    $q->where('approval_status', $this->approval_status);
+                })
                 ->when($this->contract_type_id, function ($q) {
                     $q->whereHas('contract', function ($q) {
                         $q->where('contract_type_id', $this->contract_type_id);
@@ -267,6 +279,9 @@ class DebitNoteReport extends Component
             ->when($this->status, function ($q) {
                 $q->where('status', $this->status);
             })
+            ->when($this->approval_status, function ($q) {
+                $q->where('approval_status', $this->approval_status);
+            })
             ->when($this->contract_type_id, function ($q) {
                 $q->whereHas('contract', function ($q) {
                     $q->where('contract_type_id', $this->contract_type_id);
@@ -351,6 +366,7 @@ class DebitNoteReport extends Component
             'as_of_date' => $this->as_of_date,
             'contact_id' => $this->contact_id,
             'status' => $this->status,
+            'approval_status' => $this->approval_status,
             'contract_type_id' => $this->contract_type_id,
             'is_posted' => $this->is_posted,
             'format' => 'excel'

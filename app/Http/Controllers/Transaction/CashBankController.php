@@ -35,6 +35,15 @@ class CashBankController extends Controller
         ]);
     }
 
+    public function edit($id)
+    {
+        $cashBank = CashBank::with(['contact', 'chartOfAccount', 'contraAccount'])->findOrFail($id);
+        
+        return view('transaction.cashbank.edit', [
+            'cashBank' => $cashBank,
+        ]);
+    }
+
     public function print($id)
     {
         $cashBank = CashBank::with([

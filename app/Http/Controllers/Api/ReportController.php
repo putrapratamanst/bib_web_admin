@@ -21,6 +21,8 @@ class ReportController extends Controller
         $dateTo = $request->get('date_to');
         $contactId = $request->get('contact_id');
         $status = $request->get('status');
+        $approvalStatus = $request->get('approval_status');
+        $contractTypeId = $request->get('contract_type_id');
         $currencyCode = $request->get('currency_code');
         $isPosted = $request->get('is_posted');
         $format = $request->get('format', 'json');
@@ -39,6 +41,14 @@ class ReportController extends Controller
             ->when($status, function ($q) use ($status) {
                 $q->where('status', $status);
             })
+            ->when($approvalStatus, function ($q) use ($approvalStatus) {
+                $q->where('approval_status', $approvalStatus);
+            })
+            ->when($contractTypeId, function ($q) use ($contractTypeId) {
+                $q->whereHas('contract', function ($q) use ($contractTypeId) {
+                    $q->where('contract_type_id', $contractTypeId);
+                });
+            })
             ->when($currencyCode, function ($q) use ($currencyCode) {
                 $q->where('currency_code', $currencyCode);
             })
@@ -55,7 +65,7 @@ class ReportController extends Controller
 
             // Export to Excel
             return Excel::download(
-                new DebitNoteReportExport($dateFrom, $dateTo, $contactId, $status, $currencyCode, $isPosted),
+                new DebitNoteReportExport($dateFrom, $dateTo, $contactId, $status, $approvalStatus, $contractTypeId, $currencyCode, $isPosted),
                 $filename
             );
         }
@@ -76,6 +86,14 @@ class ReportController extends Controller
             })
             ->when($status, function ($q) use ($status) {
                 $q->where('status', $status);
+            })
+            ->when($approvalStatus, function ($q) use ($approvalStatus) {
+                $q->where('approval_status', $approvalStatus);
+            })
+            ->when($contractTypeId, function ($q) use ($contractTypeId) {
+                $q->whereHas('contract', function ($q) use ($contractTypeId) {
+                    $q->where('contract_type_id', $contractTypeId);
+                });
             })
             ->when($currencyCode, function ($q) use ($currencyCode) {
                 $q->where('currency_code', $currencyCode);

@@ -42,6 +42,17 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="approval_status" class="form-label">Approval Status</label>
+                                <select wire:model.live="approval_status" class="form-select" id="approval_status">
+                                    <option value="">All Approval Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-3">

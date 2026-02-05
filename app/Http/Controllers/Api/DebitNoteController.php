@@ -23,11 +23,33 @@ class DebitNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = DebitNote::query()->orderBy('created_at', 'desc');
+        $query = DebitNote::with(['contract.contractType'])->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
+        if ($request->filled('insurance_type')) {
+            $query->whereHas('contract', function($q) use ($request) {
+                $q->where('contract_type_id', $request->insurance_type);
+            });
+        }
+
+        if ($request->filled('is_posted')) {
+            $query->where('is_posted', $request->is_posted == '1');
+        }
 
         return DataTables::of($query)
             ->addColumn('contract', function(DebitNote $b) {
                 return $b->contract->number;
+            })
+            ->addColumn('insurance_type', function(DebitNote $b) {
+                return $b->contract->contractType ? $b->contract->contractType->name : '-';
             })
             ->addColumn('is_posted', function(DebitNote $b) {
                 return $b->is_posted ? 'Yes' : 'No';

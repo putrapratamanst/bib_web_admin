@@ -15,9 +15,9 @@
             <table class="table table-new table-hover table-striped table-bordered" id="coa-table">
                 <thead class="table-header">
                     <tr>
+                        <th>Account Name</th>
                         <th>Prefix</th>
                         <th>Account Code</th>
-                        <th>Account Name</th>
                         <th>Category</th>
                     </tr>
                 </thead>
@@ -36,6 +36,14 @@
             ajax: "{{ route('api.chart-of-accounts.datatables') }}",
             columns: [
                 { 
+                    data: 'name', 
+                    name: 'name',
+                    render: function(data, type, row) {
+                        var url = "{{ url('master/chart-of-accounts') }}/" + row.id + "/edit";
+                        return '<a href="' + url + '" class="text-primary fw-bold">' + data + '</a>';
+                    }
+                },
+                { 
                     data: 'prefix', 
                     name: 'prefix',
                 },
@@ -43,10 +51,6 @@
                     data: 'code', 
                     name: 'code',
                     className: 'text-start',
-                },
-                { 
-                    data: 'name', 
-                    name: 'name',
                 },
                 {
                     data: 'account_category.name',

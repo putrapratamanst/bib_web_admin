@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     // Chart of Account
     Route::get('/chart-of-accounts', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'index'])->name('master.chart-of-accounts.index');
     Route::get('/chart-of-accounts/create', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'create'])->name('master.chart-of-accounts.create');
+    Route::get('/chart-of-accounts/{id}/edit', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'edit'])->name('master.chart-of-accounts.edit');
 
     // Contact Group
     Route::get('/contact-groups', [\App\Http\Controllers\Master\ContactGroupController::class, 'index'])->name('master.contact-groups.index');
@@ -40,6 +41,7 @@ Route::prefix('transaction')->group(function () {
     Route::get('/cash-banks', [\App\Http\Controllers\Transaction\CashBankController::class, 'index'])->name('transaction.cash-banks.index');
     Route::get('/cash-banks/create', [\App\Http\Controllers\Transaction\CashBankController::class, 'create'])->name('transaction.cash-banks.create');
     Route::get('/cash-banks/{id}', [\App\Http\Controllers\Transaction\CashBankController::class, 'show'])->name('transaction.cash-banks.show');
+    Route::get('/cash-banks/{id}/edit', [\App\Http\Controllers\Transaction\CashBankController::class, 'edit'])->name('transaction.cash-banks.edit');
     Route::get('/cash-banks/{id}/print', [\App\Http\Controllers\Transaction\CashBankController::class, 'print'])->name('transaction.cash-banks.print');
 
     // Contract
