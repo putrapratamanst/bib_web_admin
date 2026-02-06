@@ -73,7 +73,7 @@
                         <div>
                             <h6 class="text-muted mb-1">Pending Approvals</h6>
                             <h3 class="mb-0" id="pendingApprovals">-</h3>
-                            <small class="text-muted">Debit Notes awaiting approval</small>
+                            <small class="text-muted">Debit & Credit Notes awaiting approval</small>
                         </div>
                         <div>
                             <i class="fas fa-file-invoice-dollar fa-3x text-success opacity-50"></i>
@@ -311,13 +311,28 @@ function loadDashboardStats() {
         }
     });
 
-    // Load Pending Approvals (Debit Notes)
+    // Load Pending Approvals (Debit Notes and Credit Notes)
     $.ajax({
         url: "{{ route('api.debit-notes.datatables') }}",
         method: "GET",
         data: { approval_status: 'pending', length: 1 },
         success: function(response) {
-            $('#pendingApprovals').text(response.recordsTotal || 0);
+            const pendingDebitNotes = response.recordsTotal || 0;
+            
+            // Get pending credit notes
+            $.ajax({
+                url: "{{ route('api.credit-notes.datatables') }}",
+                method: "GET",
+                data: { approval_status: 'pending', length: 1 },
+                success: function(response) {
+                    const pendingCreditNotes = response.recordsTotal || 0;
+                    const totalPending = pendingDebitNotes + pendingCreditNotes;
+                    $('#pendingApprovals').text(totalPending);
+                },
+                error: function() {
+                    $('#pendingApprovals').text(pendingDebitNotes);
+                }
+            });
         }
     });
 

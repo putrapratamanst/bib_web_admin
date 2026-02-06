@@ -22,7 +22,26 @@ class CreditNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = CreditNote::query()->orderBy('created_at', 'desc');
+        $query = CreditNote::with(['contract.contractType'])->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
+        if ($request->filled('insurance_type')) {
+            $query->whereHas('contract', function($q) use ($request) {
+                $q->where('contract_type_id', $request->insurance_type);
+            });
+        }
+
+        if ($request->filled('currency_code')) {
+            $query->where('currency_code', $request->currency_code);
+        }
 
         return DataTables::of($query)
             ->addColumn('contract_number', function (CreditNote $b) {
@@ -33,6 +52,9 @@ class CreditNoteController extends Controller
             })
             ->addColumn('contact', function (CreditNote $b) {
                 return $b->contract->contact->display_name;
+            })
+            ->addColumn('insurance_type', function (CreditNote $b) {
+                return $b->contract->contractType ? $b->contract->contractType->name : '-';
             })
             ->addColumn('approval_status_badge', function (CreditNote $b) {
                 return $b->approval_status_badge;

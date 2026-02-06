@@ -158,6 +158,22 @@ class DebitNoteBillingController extends Controller
             // Update billing status to posted
             $billing->update(['status' => 'posted']);
 
+            // Check if all billings are posted, then update debit note status
+            $debitNote = $billing->debitNote;
+            $allBillings = $debitNote->billings;
+            $allPosted = $allBillings->every(function ($b) {
+                return $b->status === 'posted';
+            });
+
+            if ($allPosted && $debitNote->approval_status === 'pending') {
+                $debitNote->update([
+                    'approval_status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                    'approval_notes' => 'Auto-approved: All billings have been posted',
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Billing berhasil di-posting ke cashout',
                 'success' => true,
