@@ -13,6 +13,7 @@ class ContractResource extends JsonResource
             'id' => $this->id,
             'contract_type' => $this->contractType->name,
             'number' => $this->number,
+            'policy_number' => $this->policy_number,
             'contact' => new ContactResource($this->contact),
             'contact_id' => $this->contact_id,
             'period_start' => $this->period_start,

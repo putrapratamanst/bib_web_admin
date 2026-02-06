@@ -48,6 +48,9 @@ class DebitNoteController extends Controller
             ->addColumn('contract', function(DebitNote $b) {
                 return $b->contract->number;
             })
+            ->addColumn('policy_number', function(DebitNote $b) {
+                return $b->contract->policy_number ?? '-';
+            })
             ->addColumn('insurance_type', function(DebitNote $b) {
                 return $b->contract->contractType ? $b->contract->contractType->name : '-';
             })

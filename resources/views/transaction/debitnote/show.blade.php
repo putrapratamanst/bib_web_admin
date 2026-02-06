@@ -34,6 +34,12 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="policy_number" class="form-label">Policy Number</label>
+                            <input type="text" class="form-control" readonly name="policy_number" id="policy_number" value="{{ $debitNote->contract->policy_number ?? '-' }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="billing_address" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <input type="text" class="form-control" readonly id="billing_address" value="{{ $debitNote->billingAddress?->address ?? '-' }}">
                         </div>

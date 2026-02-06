@@ -60,6 +60,12 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="policy_number" class="form-label">Policy Number</label>
+                            <input type="text" class="form-control" name="policy_number_display" id="policy_number_display" readonly placeholder="-" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
                                 <option value="">Select Billing Address</option>
@@ -318,6 +324,13 @@ $(document).ready(function() {
                             $('#currency').val(contract.currency_code).trigger('change');
                             console.log('Currency set to:', contract.currency_code);
                         }
+                        // Update policy number if available
+                        if (contract.policy_number) {
+                            $('#policy_number_display').val(contract.policy_number);
+                            console.log('Policy number set to:', contract.policy_number);
+                        } else {
+                            $('#policy_number_display').val('-');
+                        }
                         // Update installment count if available (use installment_count from API)
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
                             $('#installment').val(contract.installment_count);
@@ -396,6 +409,7 @@ $(document).ready(function() {
         $('#contact_id').val(null).trigger('change');
         $('#billing_address_id').val(null).trigger('change').prop('disabled', true);
         $('#currency').val('').trigger('change');
+        $('#policy_number_display').val('-');
         $('#installment').val('0');
         $('#installment-field').hide();
         $('#installment').prop('required', false);
