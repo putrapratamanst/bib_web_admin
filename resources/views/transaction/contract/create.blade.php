@@ -132,7 +132,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
+                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
@@ -163,28 +173,20 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="policy_fee" class="form-label">Policy Fee</label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
                             <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
                                 <input type="text" name="amount" id="amount" class="form-control autonumeric" required readonly />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
+                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" />
                             </div>
                         </div>
                     </div>
