@@ -98,7 +98,7 @@
                         <div class="mb-3">
                             <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->exchange_rate_formatted }}" class="form-control" name="exchange_rate" id="exchange_rate" />
                             </div>
                         </div>
@@ -107,7 +107,7 @@
                         <div class="mb-3">
                             <label for="coverage_amount" class="form-label">Total Sum Insured (TSI)<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->coverage_amount_formatted }}" class="form-control" name="coverage_amount" id="coverage_amount" />
                             </div>
                         </div>
@@ -116,7 +116,7 @@
                         <div class="mb-3">
                             <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->stamp_fee_formatted }}" class="form-control" name="stamp_fee" id="stamp_fee" />
                             </div>
                         </div>
@@ -128,7 +128,7 @@
                         <div class="mb-3">
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->gross_premium_formatted }}" class="form-control" name="gross_premium" id="gross_premium" />
                             </div>
                         </div>
@@ -138,7 +138,7 @@
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->amount_formatted }}" class="form-control" name="amount" id="amount" />
                             </div>
                         </div>
@@ -147,7 +147,7 @@
                         <div class="mb-3">
                             <label for="policy_fee" class="form-label">Policy Fee</label>
                             <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">Rp</span>
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
                                 <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, ',', '.') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
                             </div>
                         </div>
@@ -166,7 +166,7 @@
                     <div class="mb-3">
                         <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
                         <div class="input-group">
-                            <span class="input-group-text curr-code" style="font-size: 14px;">Rp</span>
+                            <span class="input-group-text curr-code" style="font-size: 14px;">{{$contract->currency->code}}</span>
                             <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount_formatted }}" readonly />
                         </div>
                     </div>
