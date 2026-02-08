@@ -48,7 +48,8 @@
                         <th>Type</th>
                         <th>Contact</th>
                         <th>Period</th>
-                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Nett Premium</th>
                         <th>Status</th>
                         <th>Covered Item</th>
                     </tr>
@@ -99,6 +100,11 @@
                 {
                     data: 'period',
                     name: 'period'
+                },
+                {
+                    data: 'currency_code',
+                    name: 'currency_code',
+                    className: 'text-center'
                 },
                 {
                     data: 'amount_formatted',

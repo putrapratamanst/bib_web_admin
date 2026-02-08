@@ -124,6 +124,7 @@ Route::get('/debit-note', [\App\Http\Controllers\Api\DebitNoteController::class,
 Route::get('/debit-note/datatables', [\App\Http\Controllers\Api\DebitNoteController::class, 'datatables'])->name('api.debit-notes.datatables');
 Route::post('/debit-note', [\App\Http\Controllers\Api\DebitNoteController::class, 'store'])->name('api.debit-notes.store');
 Route::get('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::class, 'show'])->name('api.debit-notes.show');
+Route::put('/debit-note/{id}', [\App\Http\Controllers\Api\DebitNoteController::class, 'update'])->name('api.debit-notes.update');
 Route::post('/debit-note/{id}/post', [\App\Http\Controllers\Api\DebitNoteController::class, 'postDebitNote'])->name('api.debit-notes.post');
 Route::post('/debit-note/{id}/approve', [\App\Http\Controllers\Api\DebitNoteController::class, 'approve'])->name('api.debit-notes.approve');
 Route::post('/debit-note/{id}/reject', [\App\Http\Controllers\Api\DebitNoteController::class, 'reject'])->name('api.debit-notes.reject');

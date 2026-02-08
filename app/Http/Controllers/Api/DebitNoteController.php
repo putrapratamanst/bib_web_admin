@@ -64,6 +64,11 @@ class DebitNoteController extends Controller
                 $actions = '<div class="btn-group" role="group">';
                 $actions .= '<a href="' . route('transaction.debit-notes.show', $b->id) . '" class="btn btn-sm btn-outline-primary">View</a>';
                 
+                // Add edit button only if debit note can be edited
+                if ($b->canBeEdited()) {
+                    $actions .= '<a href="' . route('transaction.debit-notes.edit', $b->id) . '" class="btn btn-sm btn-outline-secondary">Edit</a>';
+                }
+                
                 // Only show approve/reject buttons for approvers
                 if ($b->canBeApproved() && auth()->user()->canApproveCreditNotes()) {
                     $actions .= '<button class="btn btn-sm btn-success approve-btn" data-id="' . $b->id . '">Approve</button>';
@@ -141,7 +146,7 @@ class DebitNoteController extends Controller
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'status' => 'active',
-                'approval_status' => 'pending', // Default approval status for new debit notes
+                'approval_status' => 'pending', // Default pending status
                 'installment' => $request->installment,
                 'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
@@ -188,6 +193,108 @@ class DebitNoteController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        try {
+            $debitNote = DebitNote::findOrFail($id);
+            
+            // Check if the debit note can be edited
+            if (!$debitNote->canBeEdited()) {
+                return response()->json([
+                    'message' => 'Debit Note cannot be edited because it has been submitted for approval or is already approved/rejected.',
+                    'success' => false
+                ], 403);
+            }
+
+            // Clean up comma-separated numbers
+            $cleanedData = $request->all();
+            if (isset($cleanedData['exchange_rate'])) {
+                $cleanedData['exchange_rate'] = str_replace(',', '', $cleanedData['exchange_rate']);
+            }
+            if (isset($cleanedData['amount'])) {
+                $cleanedData['amount'] = str_replace(',', '', $cleanedData['amount']);
+            }
+
+            // Replace request data with cleaned data
+            $request->merge($cleanedData);
+
+            // Validation
+            $validator = Validator::make($request->all(), [
+                'number' => 'required|string|max:255|unique:debit_notes,number,' . $id,
+                'contract_id' => 'required|exists:contracts,id',
+                'billing_address_id' => 'required|exists:billing_addresses,id',
+                'date' => 'required|date',
+                'due_date' => 'required|date|after_or_equal:date',
+                'currency' => 'required|string|max:3',
+                'exchange_rate' => 'required|numeric|min:0',
+                'installment' => 'required|integer|max:12',
+                'amount' => 'required|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                    'success' => false
+                ], 422);
+            }
+
+            DB::beginTransaction();
+            
+            // Get contact_id from billing_address
+            $billingAddress = \App\Models\BillingAddress::findOrFail($request->billing_address_id);
+            
+            // Update Debit Note
+            $debitNote->update([
+                'number' => $request->number,
+                'contact_id' => $billingAddress->contact_id,
+                'contract_id' => $request->contract_id,
+                'billing_address_id' => $request->billing_address_id,
+                'date' => $request->date,
+                'due_date' => $request->due_date,
+                'currency_code' => $request->currency,
+                'exchange_rate' => $request->exchange_rate,
+                'amount' => $request->amount,
+                'description' => $request->description,
+                'installment' => $request->installment,
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Update Debit Note Details if provided
+            if (isset($request->details) && is_array($request->details)) {
+                // Delete existing details
+                $debitNote->debitNoteDetails()->delete();
+                
+                // Create new details
+                foreach ($request->details as $detail) {
+                    DebitNoteDetail::create([
+                        'debit_note_id' => $debitNote->id,
+                        'item_description' => $detail['item_description'],
+                        'amount' => $detail['amount'],
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Debit Note updated successfully',
+                'success' => true,
+                'data' => new DebitNoteResource($debitNote->fresh())
+            ], 200);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'message' => 'Failed to update Debit Note: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
+    }
+
     public function postDebitNote($id)
     {
         try {
@@ -231,6 +338,33 @@ class DebitNoteController extends Controller
             return response()->json([
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
                 'success' => false
+            ], 500);
+        }
+    }
+
+    public function submitForApproval($id)
+    {
+        try {
+            $debitNote = DebitNote::findOrFail($id);
+            
+            if (!$debitNote->canBeSubmittedForApproval()) {
+                return response()->json([
+                    'message' => 'Debit Note cannot be submitted for approval in current status.'
+                ], 400);
+            }
+
+            $debitNote->update([
+                'approval_status' => 'pending',
+                'updated_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'message' => 'Debit Note has been submitted for approval successfully.',
+                'data' => new DebitNoteResource($debitNote->fresh())
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
             ], 500);
         }
     }

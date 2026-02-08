@@ -85,6 +85,14 @@ Route::prefix('transaction')->group(function () {
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
     )->name('transaction.debit-notes.show');
+    Route::get(
+        '/debit-notes/{id}/edit',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'edit']
+    )->name('transaction.debit-notes.edit');
+    Route::put(
+        '/debit-notes/{id}',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'update']
+    )->name('transaction.debit-notes.update');
 
     Route::get('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.debit-notes-billing.create');
     Route::post('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debitnotebillings.store');

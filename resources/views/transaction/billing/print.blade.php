@@ -79,6 +79,7 @@
         
         .dn-value {
             flex: 1;
+            white-space: nowrap;
         }
         
         /* Main title */
@@ -313,7 +314,7 @@
             <div class="client-address">{{ $billingAddress?->address ?? ($contact?->address ?? 'N/A') }}</div>
             <div class="dn-info">
                 <div class="dn-label">No :</div>
-                <div class="dn-value">{{ $billing->number ?? $billing->billing_number }}</div>
+                <div class="dn-value">{{ preg_replace('/-INST(\d+)/i', ' (INST $1)', $billing->number ?? $billing->billing_number) }}</div>
                 <div class="dn-label" style="margin-left: 5mm;">Tanggal :</div>
                 <div class="dn-value">{{ $billing->debitNote?->date_formatted ?? \Carbon\Carbon::parse($billing->date)->format('d-m-Y') }}</div>
             </div>
@@ -330,7 +331,7 @@
                 $policyNumber = $contract?->policy_number ?? '-';
                 $endorsementNumber = $contract?->endorsement_number ?? '0';
                 $startDate = $contract?->period_start ?? $billing->debitNote?->date ?? $billing->date;
-                $endDate = $contract?->period_end ?? \Carbon\Carbon::parse($startDate)->addYear()->toDateString();
+                $endDate = $contract?->period_end;
                 $coverageName = $contract?->contractType?->name ?? 'Insurance Coverage';
                 $installmentNum = $billing->debitNote->installment ?? 0;
             @endphp
@@ -344,7 +345,7 @@
             <div class="desc-row">
                 <div class="desc-label">Periode polis</div>
                 <div class="desc-colon">:</div>
-                <div class="desc-value">{{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
+                <div class="desc-value">@if($endDate){{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}@else{{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }}@endif</div>
             </div>
             
             <div class="desc-row">

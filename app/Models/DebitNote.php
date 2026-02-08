@@ -125,10 +125,10 @@ class DebitNote extends Model
     public function getApprovalStatusBadgeAttribute(): string
     {
         return match($this->approval_status) {
-            'pending' => '<span class="badge bg-warning">Pending</span>',
+            'pending' => '<span class="badge bg-warning">Pending Approval</span>',
             'approved' => '<span class="badge bg-success">Approved</span>',
             'rejected' => '<span class="badge bg-danger">Rejected</span>',
-            default => '<span class="badge bg-secondary">Unknown</span>',
+            default => '<span class="badge bg-light text-dark">Unknown</span>',
         };
     }
 
@@ -142,6 +142,23 @@ class DebitNote extends Model
     public function canBeApproved(): bool
     {
         return $this->approval_status === 'pending';
+    }
+
+    // Check if debit note can be edited
+    public function canBeEdited(): bool
+    {
+        // Allow editing only when status is pending AND not yet reviewed by approver
+        // (approved_by and approved_at are null means not yet reviewed)
+        return $this->approval_status === 'pending' && 
+               is_null($this->approved_by) && 
+               is_null($this->approved_at);
+    }
+
+    // Check if debit note can be submitted for approval  
+    public function canBeSubmittedForApproval(): bool
+    {
+        // Always false since default is already pending
+        return false;
     }
 
     public function creditNotes(): HasMany

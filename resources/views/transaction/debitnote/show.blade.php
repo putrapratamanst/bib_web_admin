@@ -148,6 +148,12 @@
             <div class="card-footer">
                 <a href="{{ route('transaction.debit-notes.index') }}" class="btn btn-secondary">Back</a>
                 
+                @if($debitNote->canBeEdited())
+                    <a href="{{ route('transaction.debit-notes.edit', $debitNote->id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                @endif
+                
                 @if($debitNote->canBeApproved() && auth()->user()->canApproveCreditNotes())
                     <button type="button" class="btn btn-success" onclick="approveDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-check"></i> Approve
@@ -397,6 +403,27 @@
 
     function printBilling(billingId) {
         window.open(`/transaction/billings/print/${billingId}`, '_blank');
+    }
+
+    function submitForApproval(debitNoteId) {
+        if (confirm('Are you sure you want to submit this Debit Note for approval? Once submitted, you will not be able to edit it anymore.')) {
+            $.ajax({
+                url: `/api/debit-note/${debitNoteId}/submit-for-approval`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    alert('Debit Note submitted for approval successfully!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    let message = 'Error: ';
+                    message += xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred';
+                    alert(message);
+                }
+            });
+        }
     }
 
     function approveDebitNote(debitNoteId) {

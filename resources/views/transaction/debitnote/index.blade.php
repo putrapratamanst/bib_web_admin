@@ -56,10 +56,9 @@
                         <th>Number</th>
                         <th>Date</th>
                         <th>Due Date</th>
-                        <th>Placing</th>
-                        <th>Policy Number</th>
                         <th>Insurance Type</th>
-                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Nett Premium</th>
                         <th>Status</th>
                         <th>Approval Status</th>
                         <th width="200px">Actions</th>
@@ -120,23 +119,19 @@
                         return day + '-' + month + '-' + year;
                     }
                 },
-                {
-                    data: 'contract',
-                    name: 'contract'
-                },
-                {
-                    data: 'policy_number',
-                    name: 'policy_number',
-                    render: function(data, type, row) {
-                        return data ? data : '-';
-                    }
-                },
+              
+                
                 {
                     data: 'insurance_type',
                     name: 'insurance_type',
                     render: function(data, type, row) {
                         return data ? '<span class="badge bg-info">' + data + '</span>' : '-';
                     }
+                },
+                {
+                    data: 'currency_code',
+                    name: 'currency_code',
+                    className: 'text-center'
                 },
                 {
                     data: 'amount',
