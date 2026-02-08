@@ -112,6 +112,21 @@ class BillingAddressController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $billingAddress = BillingAddress::findOrFail($id);
+
+            return response()->json([
+                'data' => $billingAddress
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [

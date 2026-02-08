@@ -57,13 +57,18 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label class="form-label">Billing Address</label>
-                            <input type="text" id="billing_address_display" class="form-control" value="{{ $contract->billingAddress ? $contract->billingAddress->name . ($contract->billingAddress->address ? ' - ' . $contract->billingAddress->address : '') : '' }}" readonly />
-                            <input type="hidden" name="billing_address_id" id="billing_address_id" value="{{ $contract->billing_address_id }}" />
+                            <label for="billing_address_id" class="form-label">Billing Address</label>
+                            <select name="billing_address_id" id="billing_address_id" class="form-control select2" data-placeholder="-- select billing address --">
+                                @if($contract->billingAddress)
+                                <option value="{{ $contract->billing_address_id }}" selected>{{ $contract->billingAddress->name . ($contract->billingAddress->address ? ' - ' . $contract->billingAddress->address : '') }}</option>
+                                @endif
+                            </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">
+                <div class="row">
+                    <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">>
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
                             <input type="number" name="covered_item" id="covered-item" class="form-control" value="{{ $contract->covered_item }}" />
@@ -82,6 +87,21 @@
                         <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number</label>
                             <input type="text" name="policy_number" id="policy_number" class="form-control" value="{{ $contract->policy_number }}" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label for="insured_name" class="form-label">Insured Name</label>
+                            <input type="text" id="insured_name" class="form-control" value="{{ $contract->billingAddress ? $contract->billingAddress->name : '' }}" readonly style="background-color: #e9ecef !important;">
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label for="correspondence_address" class="form-label">Correspondence Address</label>
+                            <input type="text" id="correspondence_address" class="form-control" value="{{ $contract->billingAddress ? $contract->billingAddress->address : '' }}" readonly style="background-color: #e9ecef !important;">
                         </div>
                     </div>
                 </div>
@@ -396,21 +416,95 @@
         });
 
         // Fetch and display primary billing address when contact changes
+        // Initialize Select2 for billing address
+        $('#billing_address_id').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- select billing address --',
+            allowClear: true,
+            ajax: {
+                url: '{{ route("api.billing-addresses.select2") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    const contactId = $('#contact_id').val();
+                    return {
+                        search: params.term,
+                        page: params.page || 1,
+                        contact_id: contactId
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data,
+                        pagination: {
+                            more: data.pagination && data.pagination.more
+                        }
+                    };
+                },
+                cache: true
+            },
+            templateResult: function(data) {
+                if (!data.id) return data.text;
+                if (data.is_primary) {
+                    return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
+                }
+                return data.text;
+            },
+            templateSelection: function(data) {
+                if (!data.id) return data.text;
+                if (data.is_primary) {
+                    return data.text + ' ★';
+                }
+                return data.text;
+            }
+        });
+
+        // Handle billing address change to populate insured name and correspondence address
+        $('#billing_address_id').on('select2:select', function(e) {
+            var data = e.params.data;
+            if (data && data.id) {
+                // Get billing address details from API
+                $.get('/api/billing-address/' + data.id, function(response) {
+                    if (response.data) {
+                        $('#insured_name').val(response.data.name || '');
+                        $('#correspondence_address').val(response.data.address || '');
+                    }
+                }).fail(function() {
+                    $('#insured_name').val('');
+                    $('#correspondence_address').val('');
+                });
+            }
+        });
+
+        $('#billing_address_id').on('select2:clear select2:unselect', function() {
+            $('#insured_name').val('');
+            $('#correspondence_address').val('');
+        });
+
         function fetchPrimaryBillingAddress(contactId) {
             if (!contactId) {
-                $('#billing_address_display').val('');
-                $('#billing_address_id').val('');
+                $('#billing_address_id').val(null).trigger('change');
+                $('#insured_name').val('');
+                $('#correspondence_address').val('');
                 return;
             }
             $.get(`/api/contact/${contactId}/billing-address`, function(response) {
                 if (response.data && response.data.length > 0) {
                     var primary = response.data.find(function(addr) { return addr.is_primary; });
                     var address = primary || response.data[0];
-                    $('#billing_address_display').val(address.name + (address.address ? ' - ' + address.address : ''));
-                    $('#billing_address_id').val(address.id);
+                    
+                    // Clear existing options and add the new one
+                    $('#billing_address_id').empty();
+                    var option = new Option(address.name + (address.address ? ' - ' + address.address : ''), address.id, true, true);
+                    $('#billing_address_id').append(option).trigger('change');
+                    
+                    $('#insured_name').val(address.name || '');
+                    $('#correspondence_address').val(address.address || '');
                 } else {
-                    $('#billing_address_display').val('');
-                    $('#billing_address_id').val('');
+                    $('#billing_address_id').val(null).trigger('change');
+                    $('#insured_name').val('');
+                    $('#correspondence_address').val('');
                 }
             });
         }
@@ -534,6 +628,7 @@
                 policy_number: $("#policy_number").val(),
                 policy_fee: $("#policy_fee").autoNumeric('get'),
                 contact_id: $("#contact_id").val(),
+                billing_address_id: $("#billing_address_id").val(),
                 endorsements: endorsements,
                 period_start: $("#period_start").val(),
                 period_end: $("#period_end").val(),

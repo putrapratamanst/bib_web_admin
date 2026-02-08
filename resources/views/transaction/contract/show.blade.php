@@ -61,6 +61,21 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label for="insured_name" class="form-label">Insured Name</label>
+                            <input readonly type="text" value="{{ $contract->billingAddress ? $contract->billingAddress->name : '-' }}" class="form-control" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label for="correspondence_address" class="form-label">Correspondence Address</label>
+                            <input readonly type="text" value="{{ $contract->billingAddress ? $contract->billingAddress->address : '-' }}" class="form-control" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_start" class="form-label">Period Start<sup class="text-danger">*</sup></label>

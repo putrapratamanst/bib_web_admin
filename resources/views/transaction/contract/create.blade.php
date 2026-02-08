@@ -49,7 +49,9 @@
                             </select>
                         </div>
                     </div>
+                </div>
 
+                <div class="row">
                     <div class="col-lg-3" style="display: none;" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
@@ -70,6 +72,21 @@
                         <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
                             <input type="text" name="policy_number" id="policy_number" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label for="insured_name" class="form-label">Insured Name</label>
+                            <input type="text" id="insured_name" class="form-control" readonly style="background-color: #e9ecef !important;">
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label for="correspondence_address" class="form-label">Correspondence Address</label>
+                            <input type="text" id="correspondence_address" class="form-control" readonly style="background-color: #e9ecef !important;">
                         </div>
                     </div>
                 </div>
@@ -393,6 +410,30 @@
         // Reset billing address when contact changes
         $('#contact_id').on('change', function() {
             $('#billing_address_id').val(null).trigger('change');
+            $('#insured_name').val('');
+            $('#correspondence_address').val('');
+        });
+
+        // Handle billing address change to populate insured name and correspondence address
+        $('#billing_address_id').on('select2:select', function(e) {
+            var data = e.params.data;
+            if (data && data.id) {
+                // Get billing address details from API
+                $.get('/api/billing-address/' + data.id, function(response) {
+                    if (response.data) {
+                        $('#insured_name').val(response.data.name || '');
+                        $('#correspondence_address').val(response.data.address || '');
+                    }
+                }).fail(function() {
+                    $('#insured_name').val('');
+                    $('#correspondence_address').val('');
+                });
+            }
+        });
+
+        $('#billing_address_id').on('select2:clear select2:unselect', function() {
+            $('#insured_name').val('');
+            $('#correspondence_address').val('');
         });
 
         $("#currency_code").on("change", function() {

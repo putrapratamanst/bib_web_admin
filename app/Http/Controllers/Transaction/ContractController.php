@@ -30,7 +30,7 @@ class ContractController extends Controller
 
     public function show($id)
     {
-        $contract = Contract::with(['endorsements.contractReference.contact'])->findOrFail($id);
+        $contract = Contract::with(['endorsements.contractReference.contact', 'billingAddress'])->findOrFail($id);
         return view('transaction.contract.show', [
             'contract' => $contract,
         ]);
