@@ -104,7 +104,8 @@ class ContractController extends Controller
             'contractType', 
             'details.insurance', 
             'endorsements.contractReference:id,number,contact_id', 
-            'currency'
+            'currency',
+            'billingAddress'
         ])->findOrFail($id);
 
         return response()->json([

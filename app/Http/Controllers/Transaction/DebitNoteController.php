@@ -20,7 +20,7 @@ class DebitNoteController extends Controller
 
     public function show($id)
     {
-        $debitNote = DebitNote::with(['debitNoteDetails', 'debitNoteBillings'])
+        $debitNote = DebitNote::with(['debitNoteDetails', 'debitNoteBillings', 'billingAddress'])
             ->findOrFail($id);
         
         return view('transaction.debitnote.show', [

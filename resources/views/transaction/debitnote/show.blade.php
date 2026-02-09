@@ -47,6 +47,21 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label for="insured_name" class="form-label">Insured Name</label>
+                            <input type="text" class="form-control" readonly id="insured_name" value="{{ $debitNote->billingAddress?->name ?? '-' }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label for="correspondence_address" class="form-label">Correspondence Address</label>
+                            <input type="text" class="form-control" readonly id="correspondence_address" value="{{ $debitNote->billingAddress?->address ?? '-' }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>

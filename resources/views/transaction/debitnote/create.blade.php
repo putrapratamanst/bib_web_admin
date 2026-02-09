@@ -75,17 +75,21 @@
                             @enderror
                         </div>
                     </div>
-                    <!-- <div class="col-md-4 col-lg-3">
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">
                         <div class="mb-3">
-                            <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
-                            <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required disabled>
-                                <option value="">Select Billing Address</option>
-                            </select>
-                            @error('billing_address_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label for="insured_name" class="form-label">Insured Name</label>
+                            <input type="text" id="insured_name" class="form-control" readonly style="background-color: #e9ecef !important;">
                         </div>
-                    </div> -->
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label for="correspondence_address" class="form-label">Correspondence Address</label>
+                            <input type="text" id="correspondence_address" class="form-control" readonly style="background-color: #e9ecef !important;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -306,19 +310,47 @@ $(document).ready(function() {
                         const contract = response.data;
                         console.log('Contract data:', contract);
                         
-                        // Auto-select billing address from contact if available
-                        if (contract.contact && contract.contact.billing_addresses) {
-                            // Find primary billing address or use first one
-                            let primaryAddress = contract.contact.billing_addresses.find(addr => addr.is_primary);
-                            let addressToUse = primaryAddress || contract.contact.billing_addresses[0];
+                        // Auto-select billing address from contract if available
+                        if (contract.billing_address_id && contract.billing_address) {
+                            // Clear and set the billing address from contract
+                            $('#billing_address_id').empty().append(
+                                new Option(
+                                    contract.billing_address.name + (contract.billing_address.address ? ' - ' + contract.billing_address.address : ''),
+                                    contract.billing_address_id,
+                                    true,
+                                    true
+                                )
+                            ).trigger('change.select2');
                             
-                            if (addressToUse) {
-                                $('#billing_address_id').empty().append(
-                                    new Option(addressToUse.address, addressToUse.id, true, true)
-                                ).trigger('change.select2');
-                                console.log('Billing address auto-selected:', addressToUse.address);
+                            // Populate insured name and correspondence address
+                            $('#insured_name').val(contract.billing_address.name || '');
+                            $('#correspondence_address').val(contract.billing_address.address || '');
+                            
+                            console.log('Billing address auto-selected from contract:', contract.billing_address.name);
+                        } else {
+                            // Fallback: try to get from contact billing addresses
+                            if (contract.contact && contract.contact.billing_addresses && contract.contact.billing_addresses.length > 0) {
+                                let primaryAddress = contract.contact.billing_addresses.find(addr => addr.is_primary);
+                                let addressToUse = primaryAddress || contract.contact.billing_addresses[0];
+                                
+                                if (addressToUse) {
+                                    $('#billing_address_id').empty().append(
+                                        new Option(
+                                            addressToUse.name + (addressToUse.address ? ' - ' + addressToUse.address : ''),
+                                            addressToUse.id,
+                                            true,
+                                            true
+                                        )
+                                    ).trigger('change.select2');
+                                    
+                                    $('#insured_name').val(addressToUse.name || '');
+                                    $('#correspondence_address').val(addressToUse.address || '');
+                                    
+                                    console.log('Billing address auto-selected from contact:', addressToUse.name);
+                                }
                             }
                         }
+                        
                         // Update currency if available
                         if (contract.currency_code) {
                             $('#currency').val(contract.currency_code).trigger('change');
