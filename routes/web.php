@@ -71,6 +71,10 @@ Route::prefix('transaction')->group(function () {
         '/credit-notes/{id}',
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'show']
     )->name('transaction.credit-notes.show');
+    Route::get(
+        '/credit-notes/{id}/print',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'print']
+    )->name('transaction.credit-notes.print');
 
     // Debit Note
     Route::get(

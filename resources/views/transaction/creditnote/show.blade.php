@@ -7,7 +7,7 @@
             Credit Note Details
             <div class="float-end">
                 @if($creditNote->canBePrinted())
-                    <button class="btn btn-success btn-sm" onclick="printCreditNote()">
+                    <button class="btn btn-success btn-sm" onclick="printCreditNote('{{ $creditNote->id }}')">
                         <i class="fas fa-print"></i> Print
                     </button>
                 @else
@@ -206,9 +206,7 @@ function rejectCreditNote(creditNoteId) {
 }
 
 function printCreditNote(creditNoteId) {
-    // TODO: Implement actual print functionality
-    alert('Print functionality will be implemented here');
-    // window.open(`/transaction/credit-notes/${creditNoteId}/print`, '_blank');
+    window.location.href = `/transaction/credit-notes/${creditNoteId}/print`;
 }
 </script>
 @endpush

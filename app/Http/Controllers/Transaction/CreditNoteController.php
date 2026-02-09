@@ -31,4 +31,11 @@ class CreditNoteController extends Controller
             'creditNote' => $creditNote
         ]);
     }
+
+    public function print($id)
+    {
+        $creditNote = \App\Models\CreditNote::with(['contract', 'contract.contact', 'currency'])->findOrFail($id);
+
+        return view('transaction.creditnote.print', compact('creditNote'));
+    }
 }
