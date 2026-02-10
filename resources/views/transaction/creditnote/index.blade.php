@@ -56,10 +56,10 @@
                         <th>Number</th>
                         <th>Date</th>
                         <th>Contract Number</th>
-                        <th>Contact</th>
+                        <th>Insured Name</th>
                         <th>Insurance Type</th>
                         <th>Currency</th>
-                        <th>Amount</th>
+                        <th>Nett Premium</th>
                         <th>Status</th>
                         <th>Approval Status</th>
                         <th width="200px">Actions</th>
@@ -111,7 +111,7 @@
                         return '<a href="{{ route('transaction.contracts.index') }}/' + row.contract_id + '">' + data + '</a>';
                     },
                 },
-                { data: 'contact', name: 'contact' },
+                { data: 'insured_name', name: 'insured_name' },
                 {
                     data: 'insurance_type',
                     name: 'insurance_type',

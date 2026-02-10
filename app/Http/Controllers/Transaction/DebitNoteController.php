@@ -20,7 +20,7 @@ class DebitNoteController extends Controller
 
     public function show($id)
     {
-        $debitNote = DebitNote::with(['debitNoteDetails', 'debitNoteBillings', 'billingAddress'])
+        $debitNote = DebitNote::with(['debitNoteDetails', 'debitNoteBillings'])
             ->findOrFail($id);
         
         return view('transaction.debitnote.show', [
@@ -53,6 +53,7 @@ class DebitNoteController extends Controller
         // Replace request data with cleaned data
         $request->merge($cleanedData);
         // Validation
+
 
         $validator = Validator::make($request->all(), [
             'number' => 'required|string|max:255|unique:debit_notes,number',
@@ -163,6 +164,7 @@ class DebitNoteController extends Controller
             'number' => 'required|string|max:255|unique:debit_notes,number,' . $id,
             'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
+            'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             'currency' => 'required|string|max:3',
@@ -185,6 +187,7 @@ class DebitNoteController extends Controller
                 'number' => $request->number,
                 'contact_id' => $request->contact_id,
                 'contract_id' => $request->contract_id,
+                'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
                 'currency_code' => $request->currency,

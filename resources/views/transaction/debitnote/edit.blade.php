@@ -11,6 +11,7 @@
         <form autocomplete="off" method="POST" id="formEdit" action="{{ route('transaction.debit-notes.update', $debitNote->id) }}">
             @csrf
             @method('PUT')
+            <input type="hidden" name="contact_id" id="contact_id" value="{{ old('contact_id', $debitNote->contact_id) }}">
             <div class="card-body">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -51,7 +52,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="contract_id" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
-                            <select class="form-select select2 @error('contract_id') is-invalid @enderror" name="contract_id" id="contract_id" required>
+                            <select class="form-select @error('contract_id') is-invalid @enderror" name="contract_id" id="contract_id" required>
                                 <option value="">Select Placing Number</option>
                                 @if($debitNote->contract)
                                     <option value="{{ $debitNote->contract->id }}" selected>{{ $debitNote->contract->number }}</option>
@@ -71,10 +72,10 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
-                            <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
+                            <select class="form-select @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
                                 <option value="">Select Billing Address</option>
                                 @if($debitNote->billingAddress)
-                                    <option value="{{ $debitNote->billingAddress->id }}" selected>{{ $debitNote->billingAddress->name }}{{ $debitNote->billingAddress->address ? ' - ' . $debitNote->billingAddress->address : '' }}</option>
+                                    <option value="{{ $debitNote->billingAddress->id }}" selected>{{ $debitNote->billingAddress->address }}</option>
                                 @endif
                             </select>
                             @error('billing_address_id')
@@ -230,19 +231,20 @@
         // Initialize Select2 for contract selection
         $('#contract_id').select2({
             theme: 'bootstrap-5',
-            placeholder: 'Select Contract',
+            width: '100%',
+            placeholder: '-- select placing number --',
             allowClear: true,
             ajax: {
-                url: '{{ route("api.contracts.select2") }}',
+                url: "{{ route('api.contracts.select2') }}",
                 dataType: 'json',
                 delay: 250,
-                data: function (params) {
+                data: function(params) {
                     return {
                         search: params.term,
                         page: params.page || 1
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: data.data,
                         pagination: {
@@ -251,36 +253,21 @@
                     };
                 },
                 cache: true
-            }
+            },
+            minimumInputLength: 0
         });
 
-        // Initialize Select2 for billing address selection
+        // Initialize Select2 for billing address
         $('#billing_address_id').select2({
             theme: 'bootstrap-5',
-            placeholder: 'Select Billing Address',
+            width: '100%',
+            placeholder: '-- select billing address --',
             allowClear: true,
-            escapeMarkup: function (markup) {
-                return markup; // Don't escape markup
-            },
-            templateResult: function(data) {
-                if (!data.id) return data.text;
-                if (data.is_primary) {
-                    return $('<span>' + data.text + ' <span class="badge bg-info ms-2">Primary</span></span>');
-                }
-                return data.text;
-            },
-            templateSelection: function(data) {
-                if (!data.id) return data.text;
-                if (data.is_primary) {
-                    return data.text + ' ★';
-                }
-                return data.text;
-            },
             ajax: {
                 url: '{{ route("api.billing-addresses.select2") }}',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) {
+                data: function(params) {
                     const contractId = $('#contract_id').val();
                     return {
                         search: params.term,
@@ -288,7 +275,7 @@
                         contract_id: contractId
                     };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return {
                         results: data.data,
                         pagination: {
@@ -297,29 +284,29 @@
                     };
                 },
                 cache: true
-            }
+            },
+            minimumInputLength: 0
         });
 
         // Handle billing address change to populate insured name and correspondence address
-        $('#billing_address_id').on('select2:select', function(e) {
-            var data = e.params.data;
-            if (data && data.id) {
-                $.get('/api/billing-address/' + data.id, function(response) {
-                    if (response.data) {
-                        $('#insured_name').val(response.data.name || '');
-                        $('#correspondence_address').val(response.data.address || '');
-                    }
-                }).fail(function() {
-                    $('#insured_name').val('');
-                    $('#correspondence_address').val('');
-                });
+        $('#billing_address_id').on('change', function() {
+            var billingAddressId = $(this).val();
+            if (billingAddressId) {
+                $.get("{{ route('api.billing-addresses.show', '') }}/" + billingAddressId)
+                    .done(function(response) {
+                        if (response.data) {
+                            $('#insured_name').val(response.data.name || '');
+                            $('#correspondence_address').val(response.data.address || '');
+                        }
+                    })
+                    .fail(function() {
+                        $('#insured_name').val('');
+                        $('#correspondence_address').val('');
+                    });
+            } else {
+                $('#insured_name').val('');
+                $('#correspondence_address').val('');
             }
-        });
-
-        // Handle billing address clear
-        $('#billing_address_id').on('select2:clear', function() {
-            $('#insured_name').val('');
-            $('#correspondence_address').val('');
         });
 
         // Initialize AutoNumeric for decimal inputs
@@ -356,11 +343,16 @@
     });
 
     function loadContractData(contractId) {
-        $.get("{{ url('/api/contract') }}/" + contractId)
+        $.get("{{ route('api.contracts.show', '') }}/" + contractId)
             .done(function(response) {
                 if (response.data) {
                     // Update policy number
                     $('#policy_number').val(response.data.policy_number || '-');
+                    
+                    // Update contact_id hidden field
+                    if (response.data.contact_id) {
+                        $('#contact_id').val(response.data.contact_id);
+                    }
                     
                     // Update currency if available
                     if (response.data.currency_code) {
@@ -372,23 +364,8 @@
                         $('#exchange_rate').autoNumeric('set', response.data.exchange_rate);
                     }
                     
-                    // Auto-select billing address from contract if available
-                    if (response.data.billing_address_id && response.data.billing_address) {
-                        var newOption = new Option(
-                            response.data.billing_address.name + (response.data.billing_address.address ? ' - ' + response.data.billing_address.address : ''),
-                            response.data.billing_address_id,
-                            true,
-                            true
-                        );
-                        $('#billing_address_id').empty().append(newOption).trigger('change');
-                        
-                        // Populate insured name and correspondence address
-                        $('#insured_name').val(response.data.billing_address.name || '');
-                        $('#correspondence_address').val(response.data.billing_address.address || '');
-                    } else {
-                        // Load billing addresses for the contact
-                        loadBillingAddresses(response.data.contact_id);
-                    }
+                    // Load billing addresses for the contact
+                    loadBillingAddresses(response.data.contact_id);
                 }
             })
             .fail(function() {
@@ -397,8 +374,36 @@
     }
 
     function loadBillingAddresses(contactId) {
-        // This function is not needed anymore since we're using Select2 AJAX
-        // Billing addresses will be loaded via Select2 ajax call
+        $('#billing_address_id').empty().append('<option value="">Loading...</option>');
+        
+        $.get("{{ route('api.billing-addresses.by-contact', '') }}/" + contactId)
+            .done(function(response) {
+                $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>');
+                
+                if (response.data && response.data.length > 0) {
+                    var selectedAddress = null;
+                    $.each(response.data, function(index, address) {
+                        var selected = address.id == "{{ $debitNote->billing_address_id }}" ? 'selected' : '';
+                        $('#billing_address_id').append('<option value="' + address.id + '" ' + selected + '>' + address.address + '</option>');
+                        
+                        // Keep track of the selected address
+                        if (selected) {
+                            selectedAddress = address;
+                        }
+                    });
+                    
+                    // Populate insured name and correspondence address if an address is selected
+                    if (selectedAddress) {
+                        $('#insured_name').val(selectedAddress.name || '');
+                        $('#correspondence_address').val(selectedAddress.address || '');
+                    }
+                } else {
+                    $('#billing_address_id').append('<option value="" disabled>No billing addresses found</option>');
+                }
+            })
+            .fail(function() {
+                $('#billing_address_id').empty().append('<option value="">Failed to load addresses</option>');
+            });
     }
 </script>
 @endpush

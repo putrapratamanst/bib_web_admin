@@ -48,6 +48,7 @@ Route::get('/contract-types/select2', [\App\Http\Controllers\Api\ContractTypeCon
 
 // Billing Address
 Route::get('/contact/{contactId}/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.index');
+Route::get('/billing-addresses/by-contact/{contactId}', [\App\Http\Controllers\Api\BillingAddressController::class, 'index'])->name('api.billing-addresses.by-contact');
 Route::get('/billing-address/select2', [\App\Http\Controllers\Api\BillingAddressController::class, 'select2'])->name('api.billing-addresses.select2');
 Route::get('/billing-address/{id}', [\App\Http\Controllers\Api\BillingAddressController::class, 'show'])->name('api.billing-addresses.show');
 Route::post('/billing-address', [\App\Http\Controllers\Api\BillingAddressController::class, 'store'])->name('api.billing-addresses.store');

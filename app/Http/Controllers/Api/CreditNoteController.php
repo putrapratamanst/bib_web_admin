@@ -22,7 +22,7 @@ class CreditNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = CreditNote::with(['contract.contractType'])->orderBy('created_at', 'desc');
+        $query = CreditNote::with(['contract.contractType', 'contract.billingAddress', 'contract.contact'])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -50,8 +50,8 @@ class CreditNoteController extends Controller
             ->addColumn('contract_id', function (CreditNote $b) {
                 return $b->contract->id;
             })
-            ->addColumn('contact', function (CreditNote $b) {
-                return $b->contract->contact->display_name;
+            ->addColumn('insured_name', function (CreditNote $b) {
+                return $b->contract->billingAddress ? $b->contract->billingAddress->name : ($b->contract->contact ? $b->contract->contact->display_name : '-');
             })
             ->addColumn('insurance_type', function (CreditNote $b) {
                 return $b->contract->contractType ? $b->contract->contractType->name : '-';

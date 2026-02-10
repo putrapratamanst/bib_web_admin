@@ -56,6 +56,7 @@
                         <th>Number</th>
                         <th>Date</th>
                         <th>Due Date</th>
+                        <th>Insured Name</th>
                         <th>Insurance Type</th>
                         <th>Currency</th>
                         <th>Nett Premium</th>
@@ -118,6 +119,10 @@
                         var year = date.getFullYear();
                         return day + '-' + month + '-' + year;
                     }
+                },
+                {
+                    data: 'insured_name',
+                    name: 'insured_name'
                 },
               
                 

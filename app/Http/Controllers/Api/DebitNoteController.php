@@ -23,7 +23,7 @@ class DebitNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = DebitNote::with(['contract.contractType'])->orderBy('created_at', 'desc');
+        $query = DebitNote::with(['contract.contractType', 'contract.billingAddress'])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -50,6 +50,9 @@ class DebitNoteController extends Controller
             })
             ->addColumn('policy_number', function(DebitNote $b) {
                 return $b->contract->policy_number ?? '-';
+            })
+            ->addColumn('insured_name', function(DebitNote $b) {
+                return $b->contract->billingAddress ? $b->contract->billingAddress->name : ($b->contract->contact ? $b->contract->contact->display_name : '-');
             })
             ->addColumn('insurance_type', function(DebitNote $b) {
                 return $b->contract->contractType ? $b->contract->contractType->name : '-';

@@ -23,7 +23,7 @@ class ContractController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = Contract::with('contact')->orderBy('created_at', 'desc');
+        $query = Contract::with(['contact', 'billingAddress'])->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
             // ->orderColumn('created_at', function ($query, $order) {
@@ -32,8 +32,8 @@ class ContractController extends Controller
             ->addColumn('contract_type', function (Contract $c) {
                 return $c->contractType->name;
             })
-            ->addColumn('contact', function (Contract $c) {
-                return $c->contact ? $c->contact->display_name : '-';
+            ->addColumn('insured_name', function (Contract $c) {
+                return $c->billingAddress ? $c->billingAddress->name : ($c->contact ? $c->contact->display_name : '-');
             })
             ->filter(function ($query) use ($request) {
                 if ($request->has('contract_type') && $request->contract_type != '') {

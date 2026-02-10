@@ -46,7 +46,7 @@
                         <th>Number</th>
                         <th>Policy Number</th>
                         <th>Type</th>
-                        <th>Contact</th>
+                        <th>Insured Name</th>
                         <th>Period</th>
                         <th>Currency</th>
                         <th>Nett Premium</th>
@@ -94,8 +94,8 @@
                     name: 'contract_type'
                 },
                 {
-                    data: 'contact',
-                    name: 'contact'
+                    data: 'insured_name',
+                    name: 'insured_name'
                 },
                 {
                     data: 'period',
