@@ -75,6 +75,10 @@ Route::prefix('transaction')->group(function () {
         '/credit-notes/{id}/print',
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'print']
     )->name('transaction.credit-notes.print');
+    Route::get(
+        '/credit-notes/{id}/print-directory',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'printDirectory']
+    )->name('transaction.credit-notes.print-directory');
 
     // Debit Note
     Route::get(
@@ -89,6 +93,10 @@ Route::prefix('transaction')->group(function () {
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
     )->name('transaction.debit-notes.show');
+    Route::get(
+        '/debit-notes/{id}/print',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'print']
+    )->name('transaction.debit-notes.print');
     Route::get(
         '/debit-notes/{id}/edit',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'edit']

@@ -19,21 +19,24 @@
 
         .credit-note {
             max-width: 210mm;
+            width: 210mm;
             margin: 0 auto;
             background-color: #fffacd;
-            padding: 40px;
+            padding: 15mm;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            min-height: auto;
         }
 
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .top-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         .company-info {
@@ -84,27 +87,27 @@
         }
 
         .document-title {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: bold;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             color: #333;
         }
 
         .content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
+            gap: 15px;
+            margin-top: 15px;
         }
 
         .left-section {
             border: 2px solid #333;
-            padding: 20px;
+            padding: 12px;
         }
 
         .right-section {
             border: 2px solid #333;
-            padding: 20px;
+            padding: 12px;
         }
 
         .section-title {
@@ -115,7 +118,7 @@
         }
 
         .field {
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             display: flex;
             align-items: baseline;
         }
@@ -149,8 +152,8 @@
 
         .remarks-area {
             border: 1px solid #333;
-            min-height: 100px;
-            padding: 10px;
+            min-height: 60px;
+            padding: 8px;
         }
 
         .premium-title {
@@ -207,23 +210,23 @@
         }
 
         .bottom-section {
-            margin-top: 20px;
+            margin-top: 10px;
             border: 2px solid #333;
-            min-height: 80px;
+            min-height: 40px;
             grid-column: 1 / -1;
         }
 
         .signature-section {
             text-align: right;
-            padding: 20px;
-            margin-top: 20px;
+            padding: 10px;
+            margin-top: 10px;
         }
 
         .signature-line {
             display: inline-block;
             border-bottom: 2px solid #333;
-            min-width: 250px;
-            margin-top: 60px;
+            min-width: 200px;
+            margin-top: 30px;
         }
 
         .signature-label {
@@ -235,9 +238,18 @@
             body {
                 background-color: white;
                 padding: 0;
+                margin: 0;
             }
             .credit-note {
                 box-shadow: none;
+                max-width: 100%;
+                width: 210mm;
+                padding: 10mm;
+                margin: 0;
+            }
+            @page {
+                size: A4;
+                margin: 0;
             }
         }
     </style>
@@ -343,5 +355,12 @@
             <div class="signature-label">Authorized Signature</div>
         </div>
     </div>
+    
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            window.print();
+        }
+    </script>
 </body>
 </html>

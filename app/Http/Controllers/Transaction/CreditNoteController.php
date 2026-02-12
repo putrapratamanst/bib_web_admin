@@ -38,4 +38,18 @@ class CreditNoteController extends Controller
 
         return view('transaction.creditnote.print', compact('creditNote'));
     }
+
+    public function printDirectory($id)
+    {
+        $creditNote = \App\Models\CreditNote::with([
+            'contract', 
+            'contract.contact', 
+            'contract.billingAddress',
+            'contract.contractType',
+            'currency',
+            'debitNote'
+        ])->findOrFail($id);
+
+        return view('transaction.creditnote.print-directory', compact('creditNote'));
+    }
 }

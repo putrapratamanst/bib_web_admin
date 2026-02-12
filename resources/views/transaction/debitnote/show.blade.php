@@ -9,7 +9,7 @@
             Detail Debit Note
             <div class="float-end">
                 @if($debitNote->canBePrinted())
-                    <button class="btn btn-success btn-sm" onclick="printDebitNote()">
+                    <button class="btn btn-success btn-sm" onclick="printDebitNote('{{ $debitNote->id }}')"> 
                         <i class="fas fa-print"></i> Print
                     </button>
                 @else
@@ -498,9 +498,7 @@
     }
 
     function printDebitNote(debitNoteId) {
-        // TODO: Implement actual print functionality
-        alert('Print functionality will be implemented here');
-        // window.open(`/transaction/debit-notes/${debitNoteId}/print`, '_blank');
+        window.open(`/transaction/debit-notes/${debitNoteId}/print`, '_blank');
     }
 
 </script>

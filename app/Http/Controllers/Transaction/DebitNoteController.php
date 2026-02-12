@@ -28,6 +28,20 @@ class DebitNoteController extends Controller
         ]);
     }
 
+    public function print($id)
+    {
+        $debitNote = DebitNote::with([
+            'contract', 
+            'contract.contact', 
+            'contract.billingAddress',
+            'contract.contractType',
+            'currency',
+            'debitNoteDetails'
+        ])->findOrFail($id);
+
+        return view('transaction.debitnote.print', compact('debitNote'));
+    }
+
     public function create()
     {
         return view('transaction.debitnote.create');
