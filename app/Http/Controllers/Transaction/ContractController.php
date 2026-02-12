@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ContractController extends Controller
 {
@@ -41,7 +42,7 @@ class ContractController extends Controller
         $contract = Contract::with(['details', 'endorsements.contractReference.contact', 'contractType', 'contact'])->findOrFail($id);
         
         // Check if user is admin and contract is pending or rejected
-        if (auth()->user()->role !== 'admin') {
+        if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized. Only admins can edit contracts.');
         }
 

@@ -94,9 +94,9 @@ Route::prefix('transaction')->group(function () {
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
     )->name('transaction.debit-notes.show');
     Route::get(
-        '/debit-notes/{id}/print',
-        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'print']
-    )->name('transaction.debit-notes.print');
+        '/debit-notes/{id}/print-directory',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'printDirectory']
+    )->name('transaction.debit-notes.print-directory');
     Route::get(
         '/debit-notes/{id}/edit',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'edit']
@@ -111,9 +111,12 @@ Route::prefix('transaction')->group(function () {
     
     // Debit Note Billings List
     Route::get('/debit-note-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'index'])->name('transaction.debit-note-billings.index');
+    Route::get('/debit-note-billings/create/{id?}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.debit-note-billings.create');
+    Route::post('/debit-note-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debit-note-billings.store');
     Route::post('/debit-note-billings/{id}/post-to-cashout', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'postToCashout'])->name('transaction.debit-note-billings.post-to-cashout');
     Route::get('/billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'index'])->name('transaction.billings.index');
     Route::get('/billings/print/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'printBilling'])->name('transaction.billings.print');
+    Route::get('/billings/print-directory/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'printBillingDirectory'])->name('transaction.billings.print-directory');
     Route::get('/billings/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'show'])->name('transaction.billings.show');
     Route::get('/billings/create', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.billings.create');
 

@@ -9,9 +9,9 @@
             Detail Debit Note
             <div class="float-end">
                 @if($debitNote->canBePrinted())
-                    <button class="btn btn-success btn-sm" onclick="printDebitNote('{{ $debitNote->id }}')"> 
+                    <!-- <button class="btn btn-success btn-sm" onclick="printDebitNote('{{ $debitNote->id }}')"> 
                         <i class="fas fa-print"></i> Print
-                    </button>
+                    </button> -->
                 @else
                     <span class="badge bg-warning">Approval Required</span>
                 @endif
@@ -181,9 +181,9 @@
                 @endif
                 
                 @if($debitNote->canBePrinted())
-                    <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
+                    <!-- <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-print"></i> Print
-                    </button>
+                    </button> -->
                 @endif
 
                 @if(!$debitNote->is_posted && $debitNote->status === 'active')
@@ -253,8 +253,11 @@
                                     </button>
                                 @endif
                                 @if ($billing->status === 'posted')
-                                <a href="javascript:void(0);" class="btn btn-sm btn-info" onclick="printBilling('{{ $billing->id }}')" title="Print Billing">
+                                <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBilling('{{ $billing->id }}')" title="Print Billing">
                                     <i class="fas fa-print"></i> Print
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing Directory">
+                                    <i class="fas fa-print"></i> Print Directory
                                 </a>
                                 @endif
                             </td>
@@ -418,6 +421,10 @@
 
     function printBilling(billingId) {
         window.open(`/transaction/billings/print/${billingId}`, '_blank');
+    }
+
+    function printBillingDirectory(billingId) {
+        window.open(`/transaction/billings/print-directory/${billingId}`, '_blank');
     }
 
     function submitForApproval(debitNoteId) {

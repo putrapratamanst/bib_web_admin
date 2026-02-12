@@ -79,8 +79,10 @@
                             actions += '<button class="btn btn-sm btn-success me-1" onclick="postBilling(\'' + data + '\')" title="Post to Cashout">';
                             actions += '<i class="fas fa-check-circle"></i> Post</button>';
                         }
-                        actions += '<a href="javascript:void(0);" class="btn btn-sm btn-info" onclick="printBilling(\'' + data + '\')" title="Print Billing">';
+                        actions += '<a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBilling('\'' + data + '\'')" title="Print Billing">';
                         actions += '<i class="fas fa-print"></i> Print</a>';
+                        actions += '<a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBillingDirectory('\'' + data + '\'')" title="Print Billing Directory">';
+                        actions += '<i class="fas fa-print"></i> Print Directory</a>';
                         return actions;
                     }
                 }
@@ -138,6 +140,11 @@
         // Function to print billing
         window.printBilling = function(billingId) {
             window.open('/transaction/billings/print/' + billingId, '_blank');
+        };
+
+        // Function to print billing directory
+        window.printBillingDirectory = function(billingId) {
+            window.open('/transaction/billings/print-directory/' + billingId, '_blank');
         };
     });
 </script>

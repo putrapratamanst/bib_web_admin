@@ -50,103 +50,101 @@
         }
 
         .header-section {
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .row {
             display: flex;
-            margin-bottom: 6px;
-            padding: 4px 0;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            font-size: 12px;
         }
 
         .label {
             width: 180px;
             font-weight: bold;
-        }
-
-        .label i {
-            font-weight: normal !important;
-            font-style: italic;
-        }
-
-        .header-section .row:last-child {
-            border-bottom: 1px solid #000;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
         .separator {
-            margin: 0 10px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         .value {
             flex: 1;
-        }
-
-        .section-title {
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            padding-left: 10px;
         }
 
         .table-container {
-            border: 2px solid #000;
-            margin: 15px 0 5px 0;
+            border: 1px solid #000;
+            margin: 20px 0;
         }
 
         .table-header {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border-bottom: 2px solid #000;
+            background: #f0f0f0;
+            display: flex;
+            padding: 8px;
+            border-bottom: 1px solid #000;
         }
 
         .table-header div {
-            padding: 8px;
-            text-align: center;
             font-weight: bold;
+            text-align: center;
             font-size: 12px;
         }
 
         .table-header div:first-child {
-            border-right: 2px solid #000;
+            flex: 1;
+            border-right: 1px solid #000;
         }
 
         .table-body {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            height: 300px;
+            display: flex;
+            min-height: 180px;
         }
 
         .notes-column {
-            border-right: 2px solid #000;
+            flex: 1;
             padding: 12px;
-            font-size: 12px;
+            border-right: 1px solid #000;
+            font-size: 11px;
+            line-height: 1.4;
         }
 
         .details-column {
+            width: 200px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
 
         .premium-section {
-            flex: 0 0 auto;
-            padding: 12px;
-            border-bottom: 2px solid #000;
-            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .premium-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            align-items: center;
+            font-size: 10px;
+            padding: 4px 0;
         }
 
         .premium-label {
-            font-weight: bold;
+            flex: 1;
+            text-align: left;
         }
 
         .premium-value {
+            flex: none;
             text-align: right;
+            font-weight: bold;
+            margin-left: 10px;
         }
 
         .signature-section {
@@ -166,7 +164,6 @@
             font-size: 9px;
             color: #666;
             line-height: 1.2;
-            border-top: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -203,11 +200,11 @@
 
             .footer {
                 margin-top: 5px;
-                /* padding: 10mm 15mm; */
                 /* border-top: 1px solid #ddd; */
                 page-break-inside: avoid;
                 display: flex;
                 justify-content: space-between;
+                padding-bottom: 75px;
                 align-items: flex-start;
                 width: 100%;
             }
@@ -242,7 +239,7 @@
             <div class="row">
                 <div class="label">Tanggal<br><i>Date</i></div>
                 <div class="separator">:</div>
-                <div class="value">{{ $debitNote->date_formatted }}</div>
+                <div class="value">{{ \Carbon\Carbon::parse($debitNote->date)->format('d F Y') }}</div>
             </div>
 
             <div class="row">
@@ -263,9 +260,9 @@
             <div class="label">Nama & Alamat Tertanggung<br><i>Name & Address of Insured</i></div>
             <div class="separator">:</div>
             <div class="value">
-                <div>{{ $debitNote->contract->contact->name ?? $debitNote->contact->name }}</div>
+                <div>{{ $debitNote->contract->contact->name ?? $debitNote->contact->name ?? '' }}</div>
                 <div style="margin-top: 5px;">
-                    {{ $debitNote->billingAddress ? $debitNote->billingAddress->address : ($debitNote->contract->contact ? $debitNote->contract->contact->address : '') }}
+                    {{ $debitNote->contract->billingAddress ? $debitNote->contract->billingAddress->address : ($debitNote->contract->contact ? $debitNote->contract->contact->address : '') }}
                 </div>
             </div>
         </div>
@@ -302,7 +299,7 @@
                     </div>
                     <div style="margin-top: 30px;margin-bottom: 15px;">
                         <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>
-                        IDR {{ $debitNote->amount_formatted }} - {{ $debitNote->due_date ? $debitNote->due_date->format('d M Y') : '' }}
+                        IDR {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d M Y') }}
                     </div>
                     <div style="margin-bottom: 15px;">
                         <strong>PT. Brilliant Insurance Brokers</strong><br>
@@ -327,29 +324,29 @@
 
                         <div class="premium-row">
                             <span class="premium-label">Premi<br><i>Premium</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code }}<br>{{ number_format($grossPremium, 2, ',', '.') }}</span>
+                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($grossPremium, 2, ',', '.') }}</span>
                         </div>
 
                         <div class="premium-row">
                             <span class="premium-label">Biaya Polis<br><i>Policy Cost</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code }}<br>{{ number_format(1, 2, ',', '.') }}</span>
+                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format(1, 2, ',', '.') }}</span>
                         </div>
 
                         <div class="premium-row">
                             <span class="premium-label">Biaya Materai<br><i>Stamp Duty</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code }}<br>{{ number_format($stampFee, 2, ',', '.') }}</span>
+                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($stampFee, 2, ',', '.') }}</span>
                         </div>
 
                         @if($discount > 0)
                         <div class="premium-row">
                             <span class="premium-label">Diskon ({{ number_format($discount, 0) }}%)<br><i>Discount</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code }}<br>{{ number_format($discountAmount, 2, ',', '.') }}</span>
+                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($discountAmount, 2, ',', '.') }}</span>
                         </div>
                         @endif
 
                         <div class="premium-row" style="border-top: 1px solid #000; margin-top: 10px; padding-top: 10px;">
                             <span class="premium-label"><strong>Premi Neto<br><i>Nett Premium</i></strong></span>
-                            <span class="premium-value"><strong>{{ $debitNote->currency_code }}<br>{{ $debitNote->amount_formatted }}</strong></span>
+                            <span class="premium-value"><strong>{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($debitNote->amount, 2, ',', '.') }}</strong></span>
                         </div>
                     </div>
 

@@ -147,6 +147,11 @@ class DebitNote extends Model
     // Check if debit note can be edited
     public function canBeEdited(): bool
     {
+        // Approver tidak bisa edit debit note
+        if (auth()->check() && auth()->user()->role === 'approver') {
+            return false;
+        }
+        
         // Allow editing only when status is pending AND not yet reviewed by approver
         // (approved_by and approved_at are null means not yet reviewed)
         return $this->approval_status === 'pending' && 

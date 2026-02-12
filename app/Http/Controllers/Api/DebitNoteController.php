@@ -8,7 +8,9 @@ use App\Http\Resources\DebitNoteResource;
 use App\Models\DebitNote;
 use App\Models\DebitNoteDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -73,7 +75,7 @@ class DebitNoteController extends Controller
                 }
                 
                 // Only show approve/reject buttons for approvers
-                if ($b->canBeApproved() && auth()->user()->canApproveCreditNotes()) {
+                if ($b->canBeApproved() && Auth::user()->canApproveCreditNotes()) {
                     $actions .= '<button class="btn btn-sm btn-success approve-btn" data-id="' . $b->id . '">Approve</button>';
                     $actions .= '<button class="btn btn-sm btn-danger reject-btn" data-id="' . $b->id . '">Reject</button>';
                 }
@@ -92,7 +94,7 @@ class DebitNoteController extends Controller
     public function store(Request $request)
     {
         // Debug: Log incoming data
-        \Log::info('DebitNote Store Request Data:', $request->all());
+        Log::info('DebitNote Store Request Data:', $request->all());
         
         // Clean up comma-separated numbers
         $cleanedData = $request->all();
@@ -106,7 +108,7 @@ class DebitNoteController extends Controller
         // Replace request data with cleaned data
         $request->merge($cleanedData);
         
-        \Log::info('Billing Address ID from request:', ['billing_address_id' => $request->billing_address_id]);
+        Log::info('Billing Address ID from request:', ['billing_address_id' => $request->billing_address_id]);
         
         // Validation
         $validator = Validator::make($request->all(), [
@@ -153,7 +155,7 @@ class DebitNoteController extends Controller
                 'installment' => $request->installment,
                 'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
-                'created_by' => auth()->id(),
+                'created_by' => Auth::id(),
             ]);
 
             // Create Debit Note Details
@@ -260,7 +262,7 @@ class DebitNoteController extends Controller
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'installment' => $request->installment,
-                'updated_by' => auth()->id(),
+                'updated_by' => Auth::id(),
             ]);
 
             // Update Debit Note Details if provided

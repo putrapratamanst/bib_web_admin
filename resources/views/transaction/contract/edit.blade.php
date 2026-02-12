@@ -68,7 +68,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">>
+                    <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
                             <input type="number" name="covered_item" id="covered-item" class="form-control" value="{{ $contract->covered_item }}" />

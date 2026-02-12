@@ -102,7 +102,7 @@ Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractControl
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
 Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
 Route::post('/contract/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'uploadDocument'])->name('api.contracts.upload-document');
-Route::get('/contract/{id}/documents', [\App\Http\Controllers\Api\ContsaractController::class, 'getDocuments'])->name('api.contracts.get-documents');
+Route::get('/contract/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'getDocuments'])->name('api.contracts.get-documents');
 Route::delete('/contract/{contractId}/documents/{documentId}', [\App\Http\Controllers\Api\ContractController::class, 'deleteDocument'])->name('api.contracts.delete-document');
 Route::get('/contract/{contractId}/documents/{documentId}/download', [\App\Http\Controllers\Api\ContractController::class, 'downloadDocument'])->name('api.contracts.download-document');
 
