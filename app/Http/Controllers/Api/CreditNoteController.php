@@ -88,8 +88,31 @@ class CreditNoteController extends Controller
 
     public function generateNumber()
     {
-        $newNumber = 'BIB/C' . date('y') . '/' . str_pad(CreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
-        return response()->json(['number' => $newNumber]);
+        $number = $this->generateCreditNoteNumber();
+        return response()->json(['number' => $number]);
+    }
+
+    /**
+     * Generate credit note number for internal use
+     */
+    private function generateCreditNoteNumber()
+    {
+        // Format: BIB/CYY/00001
+        $year = date('y'); // 2 digit year
+        $prefix = "BIB/C{$year}/";
+        
+        $lastCreditNote = CreditNote::where('number', 'like', "{$prefix}%")
+            ->orderBy('number', 'desc')
+            ->first();
+        
+        if ($lastCreditNote) {
+            $lastNumber = (int) substr($lastCreditNote->number, strrpos($lastCreditNote->number, '/') + 1);
+            $runningNumber = $lastNumber + 1;
+        } else {
+            $runningNumber = 1;
+        }
+        
+        return sprintf("%s%04d", $prefix, $runningNumber);
     }
 
     public function store(CreditNoteStoreRequest $request)
@@ -97,12 +120,17 @@ class CreditNoteController extends Controller
         try {
             $request->validated();
             $data = $request->all();
+            
+            // Generate credit note number
+            $creditNoteNumber = $this->generateCreditNoteNumber();
+            
             $contractID = DebitNoteBilling::find($data['billing_id'])->debitNote->contract_id ?? null;
             $debitNoteID = DebitNoteBilling::find($data['billing_id'])->debitNote->id ?? null;
+            
             $creditNote = CreditNote::create([
                 'contract_id' => $contractID,
                 'debit_note_id' => $debitNoteID,
-                'number' => $data['number'],
+                'number' => $creditNoteNumber,
                 'date' => $data['date'],
                 'description' => $data['description'],
                 'currency_code' => $data['currency_code'],

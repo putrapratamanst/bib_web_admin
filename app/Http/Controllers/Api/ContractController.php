@@ -113,6 +113,40 @@ class ContractController extends Controller
         ]);
     }
 
+    /**
+     * Generate contract number for internal use (extracted from generateNumber)
+     */
+    private function generateContractNumber($contractTypeId)
+    {
+        // Get contract type
+        $contractType = \App\Models\ContractType::findOrFail($contractTypeId);
+        
+        // Get contract type code (first 3 letters of name, uppercase, remove non-alpha)
+        $contractTypeCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $contractType->name), 0, 3));
+        
+        // Current month and year
+        $month = date('m');
+        $year = date('Y');
+        
+        // Get last contract number for this month and contract type
+        $prefix = "{$contractTypeCode}/{$month}/{$year}/";
+        $lastContract = Contract::where('number', 'like', "{$prefix}%")
+            ->orderBy('number', 'desc')
+            ->first();
+        
+        // Generate running number
+        if ($lastContract) {
+            // Extract last number
+            $lastNumber = (int) substr($lastContract->number, strrpos($lastContract->number, '/') + 1);
+            $runningNumber = $lastNumber + 1;
+        } else {
+            $runningNumber = 1;
+        }
+        
+        // Format: KODE/MM/YYYY/00001
+        return sprintf("%s%05d", $prefix, $runningNumber);
+    }
+
     public function generateNumber(Request $request)
     {
         try {
@@ -124,33 +158,7 @@ class ContractController extends Controller
                 ], 400);
             }
 
-            // Get contract type
-            $contractType = \App\Models\ContractType::findOrFail($contractTypeId);
-            
-            // Get contract type code (first 3 letters of name, uppercase, remove non-alpha)
-            $contractTypeCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $contractType->name), 0, 3));
-            
-            // Current month and year
-            $month = date('m');
-            $year = date('Y');
-            
-            // Get last contract number for this month and contract type
-            $prefix = "{$contractTypeCode}/{$month}/{$year}/";
-            $lastContract = Contract::where('number', 'like', "{$prefix}%")
-                ->orderBy('number', 'desc')
-                ->first();
-            
-            // Generate running number
-            if ($lastContract) {
-                // Extract last number
-                $lastNumber = (int) substr($lastContract->number, strrpos($lastContract->number, '/') + 1);
-                $runningNumber = $lastNumber + 1;
-            } else {
-                $runningNumber = 1;
-            }
-            
-            // Format: KODE/MM/YYYY/00001
-            $contractNumber = sprintf("%s%05d", $prefix, $runningNumber);
+            $contractNumber = $this->generateContractNumber($contractTypeId);
             
             return response()->json([
                 'data' => [
@@ -168,10 +176,14 @@ class ContractController extends Controller
     {
         try {
             $data = $request->validated();
+            
+            // Generate contract number using existing logic
+            $contractNumber = $this->generateContractNumber($data['contract_type_id']);
+            
             $contract = Contract::create([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
-                'number' => $data['number'],
+                'number' => $contractNumber,
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],
@@ -318,7 +330,7 @@ class ContractController extends Controller
             $contract->update([
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
-                'number' => $data['number'],
+                // 'number' => $data['number'], // Keep existing number - don't change it during updates
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],

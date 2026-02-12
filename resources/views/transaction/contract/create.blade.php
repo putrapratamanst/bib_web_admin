@@ -61,13 +61,13 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-lg-3">
+                    <!-- <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
                             <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" required />
-                            <small class="text-muted">Auto-generated when insurance is selected</small>
+                            <small class="text-muted">Will be generated upon saving</small>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
@@ -460,120 +460,20 @@
                 return;
             }
 
-            var details = [];
-            $('#tableDetails tbody tr').each(function() {
-                var insuranceId = $(this).find('select[name="insurance_id[]"]').val();
-                var description = $(this).find('select[name="description[]"]').val();
-                var percentage = $(this).find('input[name="percentage[]"]').val();
-                var brokerageFee = $(this).find('input[name="brokerage_fee[]"]').val();
-                var engFee = $(this).find('input[name="eng_fee[]"]').val();
-
-                details.push({
-                    insurance_id: insuranceId,
-                    description: description,
-                    percentage: percentage,
-                    brokerage_fee: brokerageFee,
-                    eng_fee: engFee,
+            // Validate contract type
+            var contractTypeId = $("#contract_type_id").val();
+            if (!contractTypeId) {
+                Swal.fire({
+                    text: 'Please select a placing type first.',
+                    icon: 'error',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
                 });
-            });
-
-            var endorsements = [];
-            var contractReferenceIds = $('#contract_reference_id').val(); // array of selected IDs
-            var endorsementNumber = $('#endorsement_number').val();
-
-            if (contractReferenceIds && contractReferenceIds.length > 0) {
-                contractReferenceIds.forEach(function(refId) {
-                    endorsements.push({
-                        contract_reference_id: refId,
-                        endorsement_number: endorsementNumber,
-                    });
-                });
+                return;
             }
 
-            var formData = {
-                contract_status: $("#contract_status").val(),
-                contract_type_id: $("#contract_type_id").val(),
-                number: $("#number").val(),
-                policy_number: $("#policy_number").val(),
-                policy_fee: $("#policy_fee").autoNumeric('get'),
-                contact_id: $("#contact_id").val(),
-                billing_address_id: billingAddressId,
-                endorsements: endorsements,
-                period_start: $("#period_start").val(),
-                period_end: $("#period_end").val(),
-                currency_code: $("#currency_code").val(),
-                exchange_rate: $("#exchange_rate").autoNumeric('get'),
-                coverage_amount: $("#coverage_amount").autoNumeric('get'),
-                gross_premium: $("#gross_premium").autoNumeric('get'),
-                discount: $("#discount").autoNumeric('get'),
-                stamp_fee: $("#stamp_fee").autoNumeric('get'),
-                amount: $("#amount").autoNumeric('get'),
-                memo: $("#memo").val(),
-                details: details,
-                covered_item: $("#covered-item").val(),
-                installment_count: $("#installment_count").val(),
-            };
-
-            $.ajax({
-                url: "{{ route('api.contracts.store') }}",
-                method: "POST",
-                data: formData,
-                beforeSend: function() {
-                    $("#btnSubmit").attr("disabled", true);
-                },
-                success: function(response) {
-                    console.log('Contract created successfully:', response);
-
-                    // Upload documents if any
-                    uploadDocuments(response.data.id, function(uploadSuccess) {
-                        if (uploadSuccess || uploadSuccess === undefined) {
-                            // Success or no files uploaded
-                            var message = response.message;
-                            var files = document.getElementById('documents').files;
-                            if (files.length > 0) {
-                                message += '\nDocuments uploaded successfully!';
-                            }
-
-                            Swal.fire({
-                                text: message,
-                                icon: "success",
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "{{ route('transaction.contracts.index') }}";
-                                }
-                            });
-                        } else {
-                            // Document upload failed but contract was created
-                            Swal.fire({
-                                title: 'Contract Created',
-                                text: 'Contract created successfully but document upload failed. You can upload documents later.',
-                                icon: 'warning',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "{{ route('transaction.contracts.index') }}";
-                                }
-                            });
-                        }
-                    });
-                },
-                error: function(xhr) {
-                    var errors = xhr.responseJSON.errors;
-                    var firstItem = Object.keys(errors)[0];
-                    var firstErrorMessage = errors[firstItem][0];
-                    $("#btnSubmit").attr("disabled", false);
-
-                    Swal.fire({
-                        text: firstErrorMessage,
-                        icon: "error",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                    });
-                },
-            });
+            // Submit form directly - number will be generated on backend
+            submitFormData();
         });
 
         $('#btnAddRow').click(function() {
@@ -639,10 +539,8 @@
             }
         });
 
-        // Generate contract number when contract type is selected
-        $("#contract_type_id").on("change", function() {
-            tryGenerateContractNumber();
-        });
+        // Contract number will be generated on submit
+        // Removed auto-generation on contract type selection
 
         $("#discount").on("change", function() {
             calculateDiscount();
@@ -747,30 +645,119 @@
         });
     }
 
-    function tryGenerateContractNumber() {
-        // Check if contract type is selected
-        var contractTypeId = $("#contract_type_id").val();
-        if (!contractTypeId) {
-            return;
+    function submitFormData() {
+        var details = [];
+        $('#tableDetails tbody tr').each(function() {
+            var insuranceId = $(this).find('select[name="insurance_id[]"]').val();
+            var description = $(this).find('select[name="description[]"]').val();
+            var percentage = $(this).find('input[name="percentage[]"]').val();
+            var brokerageFee = $(this).find('input[name="brokerage_fee[]"]').val();
+            var engFee = $(this).find('input[name="eng_fee[]"]').val();
+
+            details.push({
+                insurance_id: insuranceId,
+                description: description,
+                percentage: percentage,
+                brokerage_fee: brokerageFee,
+                eng_fee: engFee,
+            });
+        });
+
+        var endorsements = [];
+        var contractReferenceIds = $('#contract_reference_id').val(); // array of selected IDs
+        var endorsementNumber = $('#endorsement_number').val();
+
+        if (contractReferenceIds && contractReferenceIds.length > 0) {
+            contractReferenceIds.forEach(function(refId) {
+                endorsements.push({
+                    contract_reference_id: refId,
+                    endorsement_number: endorsementNumber,
+                });
+            });
         }
 
-        // Generate contract number based on contract type
-        generateContractNumber(contractTypeId);
-    }
+        var formData = {
+            contract_status: $("#contract_status").val(),
+            contract_type_id: $("#contract_type_id").val(),
+            policy_number: $("#policy_number").val(),
+            policy_fee: $("#policy_fee").autoNumeric('get'),
+            contact_id: $("#contact_id").val(),
+            billing_address_id: $('#billing_address_id').val(),
+            endorsements: endorsements,
+            period_start: $("#period_start").val(),
+            period_end: $("#period_end").val(),
+            currency_code: $("#currency_code").val(),
+            exchange_rate: $("#exchange_rate").autoNumeric('get'),
+            coverage_amount: $("#coverage_amount").autoNumeric('get'),
+            gross_premium: $("#gross_premium").autoNumeric('get'),
+            discount: $("#discount").autoNumeric('get'),
+            stamp_fee: $("#stamp_fee").autoNumeric('get'),
+            amount: $("#amount").autoNumeric('get'),
+            memo: $("#memo").val(),
+            details: details,
+            covered_item: $("#covered-item").val(),
+            installment_count: $("#installment_count").val(),
+        };
 
-    function generateContractNumber(contractTypeId) {
         $.ajax({
-            url: "{{ route('api.contracts.generate-number') }}",
-            method: "GET",
-            data: {
-                contract_type_id: contractTypeId
+            url: "{{ route('api.contracts.store') }}",
+            method: "POST",
+            data: formData,
+            beforeSend: function() {
+                $("#btnSubmit").attr("disabled", true);
             },
             success: function(response) {
-                $("#number").val(response.data.number);
+                console.log('Contract created successfully:', response);
+
+                // Upload documents if any
+                uploadDocuments(response.data.id, function(uploadSuccess) {
+                    if (uploadSuccess || uploadSuccess === undefined) {
+                        // Success or no files uploaded
+                        var message = response.message;
+                        var files = document.getElementById('documents').files;
+                        if (files.length > 0) {
+                            message += '\nDocuments uploaded successfully!';
+                        }
+
+                        Swal.fire({
+                            text: message,
+                            icon: "success",
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "{{ route('transaction.contracts.index') }}";
+                            }
+                        });
+                    } else {
+                        // Document upload failed but contract was created
+                        Swal.fire({
+                            title: 'Contract Created',
+                            text: 'Contract created successfully but document upload failed. You can upload documents later.',
+                            icon: 'warning',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "{{ route('transaction.contracts.index') }}";
+                            }
+                        });
+                    }
+                });
             },
             error: function(xhr) {
-                console.error('Failed to generate contract number:', xhr);
-            }
+                var errors = xhr.responseJSON.errors;
+                var firstItem = Object.keys(errors)[0];
+                var firstErrorMessage = errors[firstItem][0];
+                $("#btnSubmit").attr("disabled", false);
+
+                Swal.fire({
+                    text: firstErrorMessage,
+                    icon: "error",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                });
+            },
         });
     }
 

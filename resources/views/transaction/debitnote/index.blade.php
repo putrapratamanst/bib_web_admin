@@ -50,22 +50,24 @@
                 </div> -->
             </div>
             
-            <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
-                <thead class="table-header">
-                    <tr>
-                        <th>Number</th>
-                        <th>Date</th>
-                        <th>Due Date</th>
-                        <th>Insured Name</th>
-                        <th>Insurance Type</th>
-                        <th>Currency</th>
-                        <th>Nett Premium</th>
-                        <th>Status</th>
-                        <th>Approval Status</th>
-                        <th width="200px">Actions</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Number</th>
+                            <th>Date</th>
+                            <th>Due Date</th>
+                            <th>Insured Name</th>
+                            <th>Insurance Type</th>
+                            <th>Currency</th>
+                            <th>Nett Premium</th>
+                            <th>Status</th>
+                            <th>Approval Status</th>
+                            <th width="200px">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -80,6 +82,8 @@
         var table = $('#dn-table').DataTable({
             processing: true,
             serverSide: true,
+            responsive: true,
+            scrollX: true,
             ajax: {
                 url: "{{ route('api.debit-notes.datatables') }}",
                 data: function(d) {

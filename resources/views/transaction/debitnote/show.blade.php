@@ -23,7 +23,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">DN Number<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly name="number" id="number" value="{{ $debitNote->number }}">
+                            <input type="text" class="form-control" readonly name="number" id="number" value="{{ $debitNote->number }}"  style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">

@@ -17,21 +17,22 @@
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-lg-3">
+                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="date" class="form-label">Credit Note Date<sup class="text-danger">*</sup></label>
                             <input type="text" name="date" id="date" class="form-control datepicker" required>
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
+                    <!-- <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label> -->
+                            <!-- <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" placeholder="Will be generated upon saving" required> -->
+                        <!-- </div>
+                    </div> -->
+                   
                 </div>
 
                 <div class="row">
@@ -93,10 +94,8 @@
     });
 
     $(document).ready(function() {
-        // Get auto-generated number
-        $.get("{{ route('api.credit-notes.generate-number') }}", function(response) {
-            $("#number").val(response.number);
-        });
+        // Number will be auto-generated on backend
+        // Removed frontend auto-generation
         $('#billing_id').select2({
             theme: 'bootstrap-5',
             width: '100%',

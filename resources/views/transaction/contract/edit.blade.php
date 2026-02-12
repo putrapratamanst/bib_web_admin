@@ -383,11 +383,7 @@
         }
     });
 
-    var rowNumber = {
-        {
-            count($contract - > details)
-        }
-    };
+    var rowNumber = {{ count($contract->details) }};
 
     // Store original values to restore when user reverts to original placing type
     var originalContractTypeId = "{{ $contract->contract_type_id }}";
@@ -528,7 +524,7 @@
         });
 
         // Initialize select2 for existing insurance dropdowns
-        @foreach($contract - > details as $index => $detail)
+        @foreach($contract -> details as $index => $detail)
         $('#insurance_id_{{ $index }}').select2({
             theme: 'bootstrap-5',
             width: '100%',
@@ -557,8 +553,8 @@
         @endforeach
 
         // Initialize select2 for existing endorsement dropdowns
-        @foreach($contract - > endorsements as $index => $endorsement)
-        @if($endorsement - > contract_reference_id)
+        @foreach($contract -> endorsements as $index => $endorsement)
+        @if($endorsement -> contract_reference_id)
         // Endorsement {{ $index }} has reference, keep selected option
         @endif
         $('#contract_reference_id_{{ $index }}').select2({

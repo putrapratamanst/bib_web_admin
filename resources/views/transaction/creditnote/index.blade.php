@@ -50,22 +50,24 @@
                 </div>
             </div>
             
-            <table class="table table-new table-hover table-striped table-bordered" id="cn-table">
-                <thead class="table-header">
-                    <tr>
-                        <th>Number</th>
-                        <th>Date</th>
-                        <th>Contract Number</th>
-                        <th>Insured Name</th>
-                        <th>Insurance Type</th>
-                        <th>Currency</th>
-                        <th>Nett Premium</th>
-                        <th>Status</th>
-                        <th>Approval Status</th>
-                        <th width="200px">Actions</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-new table-hover table-striped table-bordered" id="cn-table">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Number</th>
+                            <th>Date</th>
+                            <th>Contract Number</th>
+                            <th>Insured Name</th>
+                            <th>Insurance Type</th>
+                            <th>Currency</th>
+                            <th>Nett Premium</th>
+                            <th>Status</th>
+                            <th>Approval Status</th>
+                            <th width="200px">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -86,6 +88,8 @@
         var table = $('#cn-table').DataTable({
             processing: true,
             serverSide: true,
+            responsive: true,
+            scrollX: true,
             ajax: {
                 url: "{{ route('api.credit-notes.datatables') }}",
                 data: function(d) {
