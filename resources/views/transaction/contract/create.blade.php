@@ -149,19 +149,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-lg-3">
+                                        <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
@@ -170,6 +158,12 @@
                             </div>
                         </div>
                     </div>
+
+                </div>
+
+                <div class="row">
+                                      
+
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
@@ -204,6 +198,15 @@
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
                                 <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" />
+                            </div>
+                        </div>
+                    </div>
+                      <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;"></span>
+                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" required />
                             </div>
                         </div>
                     </div>

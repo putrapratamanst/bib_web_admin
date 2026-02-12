@@ -127,19 +127,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                                <input readonly type="text" value="{{ $contract->stamp_fee_formatted }}" class="form-control" name="stamp_fee" id="stamp_fee" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-lg-3">
+                                        <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
@@ -149,25 +137,9 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                                <input readonly type="text" value="{{ $contract->amount_formatted }}" class="form-control" name="amount" id="amount" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="policy_fee" class="form-label">Policy Fee</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                                <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, ',', '.') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
-                            </div>
-                        </div>
-                    </div>
                 </div>
+
+                <div class="row">
                 <div class="col-lg-3">
                     <div class="mb-3">
                         <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
@@ -183,6 +155,36 @@
                         <div class="input-group">
                             <span class="input-group-text curr-code" style="font-size: 14px;">{{$contract->currency->code}}</span>
                             <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount_formatted }}" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input readonly type="text" value="{{ $contract->amount_formatted }}" class="form-control" name="amount" id="amount" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, ',', '.') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input readonly type="text" value="{{ $contract->stamp_fee_formatted }}" class="form-control" name="stamp_fee" id="stamp_fee" />
+                            </div>
                         </div>
                     </div>
                 </div>

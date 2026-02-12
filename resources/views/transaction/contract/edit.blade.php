@@ -8,11 +8,11 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Edit Placing</span>
             @php
-                $badgeClass = match($contract->approval_status) {
-                    'approved' => 'bg-success',
-                    'rejected' => 'bg-danger',
-                    default => 'bg-warning'
-                };
+            $badgeClass = match($contract->approval_status) {
+            'approved' => 'bg-success',
+            'rejected' => 'bg-danger',
+            default => 'bg-warning'
+            };
             @endphp
             <span class="badge {{ $badgeClass }}">{{ ucfirst($contract->approval_status) }}</span>
         </div>
@@ -166,17 +166,6 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-3">
-                        <div class="mb-3">
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
@@ -184,6 +173,9 @@
                             </div>
                         </div>
                     </div>
+
+                </div>
+                <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
@@ -221,6 +213,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-lg-3">
+                    <div class="mb-3">
+                        <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                        <div class="input-group">
+                            <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
+                            <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required />
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-md-8 col-md-6">
@@ -238,7 +239,7 @@
                             <select name="installment_count" id="installment_count" class="form-select">
                                 @for($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ $contract->installment_count == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
+                                    @endfor
                             </select>
                         </div>
                     </div>
@@ -253,11 +254,11 @@
                                     <label for="contract_reference_id" class="form-label">Placing Reference</label>
                                     <select id="contract_reference_id" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --" multiple>
                                         @foreach($contract->endorsements as $endorsement)
-                                            @if($endorsement->contract_reference_id)
-                                            <option value="{{ $endorsement->contract_reference_id }}" selected>
-                                                {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
-                                            </option>
-                                            @endif
+                                        @if($endorsement->contract_reference_id)
+                                        <option value="{{ $endorsement->contract_reference_id }}" selected>
+                                            {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
+                                        </option>
+                                        @endif
                                         @endforeach
                                     </select>
                                 </div>
@@ -265,83 +266,83 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="endorsement_number" class="form-label">Endorsement No</label>
-                                    <input id="endorsement_number" type="text" class="form-control" name="endorsement_number" 
-                                           value="{{ $contract->endorsements->first()->endorsement_number ?? '' }}" 
-                                           placeholder="Enter endorsement number">
+                                    <input id="endorsement_number" type="text" class="form-control" name="endorsement_number"
+                                        value="{{ $contract->endorsements->first()->endorsement_number ?? '' }}"
+                                        placeholder="Enter endorsement number">
                                 </div>
-                </div>            <!-- Documents Section -->
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <h6 class="mb-3">Documents</h6>
-                        <div id="documentsContainer">
-                            <div class="alert alert-info">
-                                <i class="bi bi-hourglass"></i> Loading documents...
+                            </div> <!-- Documents Section -->
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h6 class="mb-3">Documents</h6>
+                                    <div id="documentsContainer">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-hourglass"></i> Loading documents...
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 mb-3">
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                            <i class="bi bi-cloud-upload"></i> Add Documents
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="mt-3 mb-3">
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                                <i class="bi bi-cloud-upload"></i> Add Documents
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                <table id="tableDetails" class="table table-sm table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th width="30%">Insurance</th>
-                            <th>Description</th>
-                            <th width="10%">Share</th>
-                            <th width="10%">Brokerage Fee</th>
-                            <th width="10%">Eng Fee</th>
-                            <th width="10%">Opsi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($contract->details as $index => $detail)
-                        <tr>
-                            <td>
-                                <select id="insurance_id_{{ $index }}" name="insurance_id[]" class="form-select" data-placeholder="-- select insurance --">
-                                    <option value="{{ $detail->insurance_id }}" selected>{{ $detail->insurance->display_name }}</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select id="description_{{ $index }}" name="description[]" class="form-select" required>
-                                    <option value="">-- select type --</option>
-                                    <option value="Leader" {{ $detail->description === 'Leader' ? 'selected' : '' }}>Leader</option>
-                                    <option value="Member" {{ $detail->description === 'Member' ? 'selected' : '' }}>Member</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input id="percentage_{{ $index }}" type="text" class="form-control" name="percentage[]" value="{{ $detail->percentage }}">
-                            </td>
-                            <td>
-                                <input id="brokerage_fee_{{ $index }}" type="text" class="form-control" name="brokerage_fee[]" value="{{ $detail->brokerage_fee }}">
-                            </td>
-                            <td>
-                                <input id="eng_fee_{{ $index }}" type="text" class="form-control" name="eng_fee[]" value="{{ $detail->eng_fee }}">
-                            </td>
-                            <td class="text-center" style="vertical-align: middle;">
-                                <button type="button" class="removeRow btn btn-outline-danger btn-sm">Remove</button>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="6">
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">Add Row</button>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                            <table id="tableDetails" class="table table-sm table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="30%">Insurance</th>
+                                        <th>Description</th>
+                                        <th width="10%">Share</th>
+                                        <th width="10%">Brokerage Fee</th>
+                                        <th width="10%">Eng Fee</th>
+                                        <th width="10%">Opsi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($contract->details as $index => $detail)
+                                    <tr>
+                                        <td>
+                                            <select id="insurance_id_{{ $index }}" name="insurance_id[]" class="form-select" data-placeholder="-- select insurance --">
+                                                <option value="{{ $detail->insurance_id }}" selected>{{ $detail->insurance->display_name }}</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select id="description_{{ $index }}" name="description[]" class="form-select" required>
+                                                <option value="">-- select type --</option>
+                                                <option value="Leader" {{ $detail->description === 'Leader' ? 'selected' : '' }}>Leader</option>
+                                                <option value="Member" {{ $detail->description === 'Member' ? 'selected' : '' }}>Member</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input id="percentage_{{ $index }}" type="text" class="form-control" name="percentage[]" value="{{ $detail->percentage }}">
+                                        </td>
+                                        <td>
+                                            <input id="brokerage_fee_{{ $index }}" type="text" class="form-control" name="brokerage_fee[]" value="{{ $detail->brokerage_fee }}">
+                                        </td>
+                                        <td>
+                                            <input id="eng_fee_{{ $index }}" type="text" class="form-control" name="eng_fee[]" value="{{ $detail->eng_fee }}">
+                                        </td>
+                                        <td class="text-center" style="vertical-align: middle;">
+                                            <button type="button" class="removeRow btn btn-outline-danger btn-sm">Remove</button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="6">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">Add Row</button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
 
-            </div>
-            <div class="card-footer">
-                <button type="submit" id="btnSubmit" class="btn btn-primary">Update</button>
-                <a href="{{ route('transaction.contracts.show', $contract->id) }}" class="btn btn-secondary">Cancel</a>
-            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" id="btnSubmit" class="btn btn-primary">Update</button>
+                            <a href="{{ route('transaction.contracts.show', $contract->id) }}" class="btn btn-secondary">Cancel</a>
+                        </div>
         </form>
     </div>
 </div>
@@ -382,8 +383,12 @@
         }
     });
 
-    var rowNumber = {{ count($contract->details) }};
-    
+    var rowNumber = {
+        {
+            count($contract - > details)
+        }
+    };
+
     // Store original values to restore when user reverts to original placing type
     var originalContractTypeId = "{{ $contract->contract_type_id }}";
     var originalPlacingNumber = "{{ $contract->number }}";
@@ -491,14 +496,16 @@
             }
             $.get(`/api/contact/${contactId}/billing-address`, function(response) {
                 if (response.data && response.data.length > 0) {
-                    var primary = response.data.find(function(addr) { return addr.is_primary; });
+                    var primary = response.data.find(function(addr) {
+                        return addr.is_primary;
+                    });
                     var address = primary || response.data[0];
-                    
+
                     // Clear existing options and add the new one
                     $('#billing_address_id').empty();
                     var option = new Option(address.name + (address.address ? ' - ' + address.address : ''), address.id, true, true);
                     $('#billing_address_id').append(option).trigger('change');
-                    
+
                     $('#insured_name').val(address.name || '');
                     $('#correspondence_address').val(address.address || '');
                 } else {
@@ -521,7 +528,7 @@
         });
 
         // Initialize select2 for existing insurance dropdowns
-        @foreach($contract->details as $index => $detail)
+        @foreach($contract - > details as $index => $detail)
         $('#insurance_id_{{ $index }}').select2({
             theme: 'bootstrap-5',
             width: '100%',
@@ -550,8 +557,8 @@
         @endforeach
 
         // Initialize select2 for existing endorsement dropdowns
-        @foreach($contract->endorsements as $index => $endorsement)
-        @if($endorsement->contract_reference_id)
+        @foreach($contract - > endorsements as $index => $endorsement)
+        @if($endorsement - > contract_reference_id)
         // Endorsement {{ $index }} has reference, keep selected option
         @endif
         $('#contract_reference_id_{{ $index }}').select2({
@@ -874,11 +881,11 @@
     function calculatePeriodDuration() {
         var startDate = $("#period_start").datepicker('getDate');
         var endDate = $("#period_end").datepicker('getDate');
-        
+
         if (startDate && endDate) {
             var timeDiff = endDate.getTime() - startDate.getTime();
             var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-            
+
             if (daysDiff >= 0) {
                 $("#period_duration").val(daysDiff + " days");
             } else {
@@ -910,19 +917,19 @@
                     container.html('<div class="alert alert-info">No documents uploaded yet</div>');
                 } else {
                     let html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead><tbody>';
-                    
+
                     documents.forEach(function(doc) {
                         html += '<tr>' +
-                                '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
-                                '<td>' + doc.file_size_formatted + '</td>' +
-                                '<td>' + doc.uploaded_at + '</td>' +
-                                '<td>' +
-                                '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ' +
-                                '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>' +
-                                '</td>' +
-                                '</tr>';
+                            '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
+                            '<td>' + doc.file_size_formatted + '</td>' +
+                            '<td>' + doc.uploaded_at + '</td>' +
+                            '<td>' +
+                            '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ' +
+                            '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+                            '</td>' +
+                            '</tr>';
                     });
-                    
+
                     html += '</tbody></table></div>';
                     container.html(html);
                 }
@@ -1050,4 +1057,3 @@
     }
 </script>
 @endpush
-
