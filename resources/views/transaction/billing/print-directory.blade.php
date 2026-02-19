@@ -328,12 +328,12 @@
                 <div class="table-body">
                     <div class="notes-column">
                         <div>
-                            <strong>Risk Location: </strong>{{ $billing->debitNote->contract->riskLocation ?? 'xyd' }}
+                            <strong>Risk Location: </strong>{{ $billing->debitNote->contract->riskLocation ?? '-' }}
                         </div>
                         
                         <div>
-                            <strong>Stock: </strong>{{ $billing->debitNote->contract->stock ?? 'xyd' }}<br>
-                            <strong>Content: </strong>{{ $billing->debitNote->contract->content ?? 'xyd' }}
+                            <strong>Stock: </strong>{{ $billing->debitNote->contract->stock ?? '-' }}<br>
+                            <strong>Content: </strong>{{ $billing->debitNote->contract->content ?? '-' }}
                         </div>
                         
                         <div>

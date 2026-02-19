@@ -72,6 +72,10 @@ Route::prefix('transaction')->group(function () {
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'show']
     )->name('transaction.credit-notes.show');
     Route::get(
+        '/credit-notes/{id}/edit',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'edit']
+    )->name('transaction.credit-notes.edit');
+    Route::get(
         '/credit-notes/{id}/print',
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'print']
     )->name('transaction.credit-notes.print');

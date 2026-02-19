@@ -118,6 +118,7 @@ Route::get('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::clas
 Route::get('/credit-note/datatables', [\App\Http\Controllers\Api\CreditNoteController::class, 'datatables'])->name('api.credit-notes.datatables');
 Route::get('/credit-note/generate-number', [\App\Http\Controllers\Api\CreditNoteController::class, 'generateNumber'])->name('api.credit-notes.generate-number');
 Route::post('/credit-note', [\App\Http\Controllers\Api\CreditNoteController::class, 'store'])->name('api.credit-notes.store');
+Route::put('/credit-note/{id}', [\App\Http\Controllers\Api\CreditNoteController::class, 'update'])->name('api.credit-notes.update');
 Route::post('/credit-note/{id}/approve', [\App\Http\Controllers\Api\CreditNoteController::class, 'approve'])->name('api.credit-notes.approve');
 Route::post('/credit-note/{id}/reject', [\App\Http\Controllers\Api\CreditNoteController::class, 'reject'])->name('api.credit-notes.reject');
 

@@ -32,6 +32,23 @@ class CreditNoteController extends Controller
         ]);
     }
 
+    public function edit($id)
+    {
+        $creditNote = \App\Models\CreditNote::with(['billing.debitNote.contract'])->findOrFail($id);
+
+        if (!$creditNote->canBeEdited()) {
+            return redirect()->route('transaction.credit-notes.show', $id)
+                ->with('error', 'Credit Note cannot be edited because it has been approved or rejected.');
+        }
+
+        $currencies = \App\Models\Currency::all();
+
+        return view('transaction.creditnote.edit', [
+            'creditNote' => $creditNote,
+            'currencies' => $currencies,
+        ]);
+    }
+
     public function print($id)
     {
         $creditNote = \App\Models\CreditNote::with(['contract', 'contract.contact', 'currency'])->findOrFail($id);

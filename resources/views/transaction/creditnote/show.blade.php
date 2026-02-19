@@ -126,7 +126,13 @@
                 @endif
             </div>
             <div class="card-footer">
-                <a href="{{ route('transaction.credit-notes.index') }}" class="btn btn-secondary">Back to List</a>
+                <a href="{{ route('transaction.credit-notes.index') }}" class="btn btn-secondary">Back</a>
+
+                @if($creditNote->canBeEdited())
+                    <a href="{{ route('transaction.credit-notes.edit', $creditNote->id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                @endif
                 
                 @if($creditNote->canBeApproved() && auth()->user()->canApproveCreditNotes())
                     <button type="button" class="btn btn-success" onclick="approveCreditNote('{{ $creditNote->id }}')">

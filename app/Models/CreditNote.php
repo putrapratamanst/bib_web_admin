@@ -91,6 +91,11 @@ class CreditNote extends Model
         return $this->approval_status === 'pending';
     }
 
+    public function canBeEdited(): bool
+    {
+        return $this->approval_status === 'pending';
+    }
+
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id');
@@ -109,6 +114,11 @@ class CreditNote extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by', 'id');
+    }
+
+    public function billing(): BelongsTo
+    {
+        return $this->belongsTo(DebitNoteBilling::class, 'billing_id', 'id');
     }
 
     public function createdBy(): BelongsTo

@@ -206,17 +206,17 @@ class DebitNoteController extends Controller
      */
     private function generateDebitNoteNumber()
     {
-        // Format: DN/YYYY/MM/00001
-        $year = date('Y');
+        // Format: BIB/DYY/MM-00001
+        $year = date('y');
         $month = date('m');
-        $prefix = "DN/{$year}/{$month}/";
+        $prefix = "BIB/D{$year}/{$month}-";
         
         $lastDebitNote = DebitNote::where('number', 'like', "{$prefix}%")
             ->orderBy('number', 'desc')
             ->first();
         
         if ($lastDebitNote) {
-            $lastNumber = (int) substr($lastDebitNote->number, strrpos($lastDebitNote->number, '/') + 1);
+            $lastNumber = (int) substr($lastDebitNote->number, strrpos($lastDebitNote->number, '-') + 1);
             $runningNumber = $lastNumber + 1;
         } else {
             $runningNumber = 1;

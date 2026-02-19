@@ -43,7 +43,8 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">DN Number<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control @error('number') is-invalid @enderror" name="number" id="number" value="{{ old('number', $debitNote->number) }}" placeholder="Enter DN Number" required readonly  style="background-color: #e9ecef;">
+                            <input type="text" class="form-control @error('number') is-invalid @enderror" name="number" id="number" value="{{ old('number', $debitNote->number) }}" placeholder="Enter DN Number" required>
+                            <!-- <input type="text" class="form-control @error('number') is-invalid @enderror" name="number" id="number" value="{{ old('number', $debitNote->number) }}" placeholder="Enter DN Number" required readonly  style="background-color: #e9ecef;"> -->
                             @error('number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
