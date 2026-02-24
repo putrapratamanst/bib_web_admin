@@ -54,8 +54,14 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
+                            <label for="cover_note_number" class="form-label">Nomor Cover Note<sup class="text-danger">*</sup></label>
+                            <input readonly type="text" value="{{ $contract->cover_note_number ?? '-' }}" class="form-control" name="cover_note_number" id="cover_note_number" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
-                            <input readonly type="text" value="{{ $contract->policy_number }}" class="form-control" name="policy_number" id="policy_number" />
+                            <input readonly type="text" value="{{ $contract->policy_number ?? '-' }}" class="form-control" name="policy_number" id="policy_number" />
                         </div>
                     </div>
                 </div>

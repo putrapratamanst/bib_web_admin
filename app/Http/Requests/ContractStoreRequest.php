@@ -29,7 +29,8 @@ class ContractStoreRequest extends FormRequest
                     ? 'unique:contracts,number,' . $contractId . ',id'
                     : 'unique:contracts,number'
             ],
-            'policy_number' => 'required|max:150',
+            'cover_note_number' => 'nullable|max:150',
+            'policy_number' => 'nullable|max:150',
             'policy_fee' => 'nullable|numeric',
             'contact_id' => 'required|exists:contacts,id',
             'billing_address_id' => 'nullable|exists:billing_addresses,id',
@@ -76,7 +77,7 @@ class ContractStoreRequest extends FormRequest
             'contract_type_id.exists' => 'Contract type is invalid',
             'number.max' => 'Number must not be greater than 100 characters',
             'number.unique' => 'Number already exists',
-            'policy_number.required' => 'Policy number is required',
+            'cover_note_number.max' => 'Cover note number must not be greater than 150 characters',
             'policy_number.max' => 'Policy number must not be greater than 150 characters',
             'contact_id.required' => 'Contact is required',
             'contact_id.exists' => 'Contact is invalid',
@@ -117,6 +118,16 @@ class ContractStoreRequest extends FormRequest
     public function withValidator(Validator $validator)
     {
         $validator->after(function ($validator) {
+            $coverNoteNumber = trim((string) $this->input('cover_note_number', ''));
+            $policyNumber = trim((string) $this->input('policy_number', ''));
+
+            $isCoverNoteFilled = $coverNoteNumber !== '';
+            $isPolicyFilled = $policyNumber !== '';
+
+            if (!$isCoverNoteFilled && !$isPolicyFilled) {
+                $validator->errors()->add('cover_note_number', 'Nomor Cover Note atau Nomor Polis wajib diisi salah satu.');
+            }
+
             $totalPercentage = collect($this->input('details'))->sum('percentage');
 
             if ($totalPercentage != 100) {

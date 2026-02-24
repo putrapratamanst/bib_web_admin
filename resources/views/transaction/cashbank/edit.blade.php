@@ -151,21 +151,24 @@
                 delay: 500,
                 data: function (params) {
                     return {
-                        q: params.term,
+                        search: params.term,
+                        page: params.page || 1,
                     };
                 },
                 processResults: function (data) {
                     return {
-                        results: $.map(data.items, function(item) {
+                        results: $.map(data.data, function(item) {
                             return {
                                 id: item.id,
                                 text: item.text
                             };
-                        })
+                        }),
+                        pagination: {
+                            more: data.pagination.more
+                        }
                     };
                 },
-                minimumInputLength: 2,
-            }
+            },
         });
 
         // Chart of Account Select2
@@ -192,7 +195,6 @@
                         })
                     };
                 },
-                minimumInputLength: 2,
             }
         });
 
@@ -220,7 +222,6 @@
                         })
                     };
                 },
-                minimumInputLength: 2,
             }
         });
 
@@ -257,15 +258,36 @@
                     $("#btnSubmit").attr("disabled", true);
                 },
                 success: function(response) {
-                    alert(response.message);
-                    window.location.href = "{{ route('transaction.cash-banks.index') }}";
+                    Swal.fire({
+                        text: response.message,
+                        icon: "success",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{{ route('transaction.cash-banks.index') }}";
+                        }
+                    });
                 },
                 error: function(xhr) {
-                    var errors = xhr.responseJSON.errors;
-                    var firstItem = Object.keys(errors)[0];
-                    var firstErrorMessage = errors[firstItem][0];
+                    var firstErrorMessage = 'Update failed';
 
-                    alert(firstErrorMessage);
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.errors) {
+                            var errors = xhr.responseJSON.errors;
+                            var firstItem = Object.keys(errors)[0];
+                            firstErrorMessage = errors[firstItem][0];
+                        } else if (xhr.responseJSON.message) {
+                            firstErrorMessage = xhr.responseJSON.message;
+                        }
+                    }
+
+                    Swal.fire({
+                        text: firstErrorMessage,
+                        icon: "error",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    });
                 },
                 complete: function() {
                     $("#btnSubmit").attr("disabled", false);

@@ -18,6 +18,7 @@ class Contract extends Model
         'contract_status',
         'contract_type_id',
         'number',
+        'cover_note_number',
         'policy_number',
         'policy_fee',
         'contact_id',

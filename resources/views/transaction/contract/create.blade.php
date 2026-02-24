@@ -70,8 +70,14 @@
                     </div> -->
                     <div class="col-lg-3">
                         <div class="mb-3">
+                            <label for="cover_note_number" class="form-label">Nomor Cover Note<sup class="text-danger">*</sup></label>
+                            <input type="text" name="cover_note_number" id="cover_note_number" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="policy_number" id="policy_number" class="form-control" required />
+                            <input type="text" name="policy_number" id="policy_number" class="form-control" />
                         </div>
                     </div>
                 </div>
@@ -472,6 +478,18 @@
                 return;
             }
 
+            var coverNoteNumber = ($("#cover_note_number").val() || '').trim();
+            var policyNumber = ($("#policy_number").val() || '').trim();
+            if (!coverNoteNumber && !policyNumber) {
+                Swal.fire({
+                    text: 'Nomor Cover Note atau Nomor Polis wajib diisi salah satu.',
+                    icon: 'error',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                });
+                return;
+            }
+
             // Submit form directly - number will be generated on backend
             submitFormData();
         });
@@ -679,6 +697,7 @@
         var formData = {
             contract_status: $("#contract_status").val(),
             contract_type_id: $("#contract_type_id").val(),
+            cover_note_number: $("#cover_note_number").val(),
             policy_number: $("#policy_number").val(),
             policy_fee: $("#policy_fee").autoNumeric('get'),
             contact_id: $("#contact_id").val(),

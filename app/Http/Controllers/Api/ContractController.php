@@ -184,6 +184,7 @@ class ContractController extends Controller
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
                 'number' => $contractNumber,
+                'cover_note_number' => $data['cover_note_number'] ?? null,
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],
@@ -331,6 +332,7 @@ class ContractController extends Controller
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
                 // 'number' => $data['number'], // Keep existing number - don't change it during updates
+                'cover_note_number' => $data['cover_note_number'] ?? null,
                 'policy_number' => $data['policy_number'] ?? null,
                 'policy_fee' => $data['policy_fee'] ?? null,
                 'contact_id' => $data['contact_id'],
