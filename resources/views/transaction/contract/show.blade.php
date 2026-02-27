@@ -289,7 +289,7 @@
                             </div>
                         </div>
                         
-                        @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                        @if(auth()->user()->role === 'admin')
                         <div class="mt-3 mb-3">
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="bi bi-cloud-upload"></i> Add Documents
@@ -334,7 +334,7 @@
                 <a href="{{ route('transaction.contracts.index') }}" class="btn btn-outline-secondary">Back</a>
                 
                 @auth
-                    @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                    @if(auth()->user()->role === 'admin')
                     <div>
                         <a href="{{ route('transaction.contracts.edit', $contract->id) }}" class="btn btn-primary">
                             <i class="bi bi-pencil"></i> Edit
@@ -606,7 +606,7 @@
                                 '<td>' +
                                 '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ';
                         
-                        @if(auth()->user()->role === 'admin' && in_array($contract->approval_status, ['pending', 'rejected']))
+                        @if(auth()->user()->role === 'admin')
                         html += '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>';
                         @endif
                         

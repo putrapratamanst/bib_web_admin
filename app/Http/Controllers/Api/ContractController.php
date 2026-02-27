@@ -320,13 +320,6 @@ class ContractController extends Controller
                 ], 403);
             }
 
-            // Check if contract is pending or rejected
-            if (!in_array($contract->approval_status, ['pending', 'rejected'])) {
-                return response()->json([
-                    'message' => 'Cannot update approved contracts.'
-                ], 403);
-            }
-
             $data = $request->validated();
             $contract->update([
                 'contract_status' => $data['contract_status'],
