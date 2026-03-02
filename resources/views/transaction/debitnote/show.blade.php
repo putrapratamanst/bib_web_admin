@@ -253,11 +253,11 @@
                                     </button>
                                 @endif
                                 @if ($billing->status === 'posted')
-                                <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBilling('{{ $billing->id }}')" title="Print Billing">
+                                <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing">
                                     <i class="fas fa-print"></i> Print
                                 </a>
-                                <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing Directory">
-                                    <i class="fas fa-print"></i> Print Directory
+                                <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBilling('{{ $billing->id }}')" title="Print Design Lama">
+                                    <i class="fas fa-print"></i> Print Design Lama
                                 </a>
                                 @endif
                             </td>

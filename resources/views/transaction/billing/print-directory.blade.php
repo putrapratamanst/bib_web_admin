@@ -156,7 +156,7 @@
             flex-direction: column;
         }
 
-        .notes-column > div {
+        .notes-column>div {
             margin-bottom: 8px;
         }
 
@@ -226,13 +226,19 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
-            padding: 12px;
+            padding: 12px 12px 4px;
             text-align: center;
             font-size: 11px;
             font-weight: bold;
             border-top: 1px solid #000;
+        }
+
+        .signature-text {
+            display: inline-block;
+            border-top: 1px solid #000;
+            padding-top: 3px;
         }
 
         /* Footer */
@@ -316,7 +322,7 @@
                 <div class="row">
                     <div class="label"><strong>No</strong></div>
                     <div class="separator">:</div>
-                    <div class="value">{{ $billing->billing_number }}</div>
+                    <div class="value">{{ $billing->debitNote->number }}</div>
                 </div>
                 <div class="row">
                     <div class="label"><strong>Tanggal</strong><br><i>Date</i></div>
@@ -335,7 +341,7 @@
 
             <!-- Policy Information -->
             <div class="row" style="margin-top: 6px;">
-                <div class="label"><strong>Nomor Polis</strong><br><i>Policy Number</i></div>
+                <div class="label"><strong>Nomor Polis</strong><br><i>Cover Note Number</i></div>
                 <div class="separator">:</div>
                 <div class="value">{{ $billing->debitNote->contract->policy_number ?? '-' }}</div>
             </div>
@@ -374,12 +380,7 @@
                     <!-- Notes Column -->
                     <div class="notes-column">
                         <div>
-                            <strong>Risk Location: </strong>{{ $billing->debitNote->contract->riskLocation ?? '-' }}
-                        </div>
-
-                        <div>
-                            <strong>Stock: </strong>{{ $billing->debitNote->contract->stock ?? '-' }}<br>
-                            <strong>Content: </strong>{{ $billing->debitNote->contract->content ?? '-' }}
+                            <strong>{!! nl2br(e($billing->debitNote->contract?->memo ?? '-')) !!}</strong>
                         </div>
 
                         <div><i>Jatuh tempo pembayaran premi adalah 7 hari setelah polis diterima.</i></div>
@@ -459,7 +460,7 @@
 
                         <!-- Signature -->
                         <div class="signature-section">
-                            Authorized Signatures
+                            <span class="signature-text">Authorized Signatures</span>
                         </div>
                     </div>
                 </div>

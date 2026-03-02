@@ -174,6 +174,7 @@ class DebitNoteBillingController extends Controller
                 'debitNote.contract.contractType',
                 'debitNote.currency'
             ])->findOrFail($id);
+
             return view('transaction.billing.print-directory', compact('billing'));
         } catch (\Exception $e) {
             return redirect()->route('transaction.billings.index')->with('error', 'Billing not found');
