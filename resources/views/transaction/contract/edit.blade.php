@@ -343,6 +343,9 @@
                                     </tr>
                                 </tfoot>
                             </table>
+                            <div class="d-flex justify-content-end">
+                                <div class="fw-bold">Total Share: <span id="totalShareDisplay">0.00</span>%</div>
+                            </div>
 
                         </div>
                         <div class="card-footer">
@@ -739,6 +742,7 @@
 
             assignInsuranceData(rowNumber.toString());
             rowNumber++;
+            updateTotalShare();
         });
 
         // Initialize Select2 for contract reference
@@ -787,6 +791,7 @@
 
         // Load documents on page load
         loadDocuments();
+        updateTotalShare();
     });
 
     $(document).on('click', '.removeRow', function() {
@@ -794,6 +799,11 @@
             return;
         }
         $(this).closest('tr').remove();
+        updateTotalShare();
+    });
+
+    $(document).on('input', 'input[name="percentage[]"]', function() {
+        updateTotalShare();
     });
 
     function assignInsuranceData(number) {
@@ -856,6 +866,26 @@
 
         $("#discount_amount").autoNumeric('set', discountAmount);
         $("#amount").autoNumeric('set', netPremium);
+    }
+
+    function updateTotalShare() {
+        var totalShare = 0;
+
+        $('#tableDetails tbody tr').each(function() {
+            var rawValue = ($(this).find('input[name="percentage[]"]').val() || '').toString().trim();
+            if (!rawValue) {
+                return;
+            }
+
+            var normalized = rawValue.replace(/[^\d,.-]/g, '').replace(',', '.');
+            var numericValue = parseFloat(normalized);
+
+            if (!isNaN(numericValue)) {
+                totalShare += numericValue;
+            }
+        });
+
+        $('#totalShareDisplay').text(totalShare.toFixed(2));
     }
 
     $('#contract_type_id').on('change', function() {

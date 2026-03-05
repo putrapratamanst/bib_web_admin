@@ -135,8 +135,9 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
             
-            // Generate debit note number
-            $debitNoteNumber = $this->generateDebitNoteNumber();
+            // Use manual number when provided, otherwise generate automatically
+            $manualNumber = trim((string) $request->input('number', ''));
+            $debitNoteNumber = $manualNumber !== '' ? $manualNumber : $this->generateDebitNoteNumber();
             
             // Get contact_id from billing_address
             $billingAddress = \App\Models\BillingAddress::findOrFail($request->billing_address_id);

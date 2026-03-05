@@ -341,9 +341,15 @@
 
             <!-- Policy Information -->
             <div class="row" style="margin-top: 6px;">
-                <div class="label"><strong>Nomor Polis</strong><br><i>Cover Note Number</i></div>
+                @if ($billing->debitNote->contract->policy_number)
+                <div class="label"><strong>Nomor Polis</strong><br><i>Policy Number</i></div>
                 <div class="separator">:</div>
-                <div class="value">{{ $billing->debitNote->contract->policy_number ?? '-' }}</div>
+                <div class="value">{{ $billing->debitNote->contract->policy_number }}</div>
+                @else
+                <div class="label"><strong>Nomor Cover Note</strong><br><i>Cover Note Number</i></div>
+                <div class="separator">:</div>
+                <div class="value">{{ $billing->debitNote->contract->cover_note_number }}</div>
+                @endif
             </div>
 
             <div class="row">

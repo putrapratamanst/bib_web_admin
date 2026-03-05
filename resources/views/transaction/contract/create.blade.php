@@ -322,6 +322,9 @@
                         </tr>
                     </tfoot>
                 </table>
+                <div class="d-flex justify-content-end">
+                    <div class="fw-bold">Total Share: <span id="totalShareDisplay">0.00</span>%</div>
+                </div>
 
             </div>
             <div class="card-footer">
@@ -525,6 +528,7 @@
 
             assignInsuranceData(rowNumber.toString());
             rowNumber++;
+            updateTotalShare();
         });
 
         assignInsuranceData("0");
@@ -626,6 +630,8 @@
                 }
             }
         });
+
+        updateTotalShare();
     });
 
     $(document).on('click', '.removeRow', function() {
@@ -633,6 +639,11 @@
             return;
         }
         $(this).closest('tr').remove();
+        updateTotalShare();
+    });
+
+    $(document).on('input', 'input[name="percentage[]"]', function() {
+        updateTotalShare();
     });
 
     function assignInsuranceData(number) {
@@ -894,6 +905,26 @@
                 callback(false);
             },
         });
+    }
+
+    function updateTotalShare() {
+        var totalShare = 0;
+
+        $('#tableDetails tbody tr').each(function() {
+            var rawValue = ($(this).find('input[name="percentage[]"]').val() || '').toString().trim();
+            if (!rawValue) {
+                return;
+            }
+
+            var normalized = rawValue.replace(/[^\d,.-]/g, '').replace(',', '.');
+            var numericValue = parseFloat(normalized);
+
+            if (!isNaN(numericValue)) {
+                totalShare += numericValue;
+            }
+        });
+
+        $('#totalShareDisplay').text(totalShare.toFixed(2));
     }
 </script>
 @endpush

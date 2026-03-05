@@ -31,6 +31,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/contacts/create', [\App\Http\Controllers\Master\ContactController::class, 'create'])->name('master.contacts.create');
     Route::get('/contacts/{id}', [\App\Http\Controllers\Master\ContactController::class, 'show'])->name('master.contacts.show');
 
+    // Contract Type
+    Route::get('/contract-types', [\App\Http\Controllers\Master\ContractTypeController::class, 'index'])->name('master.contract-types.index');
+    Route::get('/contract-types/create', [\App\Http\Controllers\Master\ContractTypeController::class, 'create'])->name('master.contract-types.create');
+    Route::get('/contract-types/{id}/edit', [\App\Http\Controllers\Master\ContractTypeController::class, 'edit'])->name('master.contract-types.edit');
+
     // Currency
     Route::get('/currencies/datatables', [\App\Http\Controllers\Master\CurrencyController::class, 'datatables'])->name('master.currencies.datatables');
     Route::resource('/currencies', \App\Http\Controllers\Master\CurrencyController::class, ['as' => 'master']);

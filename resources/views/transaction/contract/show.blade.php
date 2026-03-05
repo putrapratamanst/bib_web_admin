@@ -328,6 +328,9 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="d-flex justify-content-end">
+                    <div class="fw-bold">Total Share: {{ number_format((float) $contract->details->sum('percentage'), 2, '.', ',') }}%</div>
+                </div>
 
             </div>
             <div class="card-footer d-flex justify-content-between">

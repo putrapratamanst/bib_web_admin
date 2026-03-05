@@ -7,11 +7,11 @@
             Credit Note Details
             <div class="float-end">
                 @if($creditNote->canBePrinted())
-                    <button class="btn btn-success btn-sm me-2" onclick="printCreditNote('{{ $creditNote->id }}')">
-                        <i class="fas fa-print"></i> Print Standard
+                    <button class="btn btn-success btn-sm me-2" onclick="printCreditNoteDirectory('{{ $creditNote->id }}')">
+                        <i class="fas fa-print"></i> Print
                     </button>
-                    <button class="btn btn-info btn-sm" onclick="printCreditNoteDirectory('{{ $creditNote->id }}')">
-                        <i class="fas fa-map"></i> Print Directory
+                    <button class="btn btn-info btn-sm" onclick="printCreditNote('{{ $creditNote->id }}')">
+                        <i class="fas fa-map"></i> Print Design Lama
                     </button>
                 @else
                     <span class="badge bg-warning">Approval Required</span>

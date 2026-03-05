@@ -27,6 +27,9 @@
                             <a class="dropdown-item" href="{{ route('master.contacts.index') }}">Contact</a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('master.contract-types.index') }}">Contract Type</a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ route('master.currencies.index') }}">Currency</a>
                         </li>
                     </ul>

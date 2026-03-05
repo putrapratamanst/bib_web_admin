@@ -44,6 +44,11 @@ Route::delete('/currency/{currency}', [\App\Http\Controllers\Api\CurrencyControl
 
 // Contract Type
 Route::get('/contract-types', [\App\Http\Controllers\Api\ContractTypeController::class, 'index'])->name('api.contract-types.index');
+Route::get('/contract-types/datatables', [\App\Http\Controllers\Api\ContractTypeController::class, 'datatables'])->name('api.contract-types.datatables');
+Route::post('/contract-types', [\App\Http\Controllers\Api\ContractTypeController::class, 'store'])->name('api.contract-types.store');
+Route::get('/contract-types/{id}', [\App\Http\Controllers\Api\ContractTypeController::class, 'show'])->name('api.contract-types.show');
+Route::put('/contract-types/{id}', [\App\Http\Controllers\Api\ContractTypeController::class, 'update'])->name('api.contract-types.update');
+Route::delete('/contract-types/{id}', [\App\Http\Controllers\Api\ContractTypeController::class, 'destroy'])->name('api.contract-types.destroy');
 Route::get('/contract-types/select2', [\App\Http\Controllers\Api\ContractTypeController::class, 'select2'])->name('api.contract-types.select2');
 
 // Billing Address
