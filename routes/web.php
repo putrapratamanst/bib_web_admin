@@ -178,6 +178,9 @@ Route::prefix('report')->group(function () {
     
     // Account Statement Report
     Route::get('/account-statement', [\App\Http\Controllers\Report\AccountStatementController::class, 'index'])->name('report.account-statement.index');
+
+    // Renewal Notice Report
+    Route::get('/renewal-notice', [\App\Http\Controllers\Report\ReportController::class, 'renewalNotice'])->name('report.renewal-notice.index');
 });
 
 }); // End of auth middleware group

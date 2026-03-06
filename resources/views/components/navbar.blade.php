@@ -124,6 +124,12 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('report.renewal-notice.index') }}">
+                                <i class="fas fa-calendar-check me-1"></i>
+                                Renewal Notice <span class="badge bg-primary">new</span>
+                            </a>
+                        </li>
+                        <li>
                             <hr class="dropdown-divider">
                         </li>
                         <li>

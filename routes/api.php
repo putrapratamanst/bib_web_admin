@@ -171,6 +171,9 @@ Route::prefix('report')->group(function () {
     
     // Account Statement Report
     Route::get('/account-statement', [\App\Http\Controllers\Api\ReportController::class, 'accountStatement'])->name('api.reports.account-statement');
+
+    // Renewal Notice Report
+    Route::get('/renewal-notice', [\App\Http\Controllers\Api\ReportController::class, 'renewalNotice'])->name('api.reports.renewal-notice');
 });
 
 }); // End of auth middleware group

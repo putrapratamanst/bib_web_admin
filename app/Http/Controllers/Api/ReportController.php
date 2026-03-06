@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Exports\DebitNoteReportExport;
 use App\Exports\CashoutReportExport;
 use App\Exports\AccountStatementExport;
+use App\Models\Contract;
 use App\Models\DebitNote;
 use App\Models\Cashout;
 use App\Models\AccountStatement;
@@ -15,6 +16,84 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+    public function renewalNotice(Request $request)
+    {
+        $month = (int) $request->get('month', now()->month);
+        $year = (int) $request->get('year', now()->year);
+        $contractTypeId = $request->get('contract_type_id');
+
+        $contracts = Contract::query()
+            ->with([
+                'contractType',
+                'billingAddress',
+                'details.insurance',
+                'debitNotes.creditNotes',
+            ])
+            ->leftJoin('billing_addresses as ba', 'ba.id', '=', 'contracts.billing_address_id')
+            ->select('contracts.*')
+            ->whereNotNull('contracts.period_end')
+            ->whereMonth('contracts.period_end', $month)
+            ->whereYear('contracts.period_end', $year)
+            ->whereDoesntHave('endorsements')
+            ->when($contractTypeId, function ($query) use ($contractTypeId) {
+                $query->where('contracts.contract_type_id', $contractTypeId);
+            })
+            ->orderBy('contracts.period_end', 'asc')
+            ->orderBy('ba.name', 'asc')
+            ->get();
+
+        $rows = $contracts->map(function (Contract $contract) {
+            $insuranceNames = $contract->details
+                ->map(fn ($detail) => $detail->insurance?->display_name)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $debitNotes = $contract->debitNotes ?? collect();
+
+            $dnNumbers = $debitNotes
+                ->pluck('number')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $cnNumbers = $debitNotes
+                ->flatMap(function ($debitNote) {
+                    return $debitNote->creditNotes->pluck('number');
+                })
+                ->filter()
+                ->unique()
+                ->values();
+
+            return [
+                'filtered_month' => $contract->period_end?->format('m'),
+                'filtered_year' => $contract->period_end?->format('Y'),
+                'tipe_asuransi' => $contract->contractType->code ?? ($contract->contractType->name ?? '-'),
+                'nomor_polis' => $contract->policy_number ?? '-',
+                'nomor_placing' => $contract->number,
+                'nama_asuransi' => $insuranceNames->isNotEmpty() ? $insuranceNames->implode(', ') : '-',
+                'nama_tertanggung' => $contract->billingAddress->name ?? '-',
+                'alamat_tertanggung' => $contract->billingAddress->address ?? '-',
+                'no_dn' => $dnNumbers->isNotEmpty() ? $dnNumbers->implode(', ') : '-',
+                'no_cn' => $cnNumbers->isNotEmpty() ? $cnNumbers->implode(', ') : '-',
+                'mata_uang' => $contract->currency_code ?? '-',
+                'total_sum_insured' => (float) ($contract->coverage_amount ?? 0),
+                'total_sum_insured_formatted' => number_format((float) ($contract->coverage_amount ?? 0), 2, ',', '.'),
+                'period_end' => $contract->period_end?->format('Y-m-d'),
+                'period_end_formatted' => $contract->period_end?->format('d-m-Y') ?? '-',
+            ];
+        });
+
+        return response()->json([
+            'filters' => [
+                'filtered_month' => str_pad((string) $month, 2, '0', STR_PAD_LEFT),
+                'filtered_year' => (string) $year,
+                'tipe_asuransi' => $contractTypeId ? ($contracts->first()?->contractType->code ?? 'Unknown') : 'Semua',
+            ],
+            'data' => $rows,
+        ]);
+    }
+
     public function debitNotes(Request $request)
     {
         $dateFrom = $request->get('date_from');
