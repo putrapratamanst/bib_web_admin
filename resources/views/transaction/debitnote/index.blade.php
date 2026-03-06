@@ -63,6 +63,7 @@
                             <th>Nett Premium</th>
                             <th>Status</th>
                             <th>Approval Status</th>
+                            <th>Posted Status</th>
                             <th width="200px">Actions</th>
                         </tr>
                     </thead>
@@ -170,6 +171,17 @@
                     name: 'approval_status',
                     orderable: false,
                     searchable: false
+                },
+                {
+                    data: 'is_posted',
+                    name: 'is_posted',
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        const isPosted = data === 'Yes' || data === true || data === 1 || data === '1';
+                        const badgeClass = isPosted ? 'bg-success' : 'bg-warning';
+                        const label = isPosted ? 'Posted' : 'Pending';
+                        return '<span class="badge ' + badgeClass + '">' + label + '</span>';
+                    }
                 },
                 {
                     data: 'actions',

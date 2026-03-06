@@ -120,14 +120,17 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3" id="installment-field" style="display: none;">
+                    <div class="col-md-4 col-lg-3" id="installment-field">
                         <div class="mb-3">
                             <label for="installment" class="form-label">Installment<sup class="text-danger">*</sup></label>
-                            <input type="number" class="form-control @error('installment') is-invalid @enderror" name="installment" id="installment" value="{{ old('installment', 0) }}" min="0" max="12" required>
+                            <select class="form-select @error('installment') is-invalid @enderror" name="installment" id="installment" required>
+                                @for ($i = 0; $i <= 12; $i++)
+                                    <option value="{{ $i }}" {{ old('installment', 0) == $i ? 'selected' : '' }}>{{ $i == 0 ? 'Single Payment' : $i }}</option>
+                                @endfor
+                            </select>
                             @error('installment')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <div class="form-text">Number of installments (0-12)</div>
                         </div>
                     </div>
                 </div>
@@ -168,6 +171,25 @@
                             @error('amount')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="status_display" class="form-label">Status</label>
+                            <input type="text" class="form-control" id="status_display" value="Active" readonly style="background-color: #e9ecef;">
+                            <input type="hidden" name="status" value="active">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approval_status_display" class="form-label">Approval Status</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-warning">Pending Approval</span>
+                            </div>
+                            <input type="hidden" name="approval_status" value="pending">
                         </div>
                     </div>
                 </div>
@@ -367,17 +389,11 @@ $(document).ready(function() {
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
                             $('#installment').val(contract.installment_count);
                             console.log('Installment set to:', contract.installment_count);
-                            if (contract.installment_count === 0 || contract.installment_count === 1) {
-                                $('#installment-field').hide();
-                                $('#installment').prop('required', false);
-                            } else {
-                                $('#installment-field').show();
-                                $('#installment').prop('required', true);
-                            }
+                            $('#installment').prop('required', true);
                         } else {
                             console.log('Installment count not found in contract data');
-                            $('#installment-field').hide();
-                            $('#installment').prop('required', false);
+                            $('#installment').val('0');
+                            $('#installment').prop('required', true);
                         }
                         setTimeout(function() {
                             if (contract.exchange_rate) {
@@ -443,8 +459,7 @@ $(document).ready(function() {
         $('#currency').val('').trigger('change');
         $('#policy_number_display').val('-');
         $('#installment').val('0');
-        $('#installment-field').hide();
-        $('#installment').prop('required', false);
+        $('#installment').prop('required', true);
         setTimeout(function() {
             try {
                 $('#exchange_rate').autoNumeric('set', '1');

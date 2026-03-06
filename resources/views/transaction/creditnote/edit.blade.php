@@ -18,8 +18,8 @@
                 <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="number" class="form-label">Credit Note Number</label>
-                            <input type="text" name="number" id="number" class="form-control" value="{{ $creditNote->number }}">
+                            <label for="contract_id" class="form-label">Contract<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" readonly name="contract_id" id="contract_id" value="{{ $creditNote->contract->number ?? '' }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -43,8 +43,17 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="date" class="form-label">Credit Note Date<sup class="text-danger">*</sup></label>
+                            <label for="date" class="form-label">CN Date<sup class="text-danger">*</sup></label>
                             <input type="text" name="date" id="date" class="form-control datepicker" value="{{ $creditNote->date ? $creditNote->date->format('Y-m-d') : '' }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="number" class="form-label">CN Number<sup class="text-danger">*</sup></label>
+                            <input type="text" name="number" id="number" class="form-control" value="{{ $creditNote->number }}" readonly style="background-color: #e9ecef;">
                         </div>
                     </div>
                 </div>
@@ -91,6 +100,12 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="status_display" class="form-label">Status</label>
+                            <input type="text" class="form-control" readonly id="status_display" value="{{ ucfirst($creditNote->status) }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="approval_status" class="form-label">Approval Status</label>
@@ -152,6 +167,27 @@
                 },
                 minimumInputLength: 2,
             },
+        });
+
+        $('#billing_id').on('change', function() {
+            var billingId = $(this).val();
+
+            if (!billingId) {
+                $('#contract_id').val('');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/debit-note-billing/' + billingId,
+                method: 'GET',
+                success: function(response) {
+                    var contractNumber = response?.data?.debit_note?.contract?.number || '';
+                    $('#contract_id').val(contractNumber);
+                },
+                error: function() {
+                    $('#contract_id').val('');
+                }
+            });
         });
 
         $("#currency_code").on("change", updateCurrencyPrefix);

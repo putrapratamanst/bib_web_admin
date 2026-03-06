@@ -4,11 +4,17 @@
 <div class="container">
     <div class="card">
         <div class="card-header">
-            Add New Credit Note
+            Create Credit Note
         </div>        
         <form autocomplete="off" method="POST" id="formCreate">
             <div class="card-body">
                 <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="contract_id" class="form-label">Contract<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control" readonly name="contract_id" id="contract_id" value="" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_id" class="form-label">Billing<sup class="text-danger">*</sup></label>
@@ -19,20 +25,19 @@
                     </div>
                      <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="date" class="form-label">Credit Note Date<sup class="text-danger">*</sup></label>
+                            <label for="date" class="form-label">CN Date<sup class="text-danger">*</sup></label>
                             <input type="text" name="date" id="date" class="form-control datepicker" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="row">
-                    <!-- <div class="col-md-4 col-lg-3">
+                    <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label> -->
-                            <!-- <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" placeholder="Will be generated upon saving" required> -->
-                        <!-- </div>
-                    </div> -->
-                   
+                            <label for="number" class="form-label">CN Number<sup class="text-danger">*</sup></label>
+                            <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" placeholder="Auto generated">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -72,6 +77,25 @@
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea name="description" id="description" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="status_display" class="form-label">Status</label>
+                            <input type="text" class="form-control" id="status_display" value="Active" readonly style="background-color: #e9ecef;">
+                            <input type="hidden" name="status" id="status" value="active">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="approval_status_display" class="form-label">Approval Status</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-warning">Pending Approval</span>
+                            </div>
+                            <input type="hidden" name="approval_status" id="approval_status" value="pending">
                         </div>
                     </div>
                 </div>
@@ -122,6 +146,27 @@
                 },
                 minimumInputLength: 2,
             },
+        });
+
+        $('#billing_id').on('change', function() {
+            var billingId = $(this).val();
+
+            if (!billingId) {
+                $('#contract_id').val('');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/debit-note-billing/' + billingId,
+                method: 'GET',
+                success: function(response) {
+                    var contractNumber = response?.data?.debit_note?.contract?.number || '';
+                    $('#contract_id').val(contractNumber);
+                },
+                error: function() {
+                    $('#contract_id').val('');
+                }
+            });
         });
 
         $("#currency_code").on("change", updateCurrencyPrefix);
