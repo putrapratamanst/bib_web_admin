@@ -365,12 +365,12 @@
                     <div class="notes-column">
                         {!! nl2br(e($creditNote->description ?? '-')) !!}
 
-                        <div style="margin-top: 8px;"><i>Jatuh tempo pembayaran premi adalah 7 hari setelah polis diterima.</i></div>
+                        <!-- <div style="margin-top: 8px;"><i>Jatuh tempo pembayaran premi adalah 7 hari setelah polis diterima.</i></div>
                         <div><i>Klaim dapat ditolak jika pembayaran premi melebihi jatuh tempo</i></div>
-                        <div><i>Pembayaran Premi ditujukan atas atas nama ditujukan nomor Debit Note &amp; Polis tersebut</i></div>
+                        <div><i>Pembayaran Premi ditujukan atas atas nama ditujukan nomor Debit Note &amp; Polis tersebut</i></div> -->
 
                         <div class="notes-bottom">
-                            @php
+                            <!-- @php
                                 $paymentDate = $creditNote->billing?->due_date
                                     ? \Carbon\Carbon::parse($creditNote->billing->due_date)->format('d-M-Y')
                                     : \Carbon\Carbon::parse($creditNote->date)->format('d-M-Y');
@@ -391,7 +391,7 @@
                             BNI 46 Cab. Senayan<br>
                             a/c No. 025.9060.691 (IDR)<br>
                             BCA KCP Puri Botanical<br>
-                            a/c No. 6260.5866.88 (IDR)
+                            a/c No. 6260.5866.88 (IDR) -->
                         </div>
                     </div>
 
@@ -408,12 +408,12 @@
                             @endphp
 
                             <div class="premium-row">
-                                <div class="premium-label">Premi<i>Premium</i></div>
+                                <div class="premium-label">Jumlah<i>Premium</i></div>
                                 <div class="premium-currency">{{ $currency }}</div>
                                 <div class="premium-value">{{ number_format($grossPremium, 2, '.', ',') }}</div>
                             </div>
 
-                            <div class="premium-row">
+                            <!-- <div class="premium-row">
                                 <div class="premium-label">Biaya Polis<i>Policy Cost</i></div>
                                 <div class="premium-currency">{{ $currency }}</div>
                                 <div class="premium-value">{{ number_format($policyCost, 2, '.', ',') }}</div>
@@ -438,7 +438,7 @@
                                 <div class="premium-currency">{{ $currency }}</div>
                                 <div class="premium-value">{{ number_format($creditNote->amount ?? 0, 2, '.', ',') }}</div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="signature-section">
                             <span class="signature-text">Authorized Signatures</span>
