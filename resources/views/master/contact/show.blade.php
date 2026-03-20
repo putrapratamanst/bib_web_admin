@@ -131,6 +131,22 @@
                         <label for="billing_phone_modal" class="form-label">Phone</label>
                         <input type="text" class="form-control" id="billing_phone_modal" name="phone">
                     </div>
+                    <div class="col-12">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label for="ktp_modal" class="form-label">KTP</label>
+                                    <input type="number" class="form-control" id="ktp_modal" name="ktp">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label for="npwp_modal" class="form-label">NPWP</label>
+                                    <input type="number" class="form-control" id="npwp_modal" name="npwp">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary" value="1">
                         <label class="form-check-label" for="is_primary">
@@ -223,10 +239,10 @@
         // Save billing address
         $('#formBillingAddress').submit(function(e) {
             e.preventDefault();
-            
+
             var billingId = $('#billing_id').val();
-            var url = billingId ? 
-                "{{ url('api/billing-address') }}/" + billingId : 
+            var url = billingId ?
+                "{{ url('api/billing-address') }}/" + billingId :
                 "{{ route('api.billing-addresses.store') }}";
             var method = billingId ? 'PUT' : 'POST';
 
@@ -260,7 +276,7 @@
                     var errors = xhr.responseJSON.errors;
                     var firstItem = Object.keys(errors)[0];
                     var firstErrorMessage = errors[firstItem][0];
-                    
+
                     Swal.fire({
                         text: firstErrorMessage,
                         icon: 'error'
@@ -281,10 +297,10 @@
                 var html = '';
                 if (response.data.length > 0) {
                     response.data.forEach(function(item, index) {
-                        var primaryBadge = item.is_primary ? 
-                            '<span class="badge bg-success">Primary</span>' : 
+                        var primaryBadge = item.is_primary ?
+                            '<span class="badge bg-success">Primary</span>' :
                             '<button class="btn btn-sm btn-outline-secondary" onclick="setPrimary(\'' + item.id + '\')">Set Primary</button>';
-                        
+
                         html += '<tr>';
                         html += '<td>' + (index + 1) + '</td>';
                         html += '<td>' + item.name + '</td>';

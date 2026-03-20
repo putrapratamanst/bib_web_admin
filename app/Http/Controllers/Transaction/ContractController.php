@@ -41,14 +41,13 @@ class ContractController extends Controller
     {
         $contract = Contract::with(['details', 'endorsements.contractReference.contact', 'contractType', 'contact'])->findOrFail($id);
         
-        // Check if user is admin and contract is pending or rejected
+        // Check if user is admin
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized. Only admins can edit contracts.');
         }
 
-        if (!in_array($contract->approval_status, ['pending', 'rejected'])) {
-            abort(403, 'Cannot edit approved contracts.');
-        }
+        // Lock form if approved or has issued debit notes — only policy_number can be edited
+        $isFormLocked = $contract->approval_status === 'approved' || $contract->debitNotes()->exists();
 
         $contractTypes = \App\Models\ContractType::all();
         $currencies = \App\Models\Currency::all();
@@ -57,6 +56,7 @@ class ContractController extends Controller
             'contract' => $contract,
             'contractTypes' => $contractTypes,
             'currencies' => $currencies,
+            'isFormLocked' => $isFormLocked,
         ]);
     }
     public function showAddUnit($id)

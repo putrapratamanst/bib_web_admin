@@ -102,6 +102,7 @@ Route::get('/contract/generate-number', [\App\Http\Controllers\Api\ContractContr
 Route::get('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'show'])->name('api.contracts.show');
 Route::post('/contract', [\App\Http\Controllers\Api\ContractController::class, 'store'])->name('api.contracts.store');
 Route::put('/contract/{id}', [\App\Http\Controllers\Api\ContractController::class, 'update'])->name('api.contracts.update');
+Route::patch('/contract/{id}/policy-number', [\App\Http\Controllers\Api\ContractController::class, 'updatePolicyNumber'])->name('api.contracts.update-policy-number');
 Route::post('/contracts/{id}/approve', [\App\Http\Controllers\Api\ContractController::class, 'approve'])->name('api.contracts.approve');
 Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractController::class, 'reject'])->name('api.contracts.reject');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');

@@ -122,7 +122,7 @@ class ContractController extends Controller
         $contractType = \App\Models\ContractType::findOrFail($contractTypeId);
         
         // Get contract type code (first 3 letters of name, uppercase, remove non-alpha)
-        $contractTypeCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $contractType->name), 0, 3));
+        $contractTypeCode = $contractType->code;
         
         // Current month and year
         $month = date('m');
@@ -306,6 +306,28 @@ class ContractController extends Controller
         }
 
         return response()->json(['message' => 'Property units successfully saved.']);
+    }
+
+    public function updatePolicyNumber(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized. Only admins can update contracts.'], 403);
+        }
+
+        $request->validate([
+            'policy_number' => 'nullable|string|max:150',
+        ]);
+
+        $contract = Contract::findOrFail($id);
+        $contract->update([
+            'policy_number' => $request->input('policy_number'),
+            'updated_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'message' => 'Policy number updated successfully',
+            'data' => ['policy_number' => $contract->policy_number],
+        ]);
     }
 
     public function update(ContractStoreRequest $request, $id)

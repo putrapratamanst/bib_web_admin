@@ -19,17 +19,26 @@
         <form autocomplete="off" method="POST" id="formEdit">
             <input type="hidden" name="contract_id" id="contract_id" value="{{ $contract->id }}" />
             <div class="card-body">
+                @if($isFormLocked)
+                <div class="alert alert-warning">
+                    <strong><i class="fas fa-lock"></i> Form Terkunci</strong> &mdash;
+                    Placing ini sudah approved atau sudah memiliki Debit Note. Hanya field <strong>Nomor Polis</strong> yang dapat diubah.
+                </div>
+                @endif
+
                 @if($contract->approval_status === 'rejected' && $contract->rejection_reason)
                 <div class="alert alert-warning">
                     <strong>Rejection Reason:</strong> {{ $contract->rejection_reason }}
                 </div>
                 @endif
 
+                @php $lock = $isFormLocked ? 'disabled' : ''; @endphp
+
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="contract_status" class="form-label">Placing Status<sup class="text-danger">*</sup></label>
-                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select placing status --" required>
+                            <select name="contract_status" id="contract_status" class="form-control select2" data-placeholder="-- select placing status --" required {{ $lock }}>
                                 <option value=""></option>
                                 <option value="renewal" {{ $contract->contract_status === 'renewal' ? 'selected' : '' }}>Renewal</option>
                                 <option value="new" {{ $contract->contract_status === 'new' ? 'selected' : '' }}>New</option>
@@ -39,7 +48,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="contract_type_id" class="form-label">Placing Type<sup class="text-danger">*</sup></label>
-                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select placing type --" required>
+                            <select name="contract_type_id" id="contract_type_id" class="form-control select2" data-placeholder="-- select placing type --" required {{ $lock }}>
                                 <option value=""></option>
                                 @foreach($contractTypes as $contractType)
                                 <option value="{{ $contractType->id }}" {{ $contract->contract_type_id == $contractType->id ? 'selected' : '' }}>{{ $contractType->name }}</option>
@@ -50,7 +59,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="contact_id" class="form-label">Contact<sup class="text-danger">*</sup></label>
-                            <select name="contact_id" id="contact_id" class="form-control">
+                            <select name="contact_id" id="contact_id" class="form-control" {{ $lock }}>
                                 <option value="{{ $contract->contact_id }}" selected>{{ $contract->contact->display_name }}</option>
                             </select>
                         </div>
@@ -58,7 +67,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address</label>
-                            <select name="billing_address_id" id="billing_address_id" class="form-control select2" data-placeholder="-- select billing address --">
+                            <select name="billing_address_id" id="billing_address_id" class="form-control select2" data-placeholder="-- select billing address --" {{ $lock }}>
                                 @if($contract->billingAddress)
                                 <option value="{{ $contract->billing_address_id }}" selected>{{ $contract->billingAddress->name . ($contract->billingAddress->address ? ' - ' . $contract->billingAddress->address : '') }}</option>
                                 @endif
@@ -71,7 +80,7 @@
                     <div class="col-lg-3" style="{{ in_array($contract->contract_type_id, [1, 14]) ? '' : 'display: none;' }}" id="covered-item-field">
                         <div class="mb-3">
                             <label for="covered-item" class="form-label">Jumlah item yang dicover<sup class="text-danger">*</sup></label>
-                            <input type="number" name="covered_item" id="covered-item" class="form-control" value="{{ $contract->covered_item }}" />
+                            <input type="number" name="covered_item" id="covered-item" class="form-control" value="{{ $contract->covered_item }}" {{ $lock }} />
                         </div>
                     </div>
                 </div>
@@ -80,13 +89,13 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
-                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" style="background-color: #e9ecef;" required />
+                            <input type="text" name="number" id="number" class="form-control" value="{{ $contract->number }}" style="background-color: #e9ecef;" required {{ $lock }} />
                         </div>
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="cover_note_number" class="form-label">Nomor Cover Note<sup class="text-danger">*</sup></label>
-                            <input type="text" name="cover_note_number" id="cover_note_number" class="form-control" value="{{ $contract->cover_note_number }}" />
+                            <input type="text" name="cover_note_number" id="cover_note_number" class="form-control" value="{{ $contract->cover_note_number }}" {{ $lock }} />
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -116,13 +125,13 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_start" class="form-label">Period Start<sup class="text-danger">*</sup></label>
-                            <input type="text" name="period_start" id="period_start" class="form-control datepicker" value="{{ $contract->period_start ? $contract->period_start->format('d-m-Y') : '' }}" required>
+                            <input type="text" name="period_start" id="period_start" class="form-control datepicker" value="{{ $contract->period_start ? $contract->period_start->format('d-m-Y') : '' }}" required {{ $lock }}>
                         </div>
                     </div>
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="period_end" class="form-label">Period End<sup class="text-danger">*</sup></label>
-                            <input type="text" name="period_end" id="period_end" class="form-control datepicker" value="{{ $contract->period_end ? $contract->period_end->format('d-m-Y') : '' }}">
+                            <input type="text" name="period_end" id="period_end" class="form-control datepicker" value="{{ $contract->period_end ? $contract->period_end->format('d-m-Y') : '' }}" {{ $lock }}>
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -135,7 +144,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="created_at" class="form-label">Created Date<sup class="text-danger">*</sup></label>
-                            <input type="text" name="created_at" id="created_at" class="form-control datepicker" value="{{ $contract->created_at ? $contract->created_at->format('d-m-Y') : '' }}" required>
+                            <input type="text" name="created_at" id="created_at" class="form-control datepicker" value="{{ $contract->created_at ? $contract->created_at->format('d-m-Y') : '' }}" required {{ $lock }}>
                         </div>
                     </div>
                 </div>
@@ -144,7 +153,7 @@
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="currency_code" class="form-label">Currency<sup class="text-danger">*</sup></label>
-                            <select name="currency_code" id="currency_code" class="form-control select2" data-placeholder="-- select currency --" required>
+                            <select name="currency_code" id="currency_code" class="form-control select2" data-placeholder="-- select currency --" required {{ $lock }}>
                                 <option value=""></option>
                                 @foreach($currencies as $currency)
                                 <option value="{{ $currency->code }}" {{ $contract->currency_code === $currency->code ? 'selected' : '' }}>{{ $currency->code }}</option>
@@ -157,7 +166,7 @@
                             <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" value="{{ $contract->exchange_rate }}" required />
+                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" value="{{ $contract->exchange_rate }}" required {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -166,7 +175,7 @@
                             <label for="coverage_amount" class="form-label">Total Sum Insured (TSI)<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="coverage_amount" id="coverage_amount" class="form-control autonumeric" value="{{ $contract->coverage_amount }}" required />
+                                <input type="text" name="coverage_amount" id="coverage_amount" class="form-control autonumeric" value="{{ $contract->coverage_amount }}" required {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -175,7 +184,7 @@
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="gross_premium" id="gross_premium" class="form-control autonumeric" value="{{ $contract->gross_premium }}" required />
+                                <input type="text" name="gross_premium" id="gross_premium" class="form-control autonumeric" value="{{ $contract->gross_premium }}" required {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -186,7 +195,7 @@
                         <div class="mb-3">
                             <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount }}" required />
+                                <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount }}" required {{ $lock }} />
                                 <span class="input-group-text" style="font-size: 14px;">%</span>
                             </div>
                         </div>
@@ -214,7 +223,7 @@
                             <label for="policy_fee" class="form-label">Policy Fee</label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" value="{{ $contract->policy_fee }}" />
+                                <input type="text" name="policy_fee" id="policy_fee" class="form-control autonumeric" value="{{ $contract->policy_fee }}" {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -224,7 +233,7 @@
                         <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
                         <div class="input-group">
                             <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                            <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required />
+                            <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required {{ $lock }} />
                         </div>
                     </div>
                 </div>
@@ -233,7 +242,7 @@
                     <div class="col-md-8 col-md-6">
                         <div class="mb-3">
                             <label for="memo" class="form-label">Memo</label>
-                            <textarea name="memo" id="memo" class="form-control" rows="3">{{ $contract->memo }}</textarea>
+                            <textarea name="memo" id="memo" class="form-control" rows="3" {{ $lock }}>{{ $contract->memo }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -242,7 +251,7 @@
                     <div class="col-md-3">
                         <label for="installment_count" class="form-label">Installment Count</label>
                         <div class="mb-3">
-                            <select name="installment_count" id="installment_count" class="form-select">
+                            <select name="installment_count" id="installment_count" class="form-select" {{ $lock }}>
                                 @for($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ $contract->installment_count == $i ? 'selected' : '' }}>{{ $i }}</option>
                                     @endfor
@@ -258,7 +267,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="contract_reference_id" class="form-label">Placing Reference</label>
-                                    <select id="contract_reference_id" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --" multiple>
+                                    <select id="contract_reference_id" name="contract_reference_id[]" class="form-select" data-placeholder="-- select contract reference --" multiple {{ $lock }}>
                                         @foreach($contract->endorsements as $endorsement)
                                         @if($endorsement->contract_reference_id)
                                         <option value="{{ $endorsement->contract_reference_id }}" selected>
@@ -274,7 +283,7 @@
                                     <label for="endorsement_number" class="form-label">Endorsement No</label>
                                     <input id="endorsement_number" type="text" class="form-control" name="endorsement_number"
                                         value="{{ $contract->endorsements->first()->endorsement_number ?? '' }}"
-                                        placeholder="Enter endorsement number">
+                                        placeholder="Enter endorsement number" {{ $lock }}>
                                 </div>
                             </div> <!-- Documents Section -->
                             <div class="row mt-4">
@@ -330,7 +339,9 @@
                                             <input id="eng_fee_{{ $index }}" type="text" class="form-control" name="eng_fee[]" value="{{ $detail->eng_fee }}">
                                         </td>
                                         <td class="text-center" style="vertical-align: middle;">
-                                            <button type="button" class="removeRow btn btn-outline-danger btn-sm">Remove</button>
+                                            @if(!$isFormLocked)
+                                        <button type="button" class="removeRow btn btn-outline-danger btn-sm">Remove</button>
+                                        @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -338,7 +349,9 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="6">
+                                            @if(!$isFormLocked)
                                             <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">Add Row</button>
+                                            @endif
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -602,78 +615,90 @@
         $("#formEdit").submit(function(e) {
             e.preventDefault();
 
-            var coverNoteNumber = ($("#cover_note_number").val() || '').trim();
-            var policyNumber = ($("#policy_number").val() || '').trim();
+            var contractId = $("#contract_id").val();
+            var isFormLocked = {{ $isFormLocked ? 'true' : 'false' }};
+            var formData;
 
-            if (!coverNoteNumber && !policyNumber) {
-                Swal.fire({
-                    text: 'Nomor Cover Note atau Nomor Polis wajib diisi salah satu.',
-                    icon: "error",
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                });
-                return;
-            }
+            if (isFormLocked) {
+                // Only update policy_number when form is locked
+                formData = {
+                    policy_number: $("#policy_number").val(),
+                };
+            } else {
+                var coverNoteNumber = ($("#cover_note_number").val() || '').trim();
+                var policyNumber = ($("#policy_number").val() || '').trim();
 
-            var details = [];
-            $('#tableDetails tbody tr').each(function() {
-                var insuranceId = $(this).find('select[name="insurance_id[]"]').val();
-                var description = $(this).find('select[name="description[]"]').val();
-                var percentage = $(this).find('input[name="percentage[]"]').val();
-                var brokerageFee = $(this).find('input[name="brokerage_fee[]"]').val();
-                var engFee = $(this).find('input[name="eng_fee[]"]').val();
+                if (!coverNoteNumber && !policyNumber) {
+                    Swal.fire({
+                        text: 'Nomor Cover Note atau Nomor Polis wajib diisi salah satu.',
+                        icon: "error",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    });
+                    return;
+                }
 
-                details.push({
-                    insurance_id: insuranceId,
-                    description: description,
-                    percentage: percentage,
-                    brokerage_fee: brokerageFee,
-                    eng_fee: engFee,
-                });
-            });
+                var details = [];
+                $('#tableDetails tbody tr').each(function() {
+                    var insuranceId = $(this).find('select[name="insurance_id[]"]').val();
+                    var description = $(this).find('select[name="description[]"]').val();
+                    var percentage = $(this).find('input[name="percentage[]"]').val();
+                    var brokerageFee = $(this).find('input[name="brokerage_fee[]"]').val();
+                    var engFee = $(this).find('input[name="eng_fee[]"]').val();
 
-            var endorsements = [];
-            var contractReferenceIds = $('#contract_reference_id').val(); // array of selected IDs
-            var endorsementNumber = $('#endorsement_number').val();
-
-            if (contractReferenceIds && contractReferenceIds.length > 0) {
-                contractReferenceIds.forEach(function(refId) {
-                    endorsements.push({
-                        contract_reference_id: refId,
-                        endorsement_number: endorsementNumber,
+                    details.push({
+                        insurance_id: insuranceId,
+                        description: description,
+                        percentage: percentage,
+                        brokerage_fee: brokerageFee,
+                        eng_fee: engFee,
                     });
                 });
+
+                var endorsements = [];
+                var contractReferenceIds = $('#contract_reference_id').val(); // array of selected IDs
+                var endorsementNumber = $('#endorsement_number').val();
+
+                if (contractReferenceIds && contractReferenceIds.length > 0) {
+                    contractReferenceIds.forEach(function(refId) {
+                        endorsements.push({
+                            contract_reference_id: refId,
+                            endorsement_number: endorsementNumber,
+                        });
+                    });
+                }
+
+                formData = {
+                    contract_status: $("#contract_status").val(),
+                    contract_type_id: $("#contract_type_id").val(),
+                    number: $("#number").val(),
+                    cover_note_number: $("#cover_note_number").val(),
+                    policy_number: $("#policy_number").val(),
+                    policy_fee: $("#policy_fee").autoNumeric('get'),
+                    contact_id: $("#contact_id").val(),
+                    billing_address_id: $("#billing_address_id").val(),
+                    endorsements: endorsements,
+                    period_start: $("#period_start").val(),
+                    period_end: $("#period_end").val(),
+                    currency_code: $("#currency_code").val(),
+                    exchange_rate: $("#exchange_rate").autoNumeric('get'),
+                    coverage_amount: $("#coverage_amount").autoNumeric('get'),
+                    gross_premium: $("#gross_premium").autoNumeric('get'),
+                    discount: $("#discount").autoNumeric('get'),
+                    stamp_fee: $("#stamp_fee").autoNumeric('get'),
+                    amount: $("#amount").autoNumeric('get'),
+                    memo: $("#memo").val(),
+                    details: details,
+                    covered_item: $("#covered-item").val(),
+                    installment_count: $("#installment_count").val(),
+                };
             }
 
-            var contractId = $("#contract_id").val();
-            var formData = {
-                contract_status: $("#contract_status").val(),
-                contract_type_id: $("#contract_type_id").val(),
-                number: $("#number").val(),
-                cover_note_number: $("#cover_note_number").val(),
-                policy_number: $("#policy_number").val(),
-                policy_fee: $("#policy_fee").autoNumeric('get'),
-                contact_id: $("#contact_id").val(),
-                billing_address_id: $("#billing_address_id").val(),
-                endorsements: endorsements,
-                period_start: $("#period_start").val(),
-                period_end: $("#period_end").val(),
-                currency_code: $("#currency_code").val(),
-                exchange_rate: $("#exchange_rate").autoNumeric('get'),
-                coverage_amount: $("#coverage_amount").autoNumeric('get'),
-                gross_premium: $("#gross_premium").autoNumeric('get'),
-                discount: $("#discount").autoNumeric('get'),
-                stamp_fee: $("#stamp_fee").autoNumeric('get'),
-                amount: $("#amount").autoNumeric('get'),
-                memo: $("#memo").val(),
-                details: details,
-                covered_item: $("#covered-item").val(),
-                installment_count: $("#installment_count").val(),
-            };
-
             $.ajax({
-                url: "/api/contract/" + contractId,
-                method: "PUT",
+                url: isFormLocked
+                    ? "/api/contract/" + contractId + "/policy-number"
+                    : "/api/contract/" + contractId,
+                method: isFormLocked ? "PATCH" : "PUT",
                 data: formData,
                 beforeSend: function() {
                     $("#btnSubmit").attr("disabled", true);

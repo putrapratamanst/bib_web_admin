@@ -17,6 +17,8 @@ class BillingAddress extends Model
         'email',
         'phone',
         'is_primary',
+        'ktp',
+        'npwp',
         'created_by',
         'updated_by',
     ];

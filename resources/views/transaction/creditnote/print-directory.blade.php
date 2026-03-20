@@ -158,6 +158,7 @@
         .details-column {
             display: flex;
             flex-direction: column;
+            min-height: 100%;
         }
 
         .premium-section {
@@ -212,7 +213,8 @@
         }
 
         .signature-section {
-            flex: 1;
+            flex: 0 0 auto;
+            margin-top: auto;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -221,7 +223,6 @@
             text-align: center;
             font-size: 11px;
             font-weight: bold;
-            border-top: 1px solid #000;
         }
 
         .signature-text {
@@ -410,8 +411,9 @@
                             <div class="premium-row">
                                 <div class="premium-label">Jumlah<i>Premium</i></div>
                                 <div class="premium-currency">{{ $currency }}</div>
-                                <div class="premium-value">{{ number_format($grossPremium, 2, '.', ',') }}</div>
+                                <div class="premium-value">{{ number_format($creditNote->amount, 2, '.', ',') }}</div>
                             </div>
+                        </div>
 
                             <!-- <div class="premium-row">
                                 <div class="premium-label">Biaya Polis<i>Policy Cost</i></div>
@@ -438,7 +440,7 @@
                                 <div class="premium-currency">{{ $currency }}</div>
                                 <div class="premium-value">{{ number_format($creditNote->amount ?? 0, 2, '.', ',') }}</div>
                             </div>
-                        </div> -->
+                        -->
 
                         <div class="signature-section">
                             <span class="signature-text">Authorized Signatures</span>

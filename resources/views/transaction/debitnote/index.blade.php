@@ -148,7 +148,7 @@
                     name: 'amount',
                     className: 'text-end',
                     render: function(data, type, row) {
-                        return parseFloat(data).toLocaleString('de-DE', {
+                        return parseFloat(data).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                         });

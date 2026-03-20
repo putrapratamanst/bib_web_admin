@@ -13,6 +13,9 @@
             <input type="hidden" name="debit_note_id" value="{{ $debitNote->id }}">
             <div class="card-body">
 
+                {{-- Alert for validation during input --}}
+                <div id="validationAlert" style="display: none;"></div>
+
                 {{-- Calculate fees for installments --}}
                 @php
                     $policyFee = $debitNote->contract->policy_fee ?? 0;
@@ -279,12 +282,16 @@
         
         // Warn if individual input exceeds remaining
         if (currentValue > debitNoteAmount) {
-            Swal.fire({
-                title: 'Amount Exceeds Limit',
-                text: `The billing amount exceeds the total debit note amount ({{ $debitNote->amount }}). Please adjust the amount.`,
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
+            const alertHtml = `
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Warning!</strong> 
+                    The billing amount exceeds the total debit note amount  <strong>({{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }})  </strong>. Please adjust the amount.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            $('#validationAlert').html(alertHtml).show();
+        } else {
+            $('#validationAlert').html('').hide();
         }
     });
 
@@ -313,22 +320,7 @@
     });
 
     // Show error messages if they exist in session
-    @if(session('error'))
-        Swal.fire({
-            title: 'Error!',
-            text: '{{ session('error') }}',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-    @endif
+    // Error and success messages are shown via HTML alerts above
 
-    @if(session('success'))
-        Swal.fire({
-            title: 'Success!',
-            text: '{{ session('success') }}',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        });
-    @endif
 </script>
 @endpush

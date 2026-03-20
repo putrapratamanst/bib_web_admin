@@ -80,6 +80,8 @@ class BillingAddressController extends Controller
             'address' => 'required',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
+            'ktp' => 'nullable|max:20',
+            'npwp' => 'nullable|max:20',
             'is_primary' => 'boolean',
         ]);
 
@@ -135,6 +137,8 @@ class BillingAddressController extends Controller
             'address' => 'required',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
+            'ktp' => 'nullable|max:20',
+            'npwp' => 'nullable|max:20',
             'is_primary' => 'boolean',
         ]);
 
