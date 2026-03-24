@@ -356,9 +356,9 @@
                 <div class="label"><strong>Nama Tertanggung</strong><br><i>Name & Address of Insured</i></div>
                 <div class="separator">:</div>
                 <div class="value">
-                    <div>{{ $billing->debitNote->contract->contact->name ?? $billing->debitNote->contact->name ?? '' }}</div>
+                    <div>{{ $billing->debitNote->billingAddress?->name ?? '-' }}</div>
                     <div style="margin-top: 3px;">
-                        {{ $billing->debitNote->contract->billingAddress ? $billing->debitNote->contract->billingAddress->address : ($billing->debitNote->contract->contact ? $billing->debitNote->contract->contact->address : '') }}
+                        {{ $billing->debitNote->billingAddress ? $billing->debitNote->billingAddress->address : ($billing->debitNote->contract->contact ? $billing->debitNote->contract->contact->address : '') }}
                     </div>
                 </div>
             </div>
@@ -374,6 +374,13 @@
                 <div class="separator">:</div>
                 <div class="value">{{ $billing->debitNote->contract->contractType->name ?? 'Property All Risk' }}</div>
             </div>
+
+            <div class="row">
+                <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
+                <div class="separator">:</div>
+                <div class="value">{{ $billing->debitNote->contract?->currency_code ?? 'IDR' }} {{ number_format($billing->debitNote->contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
+            </div>
+
 
             <!-- Table Section -->
             <div class="table-container">
@@ -421,7 +428,7 @@
                             $grossPremium = $contract ? $contract->gross_premium : $billing->amount;
                             $discount = $contract ? $contract->discount : 0;
                             $stampFee = $contract ? $contract->stamp_fee : 0;
-                            $policyCost = $contract ? ($contract->policy_cost ?? 0) : 0;
+                            $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
                             $discountAmount = $grossPremium * ($discount / 100);
                             $currency = $billing->debitNote->currency_code ?? 'IDR';
                             @endphp
@@ -460,7 +467,7 @@
                             <div class="premium-row total">
                                 <div class="premium-label">Premi Neto<i>Nett Premium</i></div>
                                 <div class="premium-currency">{{ $currency }}</div>
-                                <div class="premium-value">{{ number_format($billing->amount, 2, '.', ',') }}</div>
+                                <div class="premium-value">{{ number_format(($grossPremium + $stampFee + $policyCost) - $discountAmount, 2, '.', ',') }}</div>
                             </div>
                         </div>
 

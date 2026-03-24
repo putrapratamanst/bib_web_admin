@@ -356,6 +356,13 @@
                 <div class="value">{{ $creditNote->contract?->contractType?->name ?? 'General Insurance' }}</div>
             </div>
 
+            <div class="row">
+                <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
+                <div class="separator">:</div>
+                <div class="value">{{ $creditNote->contract?->currency_code ?? 'IDR' }}  
+                {{ number_format($creditNote->contract?->coverage_amount ?? 0, 0, '.', ',') }}</div>
+            </div>
+
             <div class="table-container">
                 <div class="table-header">
                     <div><strong>Catatan / <em>Notes</em></strong></div>
