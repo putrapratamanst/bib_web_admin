@@ -240,16 +240,32 @@
         let totalBilled = 0;
 
         amountInputs.forEach(input => {
-            // Use AutoNumeric get method if available
+            // Skip if input is empty
+            if (!input.value || input.value.trim() === '') {
+                return;
+            }
+
             let numValue = 0;
             try {
-                numValue = parseFloat($(input).autoNumeric('get')) || 0;
+                // Try to get value from AutoNumeric
+                const autoNumericValue = $(input).autoNumeric('get');
+                if (autoNumericValue !== null && autoNumericValue !== undefined) {
+                    numValue = parseFloat(autoNumericValue) || 0;
+                } else {
+                    throw new Error('AutoNumeric not initialized');
+                }
             } catch(e) {
-                // Fallback to manual parsing
-                const value = input.value.replace(/\./g, '').replace(/,/g, '.');
+                // Fallback to manual parsing for Indonesian format (1.234.567,89)
+                const value = input.value.trim()
+                    .replace(/\./g, '')  // Remove thousand separators (dots)
+                    .replace(/,/g, '.'); // Replace decimal comma with dot
                 numValue = parseFloat(value) || 0;
             }
-            totalBilled += numValue;
+
+            // Validate parsed value
+            if (!isNaN(numValue) && isFinite(numValue)) {
+                totalBilled += numValue;
+            }
         });
 
         const remainingAmount = debitNoteAmount - totalBilled;
@@ -297,6 +313,18 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Re-initialize AutoNumeric for all amount inputs to ensure proper formatting
+        $('input[name="amount[]"]').each(function() {
+            if (!$(this).data('autoNumeric')) {
+                $(this).autoNumeric('init', {
+                    aSep: '.',
+                    aDec: ',',
+                    aForm: true,
+                });
+            }
+        });
+        
+        // Update totals after initialization
         updateBillingTotals();
     });
 
