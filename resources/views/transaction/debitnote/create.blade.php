@@ -314,6 +314,13 @@ $(document).ready(function() {
         }
     });
 
+    // Prevent opening billing address dropdown when locked
+    $('#billing_address_id').on('select2:opening', function(e) {
+        if ($(this).data('locked')) {
+            e.preventDefault();
+        }
+    });
+
     // Handle contract selection change
     $('#contract_id').on('select2:select', function(e) {
         const contractId = e.params.data.id;
@@ -344,8 +351,12 @@ $(document).ready(function() {
                                 )
                             ).trigger('change.select2');
                             
-                            // Lock the billing address dropdown
-                            $('#billing_address_id').prop('disabled', true);
+                            // Lock the billing address dropdown (prevent opening but keep submittable)
+                            $('#billing_address_id').data('locked', true);
+                            $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                                'background-color': '#e9ecef',
+                                'cursor': 'not-allowed'
+                            });
                             
                             // Populate insured name and correspondence address
                             $('#insured_name').val(contract.billing_address.name || '');
@@ -368,8 +379,12 @@ $(document).ready(function() {
                                         )
                                     ).trigger('change.select2');
                                     
-                                    // Lock the billing address dropdown
-                                    $('#billing_address_id').prop('disabled', true);
+                                    // Lock the billing address dropdown (prevent opening but keep submittable)
+                                    $('#billing_address_id').data('locked', true);
+                                    $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                                        'background-color': '#e9ecef',
+                                        'cursor': 'not-allowed'
+                                    });
                                     
                                     $('#insured_name').val(addressToUse.name || '');
                                     $('#correspondence_address').val(addressToUse.address || '');
@@ -461,7 +476,11 @@ $(document).ready(function() {
         console.log('Contract cleared');
         // Clear fields when no contract selected
         $('#contact_id').val(null).trigger('change');
-        $('#billing_address_id').val(null).trigger('change').prop('disabled', false);
+        $('#billing_address_id').val(null).trigger('change').data('locked', false);
+        $('#billing_address_id').next('.select2').find('.select2-selection').css({
+            'background-color': '',
+            'cursor': ''
+        });
         $('#currency').val('').trigger('change');
         $('#policy_number_display').val('-');
         $('#installment').val('0');

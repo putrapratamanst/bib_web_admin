@@ -289,8 +289,19 @@
             minimumInputLength: 0
         });
 
-        // Disable billing address dropdown on page load (edit mode)
-        $('#billing_address_id').prop('disabled', true);
+        // Prevent opening billing address dropdown when locked
+        $('#billing_address_id').on('select2:opening', function(e) {
+            if ($(this).data('locked')) {
+                e.preventDefault();
+            }
+        });
+
+        // Lock billing address dropdown on page load (edit mode)
+        $('#billing_address_id').data('locked', true);
+        $('#billing_address_id').next('.select2').find('.select2-selection').css({
+            'background-color': '#e9ecef',
+            'cursor': 'not-allowed'
+        });
 
         // Handle billing address change to populate insured name and correspondence address
         $('#billing_address_id').on('change', function() {
@@ -328,7 +339,11 @@
                 loadContractData(contractId);
             } else {
                 $('#policy_number').val('');
-                $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').prop('disabled', false);
+                $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').data('locked', false);
+                $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                    'background-color': '',
+                    'cursor': ''
+                });
                 $('#insured_name').val('');
                 $('#correspondence_address').val('');
             }
@@ -337,7 +352,11 @@
         // Handle when contract is cleared
         $('#contract_id').on('select2:clear', function() {
             $('#policy_number').val('');
-            $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').prop('disabled', false);
+            $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').data('locked', false);
+            $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                'background-color': '',
+                'cursor': ''
+            });
             $('#insured_name').val('');
             $('#correspondence_address').val('');
         });
@@ -392,8 +411,12 @@
                             )
                         ).trigger('change');
                         
-                        // Lock the billing address dropdown
-                        $('#billing_address_id').prop('disabled', true);
+                        // Lock the billing address dropdown (prevent opening but keep submittable)
+                        $('#billing_address_id').data('locked', true);
+                        $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                            'background-color': '#e9ecef',
+                            'cursor': 'not-allowed'
+                        });
                         
                         // Populate insured name and correspondence address
                         $('#insured_name').val(contract.billing_address.name || '');
@@ -416,8 +439,12 @@
                                     )
                                 ).trigger('change');
                                 
-                                // Lock the billing address dropdown
-                                $('#billing_address_id').prop('disabled', true);
+                                // Lock the billing address dropdown (prevent opening but keep submittable)
+                                $('#billing_address_id').data('locked', true);
+                                $('#billing_address_id').next('.select2').find('.select2-selection').css({
+                                    'background-color': '#e9ecef',
+                                    'cursor': 'not-allowed'
+                                });
                                 
                                 $('#insured_name').val(addressToUse.name || '');
                                 $('#correspondence_address').val(addressToUse.address || '');
