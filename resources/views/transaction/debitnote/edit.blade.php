@@ -289,6 +289,9 @@
             minimumInputLength: 0
         });
 
+        // Disable billing address dropdown on page load (edit mode)
+        $('#billing_address_id').prop('disabled', true);
+
         // Handle billing address change to populate insured name and correspondence address
         $('#billing_address_id').on('change', function() {
             var billingAddressId = $(this).val();
@@ -325,8 +328,18 @@
                 loadContractData(contractId);
             } else {
                 $('#policy_number').val('');
-                $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>');
+                $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').prop('disabled', false);
+                $('#insured_name').val('');
+                $('#correspondence_address').val('');
             }
+        });
+
+        // Handle when contract is cleared
+        $('#contract_id').on('select2:clear', function() {
+            $('#policy_number').val('');
+            $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>').prop('disabled', false);
+            $('#insured_name').val('');
+            $('#correspondence_address').val('');
         });
 
         // Handle currency change
@@ -347,26 +360,75 @@
         $.get("{{ route('api.contracts.show', '') }}/" + contractId)
             .done(function(response) {
                 if (response.data) {
+                    var contract = response.data;
+                    
                     // Update policy number
-                    $('#policy_number').val(response.data.policy_number || '-');
+                    $('#policy_number').val(contract.policy_number || '-');
                     
                     // Update contact_id hidden field
-                    if (response.data.contact_id) {
-                        $('#contact_id').val(response.data.contact_id);
+                    if (contract.contact_id) {
+                        $('#contact_id').val(contract.contact_id);
                     }
                     
                     // Update currency if available
-                    if (response.data.currency_code) {
-                        $('#currency').val(response.data.currency_code).trigger('change');
+                    if (contract.currency_code) {
+                        $('#currency').val(contract.currency_code).trigger('change');
                     }
                     
                     // Update exchange rate if available
-                    if (response.data.exchange_rate) {
-                        $('#exchange_rate').autoNumeric('set', response.data.exchange_rate);
+                    if (contract.exchange_rate) {
+                        $('#exchange_rate').autoNumeric('set', contract.exchange_rate);
                     }
                     
-                    // Load billing addresses for the contact
-                    loadBillingAddresses(response.data.contact_id);
+                    // Auto-select billing address from contract if available
+                    if (contract.billing_address_id && contract.billing_address) {
+                        // Clear and set the billing address from contract
+                        $('#billing_address_id').empty().append(
+                            new Option(
+                                contract.billing_address.name + (contract.billing_address.address ? ' - ' + contract.billing_address.address : ''),
+                                contract.billing_address_id,
+                                true,
+                                true
+                            )
+                        ).trigger('change');
+                        
+                        // Lock the billing address dropdown
+                        $('#billing_address_id').prop('disabled', true);
+                        
+                        // Populate insured name and correspondence address
+                        $('#insured_name').val(contract.billing_address.name || '');
+                        $('#correspondence_address').val(contract.billing_address.address || '');
+                        
+                        console.log('Billing address auto-selected from contract:', contract.billing_address.name);
+                    } else {
+                        // Fallback: try to get from contact billing addresses
+                        if (contract.contact && contract.contact.billing_addresses && contract.contact.billing_addresses.length > 0) {
+                            var primaryAddress = contract.contact.billing_addresses.find(function(addr) { return addr.is_primary; });
+                            var addressToUse = primaryAddress || contract.contact.billing_addresses[0];
+                            
+                            if (addressToUse) {
+                                $('#billing_address_id').empty().append(
+                                    new Option(
+                                        addressToUse.name + (addressToUse.address ? ' - ' + addressToUse.address : ''),
+                                        addressToUse.id,
+                                        true,
+                                        true
+                                    )
+                                ).trigger('change');
+                                
+                                // Lock the billing address dropdown
+                                $('#billing_address_id').prop('disabled', true);
+                                
+                                $('#insured_name').val(addressToUse.name || '');
+                                $('#correspondence_address').val(addressToUse.address || '');
+                                
+                                console.log('Billing address auto-selected from contact:', addressToUse.name);
+                            }
+                        } else {
+                            // Load billing addresses for the contact (old behavior)
+                            loadBillingAddresses(contract.contact_id);
+                        }
+                    }
                 }
             })
             .fail(function() {

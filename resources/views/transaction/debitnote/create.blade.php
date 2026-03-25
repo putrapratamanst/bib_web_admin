@@ -344,6 +344,9 @@ $(document).ready(function() {
                                 )
                             ).trigger('change.select2');
                             
+                            // Lock the billing address dropdown
+                            $('#billing_address_id').prop('disabled', true);
+                            
                             // Populate insured name and correspondence address
                             $('#insured_name').val(contract.billing_address.name || '');
                             $('#correspondence_address').val(contract.billing_address.address || '');
@@ -364,6 +367,9 @@ $(document).ready(function() {
                                             true
                                         )
                                     ).trigger('change.select2');
+                                    
+                                    // Lock the billing address dropdown
+                                    $('#billing_address_id').prop('disabled', true);
                                     
                                     $('#insured_name').val(addressToUse.name || '');
                                     $('#correspondence_address').val(addressToUse.address || '');
@@ -455,7 +461,7 @@ $(document).ready(function() {
         console.log('Contract cleared');
         // Clear fields when no contract selected
         $('#contact_id').val(null).trigger('change');
-        $('#billing_address_id').val(null).trigger('change').prop('disabled', true);
+        $('#billing_address_id').val(null).trigger('change').prop('disabled', false);
         $('#currency').val('').trigger('change');
         $('#policy_number_display').val('-');
         $('#installment').val('0');
