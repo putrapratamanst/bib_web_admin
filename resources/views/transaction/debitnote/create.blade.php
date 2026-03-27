@@ -11,6 +11,24 @@
         <form autocomplete="off" method="POST" id="formCreate" action="{{ route('transaction.debit-notes.store') }}">
             @csrf
             <div class="card-body">
+                <div class="alert mb-4" style="background-color: #fff8e1; border: 1px solid #f5c518; color: #333;">
+                    <p class="mb-2"><strong>Untuk contact dengan format NAMA TERTANGGUNG (Insured), mohon ditambahkan berdasarkan nama pihak pertama.</strong></p>
+                    <p class="mb-1"><strong>Contoh:</strong></p>
+                    <p class="mb-2"><code>PT SINAR KARYA DUTA ABADI QQ PT ARWANA CITRAMULIA</code></p>
+                    <p class="mb-1">Maka:</p>
+                    <ul class="mb-3">
+                        <li>di master ditambahkan sebagai <strong>PT SINAR KARYA DUTA ABADI</strong></li>
+                        <li>di billing address ditambahkan <strong>PT SINAR KARYA DUTA ABADI QQ PT ARWANA CITRAMULIA</strong></li>
+                    </ul>
+                    <p class="mb-1 text-warning-emphasis"><strong>Untuk bank, contohnya:</strong></p>
+                    <p class="mb-2"><code>PT Bank BCA KCU QQ PT SINAR KARYA DUTA ABADI</code></p>
+                    <p class="mb-1">Maka:</p>
+                    <ul class="mb-0">
+                        <li>di master ditambahkan sebagai <strong>PT SINAR KARYA DUTA ABADI</strong></li>
+                        <li>di billing address ditambahkan <strong>PT Bank BCA KCU QQ PT SINAR KARYA DUTA ABADI</strong></li>
+                    </ul>
+                </div>
+
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
