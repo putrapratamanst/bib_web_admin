@@ -117,6 +117,8 @@ Route::prefix('transaction')->group(function () {
 
     Route::get('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'create'])->name('transaction.debit-notes-billing.create');
     Route::post('/debit-notes/{id}/billing', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debitnotebillings.store');
+    Route::get('/debit-notes/{id}/edit-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'edit'])->name('transaction.debit-notes.edit-billings');
+    Route::put('/debit-notes/{id}/update-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'update'])->name('transaction.debit-notes.update-billings');
     
     // Debit Note Billings List
     Route::get('/debit-note-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'index'])->name('transaction.debit-note-billings.index');

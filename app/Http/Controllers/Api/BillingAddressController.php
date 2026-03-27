@@ -80,9 +80,12 @@ class BillingAddressController extends Controller
             'address' => 'required',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
-            'ktp' => 'nullable|max:20',
-            'npwp' => 'nullable|max:20',
+            'ktp' => 'required_without:npwp|nullable|max:20',
+            'npwp' => 'required_without:ktp|nullable|max:20',
             'is_primary' => 'boolean',
+        ], [
+            'ktp.required_without' => 'KTP atau NPWP harus diisi salah satu',
+            'npwp.required_without' => 'KTP atau NPWP harus diisi salah satu',
         ]);
 
         if ($validator->fails()) {
@@ -137,9 +140,12 @@ class BillingAddressController extends Controller
             'address' => 'required',
             'email' => 'nullable|email|max:100',
             'phone' => 'nullable|max:20',
-            'ktp' => 'nullable|max:20',
-            'npwp' => 'nullable|max:20',
+            'ktp' => 'required_without:npwp|nullable|max:20',
+            'npwp' => 'required_without:ktp|nullable|max:20',
             'is_primary' => 'boolean',
+        ], [
+            'ktp.required_without' => 'KTP atau NPWP harus diisi salah satu',
+            'npwp.required_without' => 'KTP atau NPWP harus diisi salah satu',
         ]);
 
         if ($validator->fails()) {

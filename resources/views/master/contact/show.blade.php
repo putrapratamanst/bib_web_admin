@@ -135,13 +135,14 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <div class="mb-3">
-                                    <label for="ktp_modal" class="form-label">KTP</label>
+                                    <label for="ktp_modal" class="form-label">KTP<sup class="text-danger">*</sup></label>
                                     <input type="number" class="form-control" id="ktp_modal" name="ktp">
+                                    <small class="text-muted">*Minimal isi salah satu (KTP/NPWP)</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="mb-3">
-                                    <label for="npwp_modal" class="form-label">NPWP</label>
+                                    <label for="npwp_modal" class="form-label">NPWP<sup class="text-danger">*</sup></label>
                                     <input type="number" class="form-control" id="npwp_modal" name="npwp">
                                 </div>
                             </div>
@@ -240,6 +241,18 @@
         $('#formBillingAddress').submit(function(e) {
             e.preventDefault();
 
+            // Validate KTP/NPWP - at least one must be filled
+            var ktp = $('#ktp_modal').val();
+            var npwp = $('#npwp_modal').val();
+            
+            if (!ktp && !npwp) {
+                Swal.fire({
+                    text: 'KTP atau NPWP harus diisi salah satu',
+                    icon: 'error'
+                });
+                return false;
+            }
+
             var billingId = $('#billing_id').val();
             var url = billingId ?
                 "{{ url('api/billing-address') }}/" + billingId :
@@ -252,6 +265,8 @@
                 address: $('#billing_address_modal').val(),
                 email: $('#billing_email_modal').val(),
                 phone: $('#billing_phone_modal').val(),
+                ktp: ktp,
+                npwp: npwp,
                 is_primary: $('#is_primary').is(':checked') ? 1 : 0
             };
 
@@ -335,6 +350,8 @@
                     $('#billing_address_modal').val(billing.address);
                     $('#billing_email_modal').val(billing.email);
                     $('#billing_phone_modal').val(billing.phone);
+                    $('#ktp_modal').val(billing.ktp);
+                    $('#npwp_modal').val(billing.npwp);
                     $('#is_primary').prop('checked', billing.is_primary);
                     $('#modalBillingAddress').modal('show');
                 }

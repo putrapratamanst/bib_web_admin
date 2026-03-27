@@ -152,6 +152,137 @@ class DebitNoteBillingController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        try {
+            // $id adalah debit note ID, bukan billing ID
+            $debitNote = DebitNote::with(['contract', 'billings'])->findOrFail($id);
+            
+            // Check if billings exist
+            if ($debitNote->billings->isEmpty()) {
+                return redirect()->back()->with('error', 'Belum ada billing untuk debit note ini');
+            }
+            
+            // Check if all billings are pending
+            $nonPendingCount = $debitNote->billings->where('status', '!=', 'pending')->count();
+            if ($nonPendingCount > 0) {
+                return redirect()->back()->with('error', 'Hanya billing dengan status pending yang dapat di-edit');
+            }
+            
+            return view('transaction.debitnotebilling.edit', [
+                'debitNote' => $debitNote,
+                'billings' => $debitNote->billings,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Debit Note not found');
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            // $id adalah debit note ID
+            $debitNote = DebitNote::with('contract')->findOrFail($id);
+            
+            $request->validate([
+                'billing_id'   => 'required|array',
+                'billing_id.*' => 'required|exists:debit_note_billings,id',
+                'date'   => 'required|array',
+                'date.*' => 'required|date',
+                'due_date'   => 'required|array',
+                'due_date.*' => 'required|date|after_or_equal:date.*',
+                'amount'   => 'required|array',
+                'amount.*' => 'required|numeric|min:0',
+            ]);
+            
+            // Calculate total all billings + fees untuk INST1
+            $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
+            $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
+            $totalFees = $policyFee + $stampFee;
+            
+            $totalAllBillings = 0;
+            foreach ($request->billing_id as $i => $billingId) {
+                $billing = DebitNoteBilling::findOrFail($billingId);
+                $amountValue = floatval($request->amount[$i]);
+                
+                // Check if this is INST1
+                $isFirstInstallment = false;
+                if (preg_match('/-INST(\d+)/i', $billing->billing_number, $matches)) {
+                    $isFirstInstallment = ((int)$matches[1] === 1);
+                } else {
+                    $firstBilling = $debitNote->billings()->orderBy('created_at')->first();
+                    $isFirstInstallment = ($billing->id === $firstBilling->id);
+                }
+                
+                // Tambahkan fees untuk INST1 saat validasi
+                if ($isFirstInstallment && $totalFees > 0) {
+                    $amountValue += $totalFees;
+                }
+                $totalAllBillings += $amountValue;
+            }
+            
+           
+            DB::beginTransaction();
+
+            foreach ($request->billing_id as $i => $billingId) {
+                $billing = DebitNoteBilling::findOrFail($billingId);
+                
+                // Check if billing can be edited (only pending status)
+                if ($billing->status !== 'pending') {
+                    throw new \Exception("Billing {$billing->billing_number} tidak dapat di-edit karena statusnya bukan pending");
+                }
+                
+                $billing->date = $request->date[$i];
+                $billing->due_date = $request->due_date[$i];
+                
+                // Calculate amount with policy_fee + stamp_fee for INST1
+                $amount = floatval($request->amount[$i]);
+                
+                // Check if this is INST1
+                $isFirstInstallment = false;
+                if (preg_match('/-INST(\d+)/i', $billing->billing_number, $matches)) {
+                    $isFirstInstallment = ((int)$matches[1] === 1);
+                } else {
+                    $firstBilling = $debitNote->billings()->orderBy('created_at')->first();
+                    $isFirstInstallment = ($billing->id === $firstBilling->id);
+                }
+                
+                // Tambahkan fees untuk INST1 saat save
+                if ($isFirstInstallment && $totalFees > 0) {
+                    $amount += $totalFees;
+                }
+                
+                $billing->amount = $amount;
+                // $billing->updated_by = auth()->id() ?? 1;
+                
+                if (!$billing->save()) {
+                    throw new \Exception("Failed to update billing: {$billing->billing_number}");
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('transaction.debit-notes.show', ['id' => $debitNote->id])
+                ->with('success', 'All billings updated successfully.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Validation Error: ' . implode(', ', $e->validator->errors()->all()));
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error updating DebitNoteBilling: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error updating billing: ' . $e->getMessage());
+        }
+    }
+
     public function printBilling($id)
     {
         try {

@@ -25,7 +25,7 @@ class DebitNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = DebitNote::with(['contract.contractType', 'contract.billingAddress'])->orderBy('created_at', 'desc');
+        $query = DebitNote::with(['contract.contractType', 'contract.billingAddress', 'contract.contact'])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -86,6 +86,17 @@ class DebitNoteController extends Controller
                 
                 $actions .= '</div>';
                 return $actions;
+            })
+            ->filterColumn('insured_name', function($query, $keyword) {
+                $query->whereHas('contract', function($q) use ($keyword) {
+                    $q->whereHas('billingAddress', function($subQ) use ($keyword) {
+                        $subQ->where('name', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('contact', function($subQ) use ($keyword) {
+                        $subQ->where('display_name', 'like', "%{$keyword}%")
+                            ->orWhere('name', 'like', "%{$keyword}%");
+                    });
+                });
             })
             ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);
@@ -435,6 +446,9 @@ class DebitNoteController extends Controller
                 'approved_at' => now(),
                 'approval_notes' => $request->input('notes'),
             ]);
+
+            // Update all billings status to 'posted' when debit note is approved
+            $debitNote->billings()->update(['status' => 'posted']);
 
             return response()->json([
                 'message' => 'Debit Note has been approved successfully.',

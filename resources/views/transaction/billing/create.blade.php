@@ -92,8 +92,8 @@
                 </div>
             </div>
             <div class="card-footer">
-                <button type="submit" id="btnSubmit" class="btn btn-primary">Save</button>
                 <a href="{{ route('transaction.billings.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" id="btnSubmit" class="btn btn-primary">Save</button>
             </div>
         </form>
     </div>

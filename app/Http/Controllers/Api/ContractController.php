@@ -50,7 +50,11 @@ class ContractController extends Controller
                         $q->where('number', 'like', "%{$searchValue}%")
                           ->orWhere('policy_number', 'like', "%{$searchValue}%")
                           ->orWhereHas('contact', function ($query) use ($searchValue) {
-                              $query->where('display_name', 'like', "%{$searchValue}%");
+                              $query->where('display_name', 'like', "%{$searchValue}%")
+                                    ->orWhere('name', 'like', "%{$searchValue}%");
+                          })
+                          ->orWhereHas('billingAddress', function ($query) use ($searchValue) {
+                              $query->where('name', 'like', "%{$searchValue}%");
                           });
                     });
                 }
@@ -65,7 +69,7 @@ class ContractController extends Controller
         $limit = 10;
         $offset = ($page - 1) * $limit;
 
-        $query = Contract::with(['contact'])
+        $query = Contract::with(['contact', 'billingAddress'])
             ->where('status', 'active')
             ->where('approval_status', 'approved')
             ->where(function ($q) use ($search) {
@@ -73,7 +77,11 @@ class ContractController extends Controller
                     $q->where('number', 'like', "%{$search}%")
                       ->orWhere('policy_number', 'like', "%{$search}%")
                       ->orWhereHas('contact', function($contactQuery) use ($search) {
-                          $contactQuery->where('display_name', 'like', "%{$search}%");
+                          $contactQuery->where('display_name', 'like', "%{$search}%")
+                                      ->orWhere('name', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('billingAddress', function($billingQuery) use ($search) {
+                          $billingQuery->where('name', 'like', "%{$search}%");
                       });
                 }
             })

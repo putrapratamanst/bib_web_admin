@@ -213,8 +213,8 @@
 
             </div>
             <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Save</button>
                 <a href="{{ route('transaction.debit-notes.show', $debitNote->id) }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </form>
     </div>
