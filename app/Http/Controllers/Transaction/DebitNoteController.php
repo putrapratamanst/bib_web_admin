@@ -35,7 +35,10 @@ class DebitNoteController extends Controller
             'contract.contact', 
             'contract.billingAddress',
             'contract.contractType',
-            'currency'
+            'currency',
+            'debitNoteBillings' => function ($query) {
+                $query->orderBy('due_date')->orderBy('created_at');
+            }
         ])->findOrFail($id);
 
         return view('transaction.debitnote.print-directory', compact('debitNote'));

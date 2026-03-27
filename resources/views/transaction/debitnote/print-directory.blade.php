@@ -282,8 +282,8 @@
         <div class="row">
             <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
             <div class="separator">:</div>
-            <div class="value">{{ $creditNote->contract?->currency_code ?? 'IDR' }}
-                {{ number_format($creditNote->contract?->coverage_amount ?? 0, 0, '.', ',') }}
+            <div class="value">{{ $debitNote->contract?->currency_code ?? 'IDR' }}
+                {{ number_format($debitNote->contract?->coverage_amount ?? 0, 0, '.', ',') }}
             </div>
         </div>
 
@@ -307,7 +307,13 @@
                     </div>
                     <div style="margin-top: 30px;margin-bottom: 15px;">
                         <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>
-                        IDR {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d M Y') }}
+                        @if($debitNote->debitNoteBillings->isNotEmpty())
+                            @foreach($debitNote->debitNoteBillings as $index => $billing)
+                                Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($billing->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                            @endforeach
+                        @else
+                            {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') }}
+                        @endif
                     </div>
                     <div style="margin-bottom: 15px;">
                         <strong>PT. Brilliant Insurance Brokers</strong><br>
