@@ -8,11 +8,7 @@
         <div class="card-header">
             Detail Debit Note
             <div class="float-end">
-                @if($debitNote->canBePrinted())
-                    <!-- <button class="btn btn-success btn-sm" onclick="printDebitNote('{{ $debitNote->id }}')"> 
-                        <i class="fas fa-print"></i> Print
-                    </button> -->
-                @else
+                @if($debitNote->installment > 0 && !$debitNote->canBePrinted())
                     <span class="badge bg-warning">Approval Required</span>
                 @endif
             </div>
@@ -180,10 +176,10 @@
                     <span class="text-muted"><i class="fas fa-info-circle"></i> Only users with approver role can approve this Debit Note</span>
                 @endif
                 
-                @if($debitNote->canBePrinted())
-                    <!-- <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
+                @if($debitNote->canBePrinted() && $debitNote->installment > 0)
+                    <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-print"></i> Print
-                    </button> -->
+                    </button>
                 @endif
 
                 @if(!$debitNote->is_posted && $debitNote->status === 'active')
@@ -259,13 +255,13 @@
                                         <i class="fas fa-check-circle"></i> Post
                                     </button>
                                 @endif
-                                @if ($billing->status === 'posted')
-                                <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing">
-                                    <i class="fas fa-print"></i> Print
-                                </a>
-                                <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBilling('{{ $billing->id }}')" title="Print Design Lama">
-                                    <i class="fas fa-print"></i> Print Design Lama
-                                </a>
+                                @if ($billing->status === 'posted' && $debitNote->installment == 0)
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing">
+                                        <i class="fas fa-print"></i> Print
+                                    </a>
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBilling('{{ $billing->id }}')" title="Print Design Lama">
+                                        <i class="fas fa-print"></i> Print Design Lama
+                                    </a>
                                 @endif
                             </td>
 
@@ -512,7 +508,7 @@
     }
 
     function printDebitNote(debitNoteId) {
-        window.open(`/transaction/debit-notes/${debitNoteId}/print`, '_blank');
+        window.open(`/transaction/debit-notes/${debitNoteId}/print-directory`, '_blank');
     }
 
 </script>
