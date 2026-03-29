@@ -129,7 +129,8 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="installment" class="form-label">Installment<sup class="text-danger">*</sup></label>
-                            <select class="form-select @error('installment') is-invalid @enderror" name="installment" id="installment" required>
+                            <input type="hidden" name="installment" id="installment_value" value="{{ old('installment', $debitNote->installment) }}">
+                            <select class="form-select @error('installment') is-invalid @enderror" id="installment" required disabled>
                                 @for ($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ old('installment', $debitNote->installment) == $i ? 'selected' : '' }}>{{ $i == 0 ? 'Single Payment' : $i }}</option>
                                 @endfor
@@ -145,10 +146,12 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="currency" class="form-label">Currency<sup class="text-danger">*</sup></label>
-                            <select class="form-select @error('currency') is-invalid @enderror" name="currency" id="currency" required>
+                            <input type="hidden" name="currency" id="currency_value" value="{{ old('currency', $debitNote->currency_code) }}">
+                            <select class="form-select @error('currency') is-invalid @enderror" id="currency" required disabled>
                                 <option value="">Select Currency</option>
-                                <option value="IDR" {{ old('currency', $debitNote->currency_code) == 'IDR' ? 'selected' : '' }}>IDR</option>
-                                <option value="USD" {{ old('currency', $debitNote->currency_code) == 'USD' ? 'selected' : '' }}>USD</option>
+                                @foreach($currencies as $currencyOption)
+                                    <option value="{{ $currencyOption->code }}" {{ old('currency', $debitNote->currency_code) == $currencyOption->code ? 'selected' : '' }}>{{ $currencyOption->code }} - {{ $currencyOption->name }}</option>
+                                @endforeach
                             </select>
                             @error('currency')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -160,7 +163,7 @@
                             <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
-                                <input type="text" class="form-control autonumeric text-end @error('exchange_rate') is-invalid @enderror" name="exchange_rate" id="exchange_rate" value="{{ old('exchange_rate', $debitNote->exchange_rate_formatted) }}" required>
+                                <input type="text" class="form-control autonumeric text-end @error('exchange_rate') is-invalid @enderror" name="exchange_rate" id="exchange_rate" value="{{ old('exchange_rate', $debitNote->exchange_rate_formatted) }}" required readonly style="background-color: #e9ecef;">
                                 @error('exchange_rate')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -172,7 +175,7 @@
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="amount-currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
-                                <input type="text" class="form-control text-end autonumeric @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', $debitNote->amount_formatted) }}" required>
+                                <input type="text" class="form-control text-end autonumeric @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', $debitNote->amount_formatted) }}" required readonly style="background-color: #e9ecef;">
                                 @error('amount')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -228,6 +231,9 @@
 
 @push('scripts')
 <script>
+    let activeContractRequest = null;
+    let latestRequestedContractId = null;
+
     $(document).ready(function() {
         // Initialize Select2 for contract selection
         $('#contract_id').select2({
@@ -344,6 +350,13 @@
                     'background-color': '',
                     'cursor': ''
                 });
+                $('#currency_value').val('');
+                $('#currency').val('');
+                $('#currency-text, #amount-currency-text').text('');
+                $('#exchange_rate').autoNumeric('set', '0.00');
+                $('#amount').autoNumeric('set', '0.00');
+                $('#installment_value').val('0');
+                $('#installment').val('0');
                 $('#insured_name').val('');
                 $('#correspondence_address').val('');
             }
@@ -357,6 +370,9 @@
                 'background-color': '',
                 'cursor': ''
             });
+            $('#currency_value').val('');
+            $('#installment_value').val('0');
+            $('#installment').val('0');
             $('#insured_name').val('');
             $('#correspondence_address').val('');
         });
@@ -364,20 +380,24 @@
         // Handle currency change
         $('#currency').on('change', function() {
             var currency = $(this).val();
+            $('#currency_value').val(currency);
             $('#currency-text, #amount-currency-text').text(currency);
-            
-            // Reset exchange rate if currency changes
-            if (currency === 'IDR') {
-                $('#exchange_rate').autoNumeric('set', '1.00');
-            } else {
-                $('#exchange_rate').autoNumeric('set', '15000.00');
-            }
         });
     });
 
     function loadContractData(contractId) {
-        $.get("{{ route('api.contracts.show', '') }}/" + contractId)
+        latestRequestedContractId = contractId;
+
+        if (activeContractRequest) {
+            activeContractRequest.abort();
+        }
+
+        activeContractRequest = $.get("{{ route('api.contracts.show', '') }}/" + contractId)
             .done(function(response) {
+                if ($('#contract_id').val() !== contractId || latestRequestedContractId !== contractId) {
+                    return;
+                }
+
                 if (response.data) {
                     var contract = response.data;
                     
@@ -391,12 +411,32 @@
                     
                     // Update currency if available
                     if (contract.currency_code) {
+                        $('#currency_value').val(contract.currency_code);
                         $('#currency').val(contract.currency_code).trigger('change');
+                    } else {
+                        $('#currency_value').val('');
+                        $('#currency').val('').trigger('change');
+                    }
+
+                    if (contract.installment_count !== undefined && contract.installment_count !== null) {
+                        $('#installment_value').val(contract.installment_count);
+                        $('#installment').val(contract.installment_count);
+                    } else {
+                        $('#installment_value').val('0');
+                        $('#installment').val('0');
                     }
                     
                     // Update exchange rate if available
-                    if (contract.exchange_rate) {
+                    if (contract.exchange_rate !== undefined && contract.exchange_rate !== null) {
                         $('#exchange_rate').autoNumeric('set', contract.exchange_rate);
+                    } else {
+                        $('#exchange_rate').autoNumeric('set', '1.00');
+                    }
+
+                    if (contract.amount !== undefined && contract.amount !== null) {
+                        $('#amount').autoNumeric('set', contract.amount);
+                    } else {
+                        $('#amount').autoNumeric('set', '0.00');
                     }
                     
                     // Auto-select billing address from contract if available
@@ -458,8 +498,19 @@
                     }
                 }
             })
-            .fail(function() {
-                alert('Failed to load contract data');
+            .fail(function(xhr, status) {
+                if (status === 'abort') {
+                    return;
+                }
+
+                if ($('#contract_id').val() === contractId) {
+                    alert('Failed to load contract data');
+                }
+            })
+            .always(function() {
+                if (latestRequestedContractId === contractId) {
+                    activeContractRequest = null;
+                }
             });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use App\Models\DebitNote;
 use App\Models\DebitNoteDetail;
 use App\Models\Contact;
@@ -46,7 +47,11 @@ class DebitNoteController extends Controller
 
     public function create()
     {
-        return view('transaction.debitnote.create');
+        $currencies = Currency::orderBy('code')->get();
+
+        return view('transaction.debitnote.create', [
+            'currencies' => $currencies,
+        ]);
     }
 
     public function store(Request $request)
@@ -73,14 +78,9 @@ class DebitNoteController extends Controller
 
         $validator = Validator::make($request->all(), [
             'number' => 'required|string|max:255|unique:debit_notes,number',
-            'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
-            'currency' => 'required|string|max:3',
-            'exchange_rate' => 'required|numeric|min:0',
-            'installment' => 'required|integer|max:12',
-            'amount' => 'required|min:0',
             // 'details' => 'required|array|min:1',
             // 'details.*.item_description' => 'required|string|max:255',
             // 'details.*.amount' => 'required|numeric|min:0',
@@ -92,23 +92,31 @@ class DebitNoteController extends Controller
                 ->withInput();
         }
 
+        $contract = Contract::select('id', 'contact_id', 'currency_code', 'exchange_rate', 'amount', 'installment_count')->findOrFail($request->contract_id);
+
+        if (blank($contract->currency_code)) {
+            return redirect()->back()
+                ->with('error', 'Selected contract does not have a currency.')
+                ->withInput();
+        }
+
         try {
             DB::beginTransaction();
 
             // Create Debit Note
             $debitNote = DebitNote::create([
                 'number' => $request->number,
-                'contact_id' => $request->contact_id,
+                'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
-                'currency_code' => $request->currency,
-                'exchange_rate' => $request->exchange_rate,
-                'amount' => $request->amount,
+                'currency_code' => $contract->currency_code,
+                'exchange_rate' => $contract->exchange_rate ?? 1,
+                'amount' => $contract->amount ?? 0,
                 'description' => $request->description,
                 'status' => 'active',
                 'approval_status' => 'pending', // Default pending status
-                'installment' => $request->installment,
+                'installment' => $contract->installment_count ?? 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -142,6 +150,8 @@ class DebitNoteController extends Controller
     public function edit($id)
     {
         $debitNote = DebitNote::with(['contract', 'billingAddress', 'debitNoteDetails'])->findOrFail($id);
+        $currencies = Currency::orderBy('code')->get();
+
         // Check if the debit note can be edited
         if (!$debitNote->canBeEdited()) {
             return redirect()->route('transaction.debit-notes.show', $id)
@@ -150,6 +160,7 @@ class DebitNoteController extends Controller
 
         return view('transaction.debitnote.edit', [
             'debitNote' => $debitNote,
+            'currencies' => $currencies,
         ]);
     }
 
@@ -178,20 +189,23 @@ class DebitNoteController extends Controller
         // Validation
         $validator = Validator::make($request->all(), [
             'number' => 'required|string|max:255|unique:debit_notes,number,' . $id,
-            'contact_id' => 'required|exists:contacts,id',
             'contract_id' => 'required|exists:contracts,id',
             'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
-            'currency' => 'required|string|max:3',
-            'exchange_rate' => 'required|numeric|min:0',
-            'installment' => 'required|integer|max:12',
-            'amount' => 'required|min:0',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
+                ->withInput();
+        }
+
+        $contract = Contract::select('id', 'contact_id', 'currency_code', 'exchange_rate', 'amount', 'installment_count')->findOrFail($request->contract_id);
+
+        if (blank($contract->currency_code)) {
+            return redirect()->back()
+                ->with('error', 'Selected contract does not have a currency.')
                 ->withInput();
         }
 
@@ -201,16 +215,16 @@ class DebitNoteController extends Controller
             // Update Debit Note
             $debitNote->update([
                 'number' => $request->number,
-                'contact_id' => $request->contact_id,
+                'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
-                'currency_code' => $request->currency,
-                'exchange_rate' => $request->exchange_rate,
-                'amount' => $request->amount,
+                'currency_code' => $contract->currency_code,
+                'exchange_rate' => $contract->exchange_rate ?? 1,
+                'amount' => $contract->amount ?? 0,
                 'description' => $request->description,
-                'installment' => $request->installment,
+                'installment' => $contract->installment_count ?? 0,
                 'updated_by' => auth()->id(),
             ]);
 

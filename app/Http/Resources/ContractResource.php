@@ -17,6 +17,13 @@ class ContractResource extends JsonResource
             'policy_number' => $this->policy_number,
             'contact' => new ContactResource($this->contact),
             'contact_id' => $this->contact_id,
+            'billing_address_id' => $this->billing_address_id,
+            'billing_address' => $this->billingAddress ? [
+                'id' => $this->billingAddress->id,
+                'name' => $this->billingAddress->name,
+                'address' => $this->billingAddress->address,
+                'is_primary' => $this->billingAddress->is_primary,
+            ] : null,
             'period_start' => $this->period_start,
             'period_end' => $this->period_end,
             'currency_code' => $this->currency_code,

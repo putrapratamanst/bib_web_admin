@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreditNoteApprovalRequest;
 use App\Http\Resources\DebitNoteResource;
+use App\Models\Contract;
 use App\Models\DebitNote;
 use App\Models\DebitNoteDetail;
 use Illuminate\Http\Request;
@@ -129,16 +130,21 @@ class DebitNoteController extends Controller
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             'created_at' => 'nullable|date',
-            'currency' => 'required|string|max:3',
-            'exchange_rate' => 'required|numeric|min:0',
-            'installment' => 'required|integer|max:12',
-            'amount' => 'required|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
+                'success' => false
+            ], 422);
+        }
+
+        $contract = Contract::select('id', 'contact_id', 'currency_code', 'exchange_rate', 'amount', 'installment_count')->findOrFail($request->contract_id);
+
+        if (blank($contract->currency_code)) {
+            return response()->json([
+                'message' => 'Selected contract does not have a currency.',
                 'success' => false
             ], 422);
         }
@@ -156,18 +162,18 @@ class DebitNoteController extends Controller
             // Create Debit Note
             $debitNote = DebitNote::create([
                 'number' => $debitNoteNumber,
-                'contact_id' => $billingAddress->contact_id,
+                'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
-                'currency_code' => $request->currency,
-                'exchange_rate' => $request->exchange_rate,
-                'amount' => $request->amount,
+                'currency_code' => $contract->currency_code,
+                'exchange_rate' => $contract->exchange_rate ?? 1,
+                'amount' => $contract->amount ?? 0,
                 'description' => $request->description,
                 'status' => 'active',
                 'approval_status' => 'pending', // Default pending status
-                'installment' => $request->installment,
+                'installment' => $contract->installment_count ?? 0,
                 'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
                 'created_by' => Auth::id(),
@@ -278,16 +284,21 @@ class DebitNoteController extends Controller
                 'billing_address_id' => 'required|exists:billing_addresses,id',
                 'date' => 'required|date',
                 'due_date' => 'required|date|after_or_equal:date',
-                'currency' => 'required|string|max:3',
-                'exchange_rate' => 'required|numeric|min:0',
-                'installment' => 'required|integer|max:12',
-                'amount' => 'required|min:0',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation failed',
                     'errors' => $validator->errors(),
+                    'success' => false
+                ], 422);
+            }
+
+            $contract = Contract::select('id', 'contact_id', 'currency_code', 'exchange_rate', 'amount', 'installment_count')->findOrFail($request->contract_id);
+
+            if (blank($contract->currency_code)) {
+                return response()->json([
+                    'message' => 'Selected contract does not have a currency.',
                     'success' => false
                 ], 422);
             }
@@ -300,16 +311,16 @@ class DebitNoteController extends Controller
             // Update Debit Note
             $debitNote->update([
                 // 'number' => $request->number, // Keep existing number - don't update it
-                'contact_id' => $billingAddress->contact_id,
+                'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
-                'currency_code' => $request->currency,
-                'exchange_rate' => $request->exchange_rate,
-                'amount' => $request->amount,
+                'currency_code' => $contract->currency_code,
+                'exchange_rate' => $contract->exchange_rate ?? 1,
+                'amount' => $contract->amount ?? 0,
                 'description' => $request->description,
-                'installment' => $request->installment,
+                'installment' => $contract->installment_count ?? 0,
                 'updated_by' => Auth::id(),
             ]);
 

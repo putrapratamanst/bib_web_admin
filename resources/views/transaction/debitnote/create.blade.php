@@ -123,7 +123,8 @@
                     <div class="col-md-4 col-lg-3" id="installment-field">
                         <div class="mb-3">
                             <label for="installment" class="form-label">Installment<sup class="text-danger">*</sup></label>
-                            <select class="form-select @error('installment') is-invalid @enderror" name="installment" id="installment" required>
+                            <input type="hidden" name="installment" id="installment_value" value="{{ old('installment', 0) }}">
+                            <select class="form-select @error('installment') is-invalid @enderror" id="installment" required disabled>
                                 @for ($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ old('installment', 0) == $i ? 'selected' : '' }}>{{ $i == 0 ? 'Single Payment' : $i }}</option>
                                 @endfor
@@ -139,10 +140,12 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="currency" class="form-label">Currency<sup class="text-danger">*</sup></label>
-                            <select class="form-select @error('currency') is-invalid @enderror" name="currency" id="currency" required>
+                            <input type="hidden" name="currency" id="currency_value" value="{{ old('currency') }}">
+                            <select class="form-select @error('currency') is-invalid @enderror" id="currency" required disabled>
                                 <option value="">Select Currency</option>
-                                <option value="IDR" {{ old('currency') == 'IDR' ? 'selected' : '' }}>IDR - Indonesian Rupiah</option>
-                                <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD - US Dollar</option>
+                                @foreach($currencies as $currencyOption)
+                                    <option value="{{ $currencyOption->code }}" {{ old('currency') == $currencyOption->code ? 'selected' : '' }}>{{ $currencyOption->code }} - {{ $currencyOption->name }}</option>
+                                @endforeach
                             </select>
                             @error('currency')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -154,7 +157,7 @@
                             <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;" id="currency-prefix">IDR</span>
-                                <input type="text" class="form-control autonumeric text-end @error('exchange_rate') is-invalid @enderror" name="exchange_rate" id="exchange_rate" value="{{ old('exchange_rate') }}" required>
+                                <input type="text" class="form-control autonumeric text-end @error('exchange_rate') is-invalid @enderror" name="exchange_rate" id="exchange_rate" value="{{ old('exchange_rate') }}" required readonly style="background-color: #e9ecef;">
                             </div>
                             @error('exchange_rate')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -166,7 +169,7 @@
                             <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;" id="amount-currency-prefix">IDR</span>
-                                <input type="text" class="form-control autonumeric text-end @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount') }}" required>
+                                <input type="text" class="form-control autonumeric text-end @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount') }}" required readonly style="background-color: #e9ecef;">
                             </div>
                             @error('amount')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -396,6 +399,7 @@ $(document).ready(function() {
                         
                         // Update currency if available
                         if (contract.currency_code) {
+                            $('#currency_value').val(contract.currency_code);
                             $('#currency').val(contract.currency_code).trigger('change');
                             console.log('Currency set to:', contract.currency_code);
                         }
@@ -408,11 +412,13 @@ $(document).ready(function() {
                         }
                         // Update installment count if available (use installment_count from API)
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
+                            $('#installment_value').val(contract.installment_count);
                             $('#installment').val(contract.installment_count);
                             console.log('Installment set to:', contract.installment_count);
                             $('#installment').prop('required', true);
                         } else {
                             console.log('Installment count not found in contract data');
+                            $('#installment_value').val('0');
                             $('#installment').val('0');
                             $('#installment').prop('required', true);
                         }
@@ -481,6 +487,8 @@ $(document).ready(function() {
             'background-color': '',
             'cursor': ''
         });
+        $('#currency_value').val('');
+        $('#installment_value').val('0');
         $('#currency').val('').trigger('change');
         $('#policy_number_display').val('-');
         $('#installment').val('0');
@@ -503,6 +511,7 @@ $(document).ready(function() {
     // Handle currency change
     $('#currency').on('change', function() {
         const currency = $(this).val() || 'IDR';
+        $('#currency_value').val($(this).val());
         $('#currency-prefix').text(currency);
         $('#amount-currency-prefix').text(currency);
         
@@ -671,6 +680,7 @@ $(document).ready(function() {
     });
 
     // Trigger currency change on page load to set initial values
+    $('#installment_value').val($('#installment').val());
     $('#currency').trigger('change');
 });
 </script>
