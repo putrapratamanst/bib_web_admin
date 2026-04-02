@@ -351,7 +351,7 @@
             <div class="desc-row">
                 <div class="desc-label">Total Sum Insured</div>
                 <div class="desc-colon">:</div>
-                <div class="desc-value">{{ $contract?->currency_code ?? 'IDR' }}  {{ number_format($contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
+                <div class="desc-value">{{ $contract?->currency_code ?? 'IDR' }}  {{ number_format($contract?->coverage_amount ?? 0, 2, ',', '.') }},-</div>
             </div>
             
             <div class="desc-row">

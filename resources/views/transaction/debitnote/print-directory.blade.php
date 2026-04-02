@@ -21,32 +21,58 @@
 
         .container {
             max-width: 210mm;
-            /* A4 width */
             width: 210mm;
             margin: 0 auto;
             background: white;
             padding: 15mm;
-            border: 2px solid #000;
             box-sizing: border-box;
+            min-height: calc(297mm - 40px);
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .ref-text {
+            font-size: 11px;
+            font-style: italic;
+            color: #333;
         }
 
         .logo {
             text-align: right;
-            margin-bottom: 10px;
         }
 
         .logo img {
-            width: 80px;
+            width: 180px;
             height: auto;
             display: block;
             margin-left: auto;
         }
 
-        .title {
+        .title-section {
             text-align: center;
-            font-size: 20px;
-            font-weight: bold;
+            margin: 30px 0 20px 0;
+        }
+
+        .title-line {
+            border-top: 2px solid #000;
             margin-bottom: 15px;
+        }
+
+        .document-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
         }
 
         .header-section {
@@ -64,6 +90,10 @@
             width: 180px;
             font-weight: bold;
             flex-shrink: 0;
+        }
+
+        .label i {
+            font-weight: normal;
         }
 
         .separator {
@@ -85,7 +115,6 @@
         .table-header {
             background: #f0f0f0;
             display: flex;
-            padding: 8px;
             border-bottom: 1px solid #000;
         }
 
@@ -93,6 +122,7 @@
             font-weight: bold;
             text-align: center;
             font-size: 12px;
+            padding: 8px 12px;
         }
 
         .table-header div:first-child {
@@ -100,9 +130,14 @@
             border-right: 1px solid #000;
         }
 
+        .table-header div:last-child {
+            width: 200px;
+            flex-shrink: 0;
+        }
+
         .table-body {
             display: flex;
-            min-height: 180px;
+            min-height: 500px;
         }
 
         .notes-column {
@@ -111,6 +146,8 @@
             border-right: 1px solid #000;
             font-size: 11px;
             line-height: 1.4;
+            display: flex;
+            flex-direction: column;
         }
 
         .details-column {
@@ -129,8 +166,7 @@
 
         .premium-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             font-size: 10px;
             padding: 4px 0;
         }
@@ -140,45 +176,61 @@
             text-align: left;
         }
 
+        .premium-currency {
+            width: 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
         .premium-value {
-            flex: none;
+            width: 75px;
             text-align: right;
             font-weight: bold;
-            margin-left: 10px;
+            flex-shrink: 0;
         }
 
         .signature-section {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
-            padding: 12px;
+            padding: 12px 12px 4px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border-top: 1px solid #000;
+        }
+
+        .signature-text {
+            display: inline-block;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+        }
+
+        .content-wrap {
         }
 
         .footer {
-            margin-top: 5px;
-            /* padding: 10mm 15mm; */
-            font-size: 9px;
-            color: #666;
-            line-height: 1.2;
+            margin-top: 8px;
+            border-top: 1px solid #000;
+            padding-top: 6px;
+            font-size: 8.5px;
+            color: #000;
+            line-height: 1.4;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            width: 100%;
         }
 
         .footer-left {
-            flex: none;
-            width: auto;
+            flex: 1;
         }
 
         .footer-right {
             text-align: right;
-            flex: none;
-            width: auto;
+            white-space: nowrap;
+            margin-left: 20px;
         }
 
         /* Print styles */
@@ -190,26 +242,17 @@
             }
 
             .container {
-                border: 2px solid #000;
                 max-width: 100%;
                 width: 210mm;
                 margin: 0;
-                padding: 15mm;
+                padding: 10mm;
                 box-shadow: none;
+                min-height: 297mm;
             }
 
-            .footer {
-                margin-top: 5px;
-                /* border-top: 1px solid #ddd; */
-                page-break-inside: avoid;
-                display: flex;
-                justify-content: space-between;
-                padding-bottom: 75px;
-                align-items: flex-start;
-                width: 100%;
+            .content-wrap {
             }
 
-            /* Hide browser print margins */
             @page {
                 size: A4;
                 margin: 0;
@@ -220,13 +263,22 @@
 
 <body>
     <div class="container">
-        <!-- Logo -->
-        <div class="logo">
-            <img src="{{ asset('logo.png') }}" alt="Brilliant Insurance Brokers Logo">
+        <div class="content-wrap">
+        <div class="header">
+            <div class="top-row">
+                <div class="ref-text">
+                    Ref: {{ $debitNote->contract ? $debitNote->contract->number : '-' }}
+                </div>
+                <div class="logo">
+                    <img src="{{ asset('logo.png') }}" alt="Brilliant Insurance Brokers Logo">
+                </div>
+            </div>
+            
+            <div class="title-section">
+                <div class="document-title">DEBIT NOTE</div>
+            </div>
         </div>
-
-        <!-- Title -->
-        <div class="title">DEBIT NOTE</div>
+                <div class="title-line"></div>
 
         <!-- Header Information -->
         <div class="header-section">
@@ -239,15 +291,16 @@
             <div class="row">
                 <div class="label">Tanggal<br><i>Date</i></div>
                 <div class="separator">:</div>
-                <div class="value">{{ \Carbon\Carbon::parse($debitNote->date)->format('d F Y') }}</div>
+                <div class="value">{{ \Carbon\Carbon::parse($debitNote->date)->format('d-M-Y') }}</div>
             </div>
 
             <div class="row">
                 <div class="label">Ref</div>
                 <div class="separator">:</div>
-                <div class="value">{{ $debitNote->contract ? $debitNote->contract->number : '-' }}</div>
+                <div class="value">{{ $debitNote->contract->policy_number ?? '-' }}</div>
             </div>
         </div>
+                <div class="title-line"></div>
 
         <!-- Policy Information -->
         <div class="row">
@@ -283,7 +336,7 @@
             <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
             <div class="separator">:</div>
             <div class="value">{{ $debitNote->contract?->currency_code ?? 'IDR' }}
-                {{ number_format($debitNote->contract?->coverage_amount ?? 0, 0, '.', ',') }}
+                {{ number_format($debitNote->contract?->coverage_amount ?? 0, 2, ',', '.') }}
             </div>
         </div>
 
@@ -296,26 +349,29 @@
 
             <div class="table-body">
                 <div class="notes-column">
-                    <div style="margin-bottom: 12px;">
-                        <strong>Risk Location: </strong>{{ $debitNote->contract->contact->address ?? '-' }}
+                    <div>
+                        <div style="margin-bottom: 12px;">
+                            <strong>Risk Location: </strong>{{ $debitNote->contract->contact->address ?? '-' }}
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <strong>Subject: </strong>{{ $debitNote->contract->covered_item ?? 'Property All Risk' }}
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            Adalah benar bahwa 7 hari setelah jatuh tempo dari tanggal dikeluarkannya premi maupun jatuh tempo pembayaran Premi dianggap dan dianggap sebagai Debit Note & Polis terlambat.
+                        </div>
+                        <div style="margin-top: 30px;margin-bottom: 15px;">
+                            <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>
+                            @if($debitNote->debitNoteBillings->isNotEmpty())
+                                @foreach($debitNote->debitNoteBillings as $index => $billing)
+                                    Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($billing->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                                @endforeach
+                            @else
+                                {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') }}
+                            @endif
+                        </div>
                     </div>
-                    <div style="margin-bottom: 12px;">
-                        <strong>Subject: </strong>{{ $debitNote->contract->covered_item ?? 'Property All Risk' }}
-                    </div>
-                    <div style="margin-bottom: 12px;">
-                        Adalah benar bahwa 7 hari setelah jatuh tempo dari tanggal dikeluarkannya premi maupun jatuh tempo pembayaran Premi dianggap dan dianggap sebagai Debit Note & Polis terlambat.
-                    </div>
-                    <div style="margin-top: 30px;margin-bottom: 15px;">
-                        <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>
-                        @if($debitNote->debitNoteBillings->isNotEmpty())
-                            @foreach($debitNote->debitNoteBillings as $index => $billing)
-                                Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($billing->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
-                            @endforeach
-                        @else
-                            {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') }}
-                        @endif
-                    </div>
-                    <div style="margin-bottom: 15px;">
+                    
+                    <div style="margin-top: auto;">
                         <strong>PT. Brilliant Insurance Brokers</strong><br>
                         Bank Mandiri KCP Botanica Garden a/c No. 070.0006.524123 (IDR)<br>
                         BNI 46 Cab. Senayan a/c No. 025.9060.691 (IDR)<br>
@@ -334,51 +390,57 @@
                         $stampFee = $contract ? $contract->stamp_fee : 0;
                         $discountAmount = $grossPremium * ($discount / 100);
                         $netPremium = $grossPremium - $discountAmount + $stampFee;
+                        $currency = $debitNote->currency_code ?? 'IDR';
                         @endphp
 
                         <div class="premium-row">
                             <span class="premium-label">Premi<br><i>Premium</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($grossPremium, 2, ',', '.') }}</span>
+                            <span class="premium-currency">{{ $currency }}</span>
+                            <span class="premium-value">{{ number_format($grossPremium, 2, ',', '.') }}</span>
                         </div>
 
                         <div class="premium-row">
                             <span class="premium-label">Biaya Polis<br><i>Policy Cost</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format(1, 2, ',', '.') }}</span>
+                            <span class="premium-currency">{{ $currency }}</span>
+                            <span class="premium-value">{{ number_format(1, 2, ',', '.') }}</span>
                         </div>
 
                         <div class="premium-row">
                             <span class="premium-label">Biaya Materai<br><i>Stamp Duty</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($stampFee, 2, ',', '.') }}</span>
+                            <span class="premium-currency">{{ $currency }}</span>
+                            <span class="premium-value">{{ number_format($stampFee, 2, ',', '.') }}</span>
                         </div>
 
                         @if($discount > 0)
                         <div class="premium-row">
                             <span class="premium-label">Diskon ({{ number_format($discount, 0) }}%)<br><i>Discount</i></span>
-                            <span class="premium-value">{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($discountAmount, 2, ',', '.') }}</span>
+                            <span class="premium-currency">{{ $currency }}</span>
+                            <span class="premium-value">{{ number_format($discountAmount, 2, ',', '.') }}</span>
                         </div>
                         @endif
 
                         <div class="premium-row" style="border-top: 1px solid #000; margin-top: 10px; padding-top: 10px;">
                             <span class="premium-label"><strong>Premi Neto<br><i>Nett Premium</i></strong></span>
-                            <span class="premium-value"><strong>{{ $debitNote->currency_code ?? 'IDR' }}<br>{{ number_format($debitNote->amount, 2, ',', '.') }}</strong></span>
+                            <span class="premium-currency"><strong>{{ $currency }}</strong></span>
+                            <span class="premium-value"><strong>{{ number_format($debitNote->amount, 2, ',', '.') }}</strong></span>
                         </div>
                     </div>
 
                     <div class="signature-section">
-                        <div>Authorized</div>
-                        <div style="margin-top: 40px;">Signature</div>
+                        <span class="signature-text">Authorized Signatures</span>
                     </div>
                 </div>
             </div>
         </div>
+        </div><!-- end content-wrap -->
 
         <!-- Footer -->
         <div class="footer">
             <div class="footer-left">
                 <strong>PT. Brilliant Insurance Brokers</strong><br>
-                Rukan Botanica Junction Blok J.12 no. 60,<br>
+                Rukan Botanic Junction Blok I 10 no. 60,<br>
                 Jl. Raya Joglo - Jakarta Barat 11640<br>
-                SIUP NO : KEP.230/KM.10/2012 & Member of APPARINDO no. 189-2012
+                <em>SIUP No : KEP-230/KM.10/2012 &amp; Member of APPARINDO No. 189-2012</em>
             </div>
             <div class="footer-right">
                 T: 021 – 5890 8403<br>
@@ -389,7 +451,6 @@
     </div>
 
     <script>
-        // Auto print when page loads
         window.onload = function() {
             window.print();
         }

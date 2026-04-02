@@ -378,7 +378,7 @@
             <div class="row">
                 <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
                 <div class="separator">:</div>
-                <div class="value">{{ $billing->debitNote->contract?->currency_code ?? 'IDR' }} {{ number_format($billing->debitNote->contract?->coverage_amount ?? 0, 0, '.', ',') }},-</div>
+                <div class="value">{{ $billing->debitNote->contract?->currency_code ?? 'IDR' }} {{ number_format($billing->debitNote->contract?->coverage_amount ?? 0, 2, ',', '.') }},-</div>
             </div>
 
 

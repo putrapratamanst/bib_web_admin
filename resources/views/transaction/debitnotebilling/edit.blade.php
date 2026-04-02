@@ -159,7 +159,7 @@
                                        class="form-control autonumeric @error('amount.' . $index) is-invalid @enderror" 
                                        name="amount[]" 
                                        id="amount_{{ $index }}" 
-                                       value="{{ old('amount.' . $index, $billing->amount) }}"
+                                       value="{{ old('amount.' . $index, $hasFees ? $billing->amount - $totalFees : $billing->amount) }}"
                                        data-billing-number="{{ $billing->billing_number }}"
                                        data-is-first="{{ $isFirstBilling ? '1' : '0' }}">
                                 @error('amount.' . $index)

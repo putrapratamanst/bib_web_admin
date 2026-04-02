@@ -360,7 +360,7 @@
                 <div class="label"><strong>Total Nilai Pertanggungan</strong><br><i>Total Sum Insured</i></div>
                 <div class="separator">:</div>
                 <div class="value">{{ $creditNote->contract?->currency_code ?? 'IDR' }}  
-                {{ number_format($creditNote->contract?->coverage_amount ?? 0, 0, '.', ',') }}</div>
+                {{ number_format($creditNote->contract?->coverage_amount ?? 0, 2, ',', '.') }}</div>
             </div>
 
             <div class="table-container">

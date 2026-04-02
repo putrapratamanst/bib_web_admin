@@ -132,7 +132,7 @@
                             <input type="hidden" name="installment" id="installment_value" value="{{ old('installment', $debitNote->installment) }}">
                             <select class="form-select @error('installment') is-invalid @enderror" id="installment" required disabled>
                                 @for ($i = 0; $i <= 12; $i++)
-                                    <option value="{{ $i }}" {{ old('installment', $debitNote->installment) == $i ? 'selected' : '' }}>{{ $i == 0 ? 'Single Payment' : $i }}</option>
+                                    <option value="{{ $i }}" {{ old('installment', $debitNote->installment) == $i ? 'selected' : '' }}>{{ $i }}</option>
                                 @endfor
                             </select>
                             @error('installment')
