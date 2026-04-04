@@ -308,9 +308,8 @@ class DebitNoteController extends Controller
             // Get contact_id from billing_address
             $billingAddress = \App\Models\BillingAddress::findOrFail($request->billing_address_id);
             
-            // Update Debit Note
-            $debitNote->update([
-                // 'number' => $request->number, // Keep existing number - don't update it
+            // Prepare update data
+            $updateData = [
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
@@ -322,7 +321,18 @@ class DebitNoteController extends Controller
                 'description' => $request->description,
                 'installment' => $contract->installment_count ?? 0,
                 'updated_by' => Auth::id(),
-            ]);
+            ];
+
+            // If debit note was rejected, reset approval status to pending
+            if ($debitNote->approval_status === 'rejected') {
+                $updateData['approval_status'] = 'pending';
+                $updateData['approved_by'] = null;
+                $updateData['approved_at'] = null;
+                $updateData['approval_notes'] = null;
+            }
+            
+            // Update Debit Note
+            $debitNote->update($updateData);
 
             // Update Debit Note Details if provided
             if (isset($request->details) && is_array($request->details)) {

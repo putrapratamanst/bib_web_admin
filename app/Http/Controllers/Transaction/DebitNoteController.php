@@ -212,8 +212,8 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update Debit Note
-            $debitNote->update([
+            // Prepare update data
+            $updateData = [
                 'number' => $request->number,
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
@@ -226,7 +226,18 @@ class DebitNoteController extends Controller
                 'description' => $request->description,
                 'installment' => $contract->installment_count ?? 0,
                 'updated_by' => auth()->id(),
-            ]);
+            ];
+
+            // If debit note was rejected, reset approval status to pending
+            if ($debitNote->approval_status === 'rejected') {
+                $updateData['approval_status'] = 'pending';
+                $updateData['approved_by'] = null;
+                $updateData['approved_at'] = null;
+                $updateData['approval_notes'] = null;
+            }
+
+            // Update Debit Note
+            $debitNote->update($updateData);
 
             // Update Debit Note Details if provided
             if (isset($request->details) && is_array($request->details)) {
