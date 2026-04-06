@@ -42,8 +42,8 @@
             });
 
             $('.autonumeric').autoNumeric('init', {
-                aSep: '.',
-                aDec: ',',
+                aSep: '.',  // Thousand separator: dot (Indonesian format)
+                aDec: ',',  // Decimal separator: comma (Indonesian format)
                 aForm: true,
             });
 

@@ -193,9 +193,9 @@
     const currencyCode = "{{ $debitNote->currency_code }}";
     const totalFees = {{ $totalFees }};
 
-    // Initialize currency formatter
+    // Initialize currency formatter (US format: 1,234.56)
     function formatCurrency(value) {
-        return new Intl.NumberFormat('id-ID', {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(value);
@@ -222,10 +222,9 @@
                     throw new Error('AutoNumeric not initialized');
                 }
             } catch(e) {
-                // Fallback to manual parsing for Indonesian format (1.234.567,89)
+                // Fallback to manual parsing for US format (1,234.56)
                 const value = input.value.trim()
-                    .replace(/\./g, '')  // Remove thousand separators (dots)
-                    .replace(/,/g, '.'); // Replace decimal comma with dot
+                    .replace(/,/g, '');  // Remove thousand separators (commas)
                 numValue = parseFloat(value) || 0;
             }
 
@@ -281,10 +280,10 @@
             if ($(this).data('autoNumeric')) {
                 $(this).autoNumeric('destroy');
             }
-            // Initialize with Indonesian format
+            // Initialize with US format
             $(this).autoNumeric('init', {
-                aSep: '.',
-                aDec: ',',
+                aSep: ',',  // Thousand separator: comma
+                aDec: '.',  // Decimal separator: dot (period)
                 aForm: true,
             });
         });
@@ -308,8 +307,7 @@
                 numValue = parseFloat(autoNumericValue) || 0;
             } catch(err) {
                 const value = $(this).val().trim()
-                    .replace(/\./g, '')
-                    .replace(/,/g, '.');
+                    .replace(/,/g, '');  // Remove commas
                 numValue = parseFloat(value) || 0;
             }
             
@@ -328,10 +326,9 @@
         $('input[name="amount[]"]').each(function() {
             var currentValue = $(this).val();
             if (currentValue && currentValue.trim() !== '') {
-                // Manual cleaning: remove dots (thousand separator) and replace comma with dot
+                // Manual cleaning: remove commas (thousand separator)
                 var cleanValue = currentValue.trim()
-                    .replace(/\./g, '')  // Remove all dots
-                    .replace(/,/g, '.'); // Replace comma with dot
+                    .replace(/,/g, '');  // Remove all commas
                 $(this).val(cleanValue);
             }
         });

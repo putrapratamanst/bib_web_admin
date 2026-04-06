@@ -363,7 +363,16 @@
                             <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>
                             @if($debitNote->debitNoteBillings->isNotEmpty())
                                 @foreach($debitNote->debitNoteBillings as $index => $billing)
-                                    Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($billing->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                                    @php
+                                        // Display amount: remove policy_fee and stamp_fee from first installment (for existing data)
+                                        $displayAmount = $billing->amount;
+                                        if ($index === 0 && $debitNote->contract) {
+                                            $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
+                                            $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
+                                            $displayAmount = $billing->amount - $policyFee - $stampFee;
+                                        }
+                                    @endphp
+                                    Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
                                 @endforeach
                             @else
                                 {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') }}
@@ -388,6 +397,7 @@
                         $grossPremium = $contract ? $contract->gross_premium : $debitNote->amount;
                         $discount = $contract ? $contract->discount : 0;
                         $stampFee = $contract ? $contract->stamp_fee : 0;
+                        $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
                         $discountAmount = $grossPremium * ($discount / 100);
                         $netPremium = $grossPremium - $discountAmount + $stampFee;
                         $currency = $debitNote->currency_code ?? 'IDR';
@@ -402,7 +412,7 @@
                         <div class="premium-row">
                             <span class="premium-label">Biaya Polis<br><i>Policy Cost</i></span>
                             <span class="premium-currency">{{ $currency }}</span>
-                            <span class="premium-value">{{ number_format(1, 2, ',', '.') }}</span>
+                            <span class="premium-value">{{ number_format($policyCost, 2, ',', '.') }}</span>
                         </div>
 
                         <div class="premium-row">

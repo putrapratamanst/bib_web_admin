@@ -99,6 +99,16 @@ class DebitNoteController extends Controller
                     });
                 });
             })
+            ->filterColumn('policy_number', function($query, $keyword) {
+                $query->whereHas('contract', function($q) use ($keyword) {
+                    $q->where('policy_number', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('contract', function($query, $keyword) {
+                $query->whereHas('contract', function($q) use ($keyword) {
+                    $q->where('number', 'like', "%{$keyword}%");
+                });
+            })
             ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);
     }

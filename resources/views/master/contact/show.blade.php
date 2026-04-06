@@ -136,14 +136,14 @@
                             <div class="col-6">
                                 <div class="mb-3">
                                     <label for="ktp_modal" class="form-label">KTP<sup class="text-danger">*</sup></label>
-                                    <input type="number" class="form-control" id="ktp_modal" name="ktp">
+                                    <input type="text" class="form-control" id="ktp_modal" name="ktp" maxlength="20">
                                     <small class="text-muted">*Minimal isi salah satu (KTP/NPWP)</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="mb-3">
                                     <label for="npwp_modal" class="form-label">NPWP<sup class="text-danger">*</sup></label>
-                                    <input type="number" class="form-control" id="npwp_modal" name="npwp">
+                                    <input type="text" class="form-control" id="npwp_modal" name="npwp" maxlength="20">
                                 </div>
                             </div>
                         </div>

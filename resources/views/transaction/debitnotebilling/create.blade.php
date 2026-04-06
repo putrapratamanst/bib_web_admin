@@ -226,9 +226,9 @@
     const debitNoteAmount = {{ $debitNote->amount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
 
-    // Initialize currency formatter
+    // Initialize currency formatter (US format: 1,234.56)
     function formatCurrency(value) {
-        return new Intl.NumberFormat('id-ID', {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(value);
@@ -255,10 +255,9 @@
                     throw new Error('AutoNumeric not initialized');
                 }
             } catch(e) {
-                // Fallback to manual parsing for Indonesian format (1.234.567,89)
+                // Fallback to manual parsing for US format (1,234.56)
                 const value = input.value.trim()
-                    .replace(/\./g, '')  // Remove thousand separators (dots)
-                    .replace(/,/g, '.'); // Replace decimal comma with dot
+                    .replace(/,/g, '');  // Remove thousand separators (commas)
                 numValue = parseFloat(value) || 0;
             }
 
@@ -293,7 +292,7 @@
         try {
             currentValue = parseFloat($(this).autoNumeric('get')) || 0;
         } catch(e) {
-            currentValue = parseFloat(this.value.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            currentValue = parseFloat(this.value.replace(/,/g, '')) || 0;
         }
         
         // Warn if individual input exceeds remaining
@@ -313,15 +312,18 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Re-initialize AutoNumeric for all amount inputs to ensure proper formatting
+        // Re-initialize AutoNumeric for all amount inputs to ensure proper formatting (US format)
         $('input[name="amount[]"]').each(function() {
-            if (!$(this).data('autoNumeric')) {
-                $(this).autoNumeric('init', {
-                    aSep: '.',
-                    aDec: ',',
-                    aForm: true,
-                });
+            // Destroy existing autoNumeric instance if any (from global config)
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
             }
+            // Re-initialize with US format
+            $(this).autoNumeric('init', {
+                aSep: ',',  // Thousand separator: comma
+                aDec: '.',  // Decimal separator: dot (period)
+                aForm: true,
+            });
         });
         
         // Update totals after initialization
@@ -338,8 +340,8 @@
                 // Set the clean value back
                 $(this).val(cleanValue);
             } catch(e) {
-                // If AutoNumeric fails, manually clean
-                var value = $(this).val().replace(/\./g, '').replace(/,/g, '.');
+                // If AutoNumeric fails, manually clean (remove commas)
+                var value = $(this).val().replace(/,/g, '');
                 $(this).val(value);
             }
         });

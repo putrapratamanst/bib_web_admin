@@ -238,7 +238,7 @@
                                         $displayAmount -= $policyFee + $stampFee;
                                     }
                                 @endphp
-                                {{ $debitNote->currency_code }} {{ number_format($displayAmount, 2, ',', '.') }}
+                                {{ $debitNote->currency_code }} {{ number_format($displayAmount, 2, '.', ',') }}
                             </td>
                             <td>
                                 @if ($billing->status === 'pending')

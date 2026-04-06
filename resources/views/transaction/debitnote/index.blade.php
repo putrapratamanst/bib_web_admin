@@ -58,6 +58,8 @@
                             <th>Date</th>
                             <th>Due Date</th>
                             <th>Insured Name</th>
+                            <th>Placing Number</th>
+                            <th>Policy Number</th>
                             <th>Insurance Type</th>
                             <th>Currency</th>
                             <th>Nett Premium</th>
@@ -128,6 +130,18 @@
                 {
                     data: 'insured_name',
                     name: 'insured_name'
+                },
+                {
+                    data: 'contract',
+                    name: 'contract',
+                    visible: false,
+                    searchable: true
+                },
+                {
+                    data: 'policy_number',
+                    name: 'policy_number',
+                    visible: false,
+                    searchable: true
                 },
               
                 

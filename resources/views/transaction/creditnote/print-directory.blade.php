@@ -291,7 +291,7 @@
     <div class="container">
         <div class="content-wrapper">
             <div class="top-bar">
-                <div class="ref-top">Ref: {{ $creditNote->contract?->number ?? '-' }}</div>
+                <div class="ref-top">Ref: {{ $creditNote->billing?->billing_number ?? '-' }}</div>
                 <div class="logo">
                     <img src="{{ asset('logo.png') }}" alt="Brilliant Insurance Brokers Logo">
                 </div>
