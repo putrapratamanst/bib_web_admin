@@ -136,17 +136,21 @@ class ContractController extends Controller
         $month = date('m');
         $year = date('Y');
         
-        // Get last contract number for this month and contract type
+        // Get all records with the prefix, extract numeric part, and sort numerically
+        // This avoids alphabetical sorting issues
         $prefix = "{$contractTypeCode}/{$month}/{$year}/";
         $lastContract = Contract::where('number', 'like', "{$prefix}%")
-            ->orderBy('number', 'desc')
+            ->get()
+            ->map(function($item) {
+                $item->numeric_number = (int) substr($item->number, strrpos($item->number, '/') + 1);
+                return $item;
+            })
+            ->sortByDesc('numeric_number')
             ->first();
         
         // Generate running number
         if ($lastContract) {
-            // Extract last number
-            $lastNumber = (int) substr($lastContract->number, strrpos($lastContract->number, '/') + 1);
-            $runningNumber = $lastNumber + 1;
+            $runningNumber = $lastContract->numeric_number + 1;
         } else {
             $runningNumber = 1;
         }

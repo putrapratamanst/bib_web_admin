@@ -36,22 +36,25 @@ class JournalEntryController extends Controller
         $year = date('Y');
         $month = date('m');
         
-        // Get the last number for current month
+        // Get all records with the prefix, extract numeric part, and sort numerically
+        // This avoids alphabetical sorting issues
         $lastEntry = JournalEntry::whereYear('entry_date', $year)
             ->whereMonth('entry_date', $month)
             ->where('number', 'like', "JE/{$year}/{$month}/%")
-            ->orderBy('number', 'desc')
+            ->get()
+            ->map(function($item) {
+                // Extract the number from format JE/YYYY/MM/XXXXX
+                $parts = explode('/', $item->number);
+                $item->numeric_number = (count($parts) === 4) ? intval($parts[3]) : 0;
+                return $item;
+            })
+            ->sortByDesc('numeric_number')
             ->first();
         
         $nextNumber = 1;
         
-        if ($lastEntry) {
-            // Extract the number from format JE/YYYY/MM/XXXXX
-            $parts = explode('/', $lastEntry->number);
-            if (count($parts) === 4) {
-                $lastNumber = intval($parts[3]);
-                $nextNumber = $lastNumber + 1;
-            }
+        if ($lastEntry && $lastEntry->numeric_number > 0) {
+            $nextNumber = $lastEntry->numeric_number + 1;
         }
         
         $formattedNumber = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);

@@ -239,13 +239,19 @@ class DebitNoteController extends Controller
         $month = date('m');
         $prefix = "BIB/D{$year}/{$month}-";
         
+        // Get all records with the prefix, extract numeric part, and sort numerically
+        // This avoids alphabetical sorting issues (e.g., "00923" > "00099" as strings)
         $lastDebitNote = DebitNote::where('number', 'like', "{$prefix}%")
-            ->orderBy('number', 'desc')
+            ->get()
+            ->map(function($item) {
+                $item->numeric_number = (int) substr($item->number, strrpos($item->number, '-') + 1);
+                return $item;
+            })
+            ->sortByDesc('numeric_number')
             ->first();
         
         if ($lastDebitNote) {
-            $lastNumber = (int) substr($lastDebitNote->number, strrpos($lastDebitNote->number, '-') + 1);
-            $runningNumber = $lastNumber + 1;
+            $runningNumber = $lastDebitNote->numeric_number + 1;
         } else {
             $runningNumber = 1;
         }

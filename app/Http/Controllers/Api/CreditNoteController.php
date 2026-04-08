@@ -111,13 +111,19 @@ class CreditNoteController extends Controller
         $month = date('m');
         $prefix = "BIB/C{$year}/{$month}-";
         
+        // Get all records with the prefix, extract numeric part, and sort numerically
+        // This avoids alphabetical sorting issues (e.g., "0923" > "0099" as strings)
         $lastCreditNote = CreditNote::where('number', 'like', "{$prefix}%")
-            ->orderBy('number', 'desc')
+            ->get()
+            ->map(function($item) {
+                $item->numeric_number = (int) substr($item->number, strrpos($item->number, '-') + 1);
+                return $item;
+            })
+            ->sortByDesc('numeric_number')
             ->first();
         
         if ($lastCreditNote) {
-            $lastNumber = (int) substr($lastCreditNote->number, strrpos($lastCreditNote->number, '-') + 1);
-            $runningNumber = $lastNumber + 1;
+            $runningNumber = $lastCreditNote->numeric_number + 1;
         } else {
             $runningNumber = 1;
         }
