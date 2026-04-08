@@ -77,8 +77,8 @@ class DebitNoteController extends Controller
 
 
         $validator = Validator::make($request->all(), [
-            'number' => 'required|string|max:255|unique:debit_notes,number',
             'contract_id' => 'required|exists:contracts,id',
+            'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:date',
             // 'details' => 'required|array|min:1',
@@ -103,11 +103,15 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
 
+            // Auto-generate debit note number
+            $debitNoteNumber = $this->generateDebitNoteNumber();
+
             // Create Debit Note
             $debitNote = DebitNote::create([
-                'number' => $request->number,
+                'number' => $debitNoteNumber,
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
+                'billing_address_id' => $request->billing_address_id,
                 'date' => $request->date,
                 'due_date' => $request->due_date,
                 'currency_code' => $contract->currency_code,
@@ -117,8 +121,9 @@ class DebitNoteController extends Controller
                 'status' => 'active',
                 'approval_status' => 'pending', // Default pending status
                 'installment' => $contract->installment_count ?? 0,
-                'created_at' => now(),
+                'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),
+                'created_by' => auth()->id(),
             ]);
 
             // Create Debit Note Details
@@ -188,7 +193,6 @@ class DebitNoteController extends Controller
 
         // Validation
         $validator = Validator::make($request->all(), [
-            'number' => 'required|string|max:255|unique:debit_notes,number,' . $id,
             'contract_id' => 'required|exists:contracts,id',
             'billing_address_id' => 'required|exists:billing_addresses,id',
             'date' => 'required|date',
@@ -212,9 +216,8 @@ class DebitNoteController extends Controller
         try {
             DB::beginTransaction();
 
-            // Prepare update data
+            // Prepare update data (number is auto-generated and should not be changed)
             $updateData = [
-                'number' => $request->number,
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
@@ -268,5 +271,29 @@ class DebitNoteController extends Controller
                 ->with('error', 'Failed to update Debit Note: ' . $e->getMessage())
                 ->withInput();
         }
+    }
+
+    /**
+     * Generate debit note number for internal use
+     */
+    private function generateDebitNoteNumber()
+    {
+        // Format: BIB/DYY/MM-00001
+        $year = date('y');
+        $month = date('m');
+        $prefix = "BIB/D{$year}/{$month}-";
+        
+        $lastDebitNote = DebitNote::where('number', 'like', "{$prefix}%")
+            ->orderBy('number', 'desc')
+            ->first();
+        
+        if ($lastDebitNote) {
+            $lastNumber = (int) substr($lastDebitNote->number, strrpos($lastDebitNote->number, '-') + 1);
+            $runningNumber = $lastNumber + 1;
+        } else {
+            $runningNumber = 1;
+        }
+        
+        return sprintf("%s%05d", $prefix, $runningNumber);
     }
 }
