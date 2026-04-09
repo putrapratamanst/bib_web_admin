@@ -256,7 +256,7 @@ class DebitNoteController extends Controller
             $runningNumber = 1;
         }
         
-        return sprintf("%s%05d", $prefix, $runningNumber);
+        return sprintf("%s%04d", $prefix, $runningNumber);
     }
 
     public function show($id)

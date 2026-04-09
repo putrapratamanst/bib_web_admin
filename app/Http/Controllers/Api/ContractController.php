@@ -72,6 +72,7 @@ class ContractController extends Controller
         $query = Contract::with(['contact', 'billingAddress'])
             ->where('status', 'active')
             ->where('approval_status', 'approved')
+            ->whereDoesntHave('debitNotes') // Exclude contracts yang sudah pernah dipakai untuk debit note (apapun statusnya)
             ->where(function ($q) use ($search) {
                 if ($search) {
                     $q->where('number', 'like', "%{$search}%")
@@ -156,7 +157,7 @@ class ContractController extends Controller
         }
         
         // Format: KODE/MM/YYYY/00001
-        return sprintf("%s%05d", $prefix, $runningNumber);
+        return sprintf("%s%04d", $prefix, $runningNumber);
     }
 
     public function generateNumber(Request $request)
