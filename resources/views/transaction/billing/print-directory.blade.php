@@ -381,6 +381,15 @@
                 <div class="value">{{ $billing->debitNote->contract?->currency_code ?? 'IDR' }} {{ number_format($billing->debitNote->contract?->coverage_amount ?? 0, 2, ',', '.') }},-</div>
             </div>
 
+            @php
+            $contract = $billing->debitNote->contract;
+            $grossPremium = $contract ? $contract->gross_premium : $billing->amount;
+            $discount = $contract ? $contract->discount : 0;
+            $stampFee = $contract ? $contract->stamp_fee : 0;
+            $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
+            $discountAmount = $grossPremium * ($discount / 100);
+            $currency = $billing->debitNote->currency_code ?? 'IDR';
+            @endphp
 
             <!-- Table Section -->
             <div class="table-container">
@@ -403,7 +412,8 @@
                         <div class="notes-bottom">
                             <div style="margin-bottom: 10px;">
                                 <strong>Tanggal Pembayaran<br><i>Date of Payment(s)</i></strong><br>
-                                {{ \Carbon\Carbon::parse($billing->due_date)->format('d-M-Y') }} – {{ $billing->debitNote->currency_code ?? 'IDR' }} {{ number_format($billing->amount, 2, '.', ',') }}
+                                {{ \Carbon\Carbon::parse($billing->due_date)->format('d-M-Y') }} – {{ $billing->debitNote->currency_code ?? 'IDR' }} {{ number_format(($grossPremium + $stampFee + $policyCost) - $discountAmount, 2, '.', ',')}}
+
                             </div>
 
                             <div>
@@ -423,15 +433,6 @@
                     <!-- Details Column -->
                     <div class="details-column">
                         <div class="premium-section">
-                            @php
-                            $contract = $billing->debitNote->contract;
-                            $grossPremium = $contract ? $contract->gross_premium : $billing->amount;
-                            $discount = $contract ? $contract->discount : 0;
-                            $stampFee = $contract ? $contract->stamp_fee : 0;
-                            $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
-                            $discountAmount = $grossPremium * ($discount / 100);
-                            $currency = $billing->debitNote->currency_code ?? 'IDR';
-                            @endphp
 
                             <!-- Premi -->
                             <div class="premium-row">
