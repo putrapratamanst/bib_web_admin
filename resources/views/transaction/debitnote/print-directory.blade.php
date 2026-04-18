@@ -383,9 +383,9 @@
                     <div style="margin-top: auto;">
                         <strong>PT. Brilliant Insurance Brokers</strong><br>
                         Bank Mandiri KCP Botanica Garden a/c No. 070.0006.524123 (IDR)<br>
-                        BNI 46 Cab. Senayan a/c No. 025.9060.691 (IDR)<br>
+                        BNI 46 Cab. Senayan a/c No. 025.9960.691 (IDR)<br>
                         Bank Mandiri KCP Botanica Garden a/c No. 070.0006.524131 (USD)<br>
-                        BCA KCP Puri Botanica a/c No. 6260.5866.88 (IDR)
+                        BCA KCP Puri Botanica a/c No. 6250.8855.88 (IDR)
                     </div>
 
                 </div>

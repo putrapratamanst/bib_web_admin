@@ -30,6 +30,7 @@ class Contract extends Model
         'coverage_amount',
         'gross_premium',
         'discount',
+        'discount_amount',
         'stamp_fee',
         'amount',
         'installment_count',

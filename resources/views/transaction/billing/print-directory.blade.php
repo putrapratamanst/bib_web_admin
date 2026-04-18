@@ -423,9 +423,9 @@
                                 Bank Mandiri KCP Botanical Garden<br>
                                 a/c No. 070.0006.524131 (USD)<br>
                                 BNI 46 Cab. Senayan<br>
-                                a/c No. 025.9060.691 (IDR)<br>
+                                a/c No. 025.9960.691 (IDR)<br>
                                 BCA KCP Puri Botanical<br>
-                                a/c No. 6260.5866.88 (IDR)
+                                a/c No. 6250.8855.88 (IDR)
                             </div>
                         </div>
                     </div>

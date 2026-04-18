@@ -44,6 +44,9 @@
             $('.autonumeric').autoNumeric('init', {
                 aSep: ',',  // Thousand separator: comma
                 aDec: '.',  // Decimal separator: dot
+                mDec: 2,    // Minimum decimal places: 2
+                vMax: '9999999999999.99', // Maximum value
+                vMin: '0.00', // Minimum value
                 aForm: true,
             });
 

@@ -205,7 +205,7 @@
                             <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount }}" readonly />
+                                <input type="text" name="discount_amount" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount }}" required {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -214,7 +214,7 @@
                             <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required readonly />
+                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required {{ $lock }} />
                             </div>
                         </div>
                     </div>
@@ -685,6 +685,7 @@
                     coverage_amount: $("#coverage_amount").autoNumeric('get'),
                     gross_premium: $("#gross_premium").autoNumeric('get'),
                     discount: $("#discount").autoNumeric('get'),
+                    discount_amount: $("#discount_amount").autoNumeric('get'),
                     stamp_fee: $("#stamp_fee").autoNumeric('get'),
                     amount: $("#amount").autoNumeric('get'),
                     memo: $("#memo").val(),
@@ -814,6 +815,10 @@
             calculateDiscount();
         });
 
+        $("#discount_amount").on("change", function() {
+            calculateNetPremium();
+        });
+
         // Load documents on page load
         loadDocuments();
         updateTotalShare();
@@ -890,6 +895,35 @@
         netPremium = parseFloat(grossPremium) - parseFloat(discountAmount) + parseFloat(policyFee) + parseFloat(stampFee);
 
         $("#discount_amount").autoNumeric('set', discountAmount);
+        $("#amount").autoNumeric('set', netPremium);
+    }
+
+    function calculateNetPremium() {
+        // Calculate net premium when discount_amount is changed manually
+        var grossPremium = 0;
+        var stampFee = 0;
+        var policyFee = 0;
+        var discountAmount = 0;
+        var netPremium = 0;
+
+        if ($("#gross_premium").val() != "") {
+            grossPremium = $("#gross_premium").autoNumeric('get');
+        }
+
+        if ($("#stamp_fee").val() != "") {
+            stampFee = $("#stamp_fee").autoNumeric('get');
+        }
+
+        if ($("#policy_fee").val() != "") {
+            policyFee = $("#policy_fee").autoNumeric('get');
+        }
+
+        if ($("#discount_amount").val() != "") {
+            discountAmount = $("#discount_amount").autoNumeric('get');
+        }
+
+        netPremium = parseFloat(grossPremium) - parseFloat(discountAmount) + parseFloat(policyFee) + parseFloat(stampFee);
+
         $("#amount").autoNumeric('set', netPremium);
     }
 
