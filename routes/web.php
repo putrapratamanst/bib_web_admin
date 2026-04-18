@@ -39,6 +39,11 @@ Route::middleware(['auth'])->group(function () {
     // Currency
     Route::get('/currencies/datatables', [\App\Http\Controllers\Master\CurrencyController::class, 'datatables'])->name('master.currencies.datatables');
     Route::resource('/currencies', \App\Http\Controllers\Master\CurrencyController::class, ['as' => 'master']);
+
+    // User
+    Route::get('/users', [\App\Http\Controllers\Master\UserController::class, 'index'])->name('master.users.index');
+    Route::get('/users/create', [\App\Http\Controllers\Master\UserController::class, 'create'])->name('master.users.create');
+    Route::get('/users/{id}/edit', [\App\Http\Controllers\Master\UserController::class, 'edit'])->name('master.users.edit');
 });
 
 // route group transaction

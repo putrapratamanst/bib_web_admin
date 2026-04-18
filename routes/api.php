@@ -21,6 +21,12 @@ Route::post('/chart-of-account', [\App\Http\Controllers\Api\ChartOfAccountContro
 Route::get('/chart-of-account/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'show'])->name('api.chart-of-accounts.show');
 Route::put('/chart-of-account/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'update'])->name('api.chart-of-accounts.update');
 
+// User
+Route::get('/user/datatables', [\App\Http\Controllers\Api\UserController::class, 'datatables'])->name('api.users.datatables');
+Route::post('/user', [\App\Http\Controllers\Api\UserController::class, 'store'])->name('api.users.store');
+Route::put('/user/{id}', [\App\Http\Controllers\Api\UserController::class, 'update'])->name('api.users.update');
+Route::delete('/user/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy'])->name('api.users.destroy');
+
 // Contact Group
 Route::get('/contact-group', [\App\Http\Controllers\Api\ContactGroupController::class, 'index'])->name('api.contact-groups.index');
 Route::get('/contact-group/datatables', [\App\Http\Controllers\Api\ContactGroupController::class, 'datatables'])->name('api.contact-groups.datatables');

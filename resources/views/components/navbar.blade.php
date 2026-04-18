@@ -32,6 +32,15 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('master.currencies.index') }}">Currency</a>
                         </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('master.users.index') }}">
+                                <i class="fas fa-users me-1"></i>
+                                User Management
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
