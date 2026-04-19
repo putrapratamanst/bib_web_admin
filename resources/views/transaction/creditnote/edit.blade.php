@@ -116,10 +116,7 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Note:</strong> This Credit Note can only be edited while it is in pending approval status. Once approved or rejected, it cannot be modified.
-                </div>
+                {{-- Note removed: All forms can now be edited regardless of approval status --}}
             </div>
             <div class="card-footer">
                 <a href="{{ route('transaction.credit-notes.show', $creditNote->id) }}" class="btn btn-secondary">Cancel</a>

@@ -46,8 +46,8 @@ class ContractController extends Controller
             abort(403, 'Unauthorized. Only admins can edit contracts.');
         }
 
-        // Lock form if approved or has issued debit notes — only policy_number can be edited
-        $isFormLocked = $contract->approval_status === 'approved' || $contract->debitNotes()->exists();
+        // All forms can be edited regardless of approval status
+        $isFormLocked = false;
 
         $contractTypes = \App\Models\ContractType::all();
         $currencies = \App\Models\Currency::all();

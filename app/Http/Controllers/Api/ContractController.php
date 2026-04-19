@@ -376,7 +376,6 @@ class ContractController extends Controller
                 'installment_count' => $data['installment_count'],
                 'memo' => $data['memo'],
                 'covered_item' => $data['covered_item'],
-                'approval_status' => 'pending', // Reset to pending when updated
                 'billing_address_id' => $data['billing_address_id'] ?? null,
             ]);
 

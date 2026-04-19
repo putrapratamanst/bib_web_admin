@@ -231,15 +231,7 @@ class DebitNoteController extends Controller
                 'updated_by' => auth()->id(),
             ];
 
-            // If debit note was rejected, reset approval status to pending
-            if ($debitNote->approval_status === 'rejected') {
-                $updateData['approval_status'] = 'pending';
-                $updateData['approved_by'] = null;
-                $updateData['approved_at'] = null;
-                $updateData['approval_notes'] = null;
-            }
-
-            // Update Debit Note
+            // Update Debit Note - no reset of approval status
             $debitNote->update($updateData);
 
             // Update Debit Note Details if provided

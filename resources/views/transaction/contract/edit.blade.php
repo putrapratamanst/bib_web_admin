@@ -19,12 +19,7 @@
         <form autocomplete="off" method="POST" id="formEdit">
             <input type="hidden" name="contract_id" id="contract_id" value="{{ $contract->id }}" />
             <div class="card-body">
-                @if($isFormLocked)
-                <div class="alert alert-warning">
-                    <strong><i class="fas fa-lock"></i> Form Terkunci</strong> &mdash;
-                    Placing ini sudah approved atau sudah memiliki Debit Note. Hanya field <strong>Nomor Polis</strong> yang dapat diubah.
-                </div>
-                @endif
+                {{-- Form lock alert removed: All forms can now be edited regardless of approval status --}}
 
                 @if($contract->approval_status === 'rejected' && $contract->rejection_reason)
                 <div class="alert alert-warning">

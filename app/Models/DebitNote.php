@@ -152,13 +152,8 @@ class DebitNote extends Model
             return false;
         }
         
-        // Allow editing when:
-        // 1. Status is pending AND not yet reviewed (approved_by and approved_at are null)
-        // 2. Status is rejected (allows re-editing after rejection)
-        return ($this->approval_status === 'pending' && 
-                is_null($this->approved_by) && 
-                is_null($this->approved_at)) ||
-               $this->approval_status === 'rejected';
+        // All forms can be edited regardless of approval status
+        return true;
     }
 
     // Check if debit note can be submitted for approval  

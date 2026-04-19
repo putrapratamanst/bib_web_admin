@@ -93,7 +93,8 @@ class CreditNote extends Model
 
     public function canBeEdited(): bool
     {
-        return $this->approval_status === 'pending';
+        // All forms can be edited regardless of approval status
+        return true;
     }
 
     public function contract(): BelongsTo

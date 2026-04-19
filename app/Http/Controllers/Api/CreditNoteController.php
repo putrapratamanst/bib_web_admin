@@ -250,11 +250,8 @@ class CreditNoteController extends Controller
         try {
             $creditNote = CreditNote::findOrFail($id);
 
-            if (!$creditNote->canBeEdited()) {
-                return response()->json([
-                    'message' => 'Credit Note cannot be edited because it has been approved or rejected.'
-                ], 403);
-            }
+            // All forms can be edited regardless of approval status
+            // Removed canBeEdited() check
 
             $validator = Validator::make($request->all(), [
                 'billing_id' => 'required|exists:debit_note_billings,id',

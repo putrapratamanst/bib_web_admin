@@ -207,11 +207,7 @@
                     </div>
                 </div>
 
-                <!-- Warning Message -->
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
-                    <strong>Note:</strong> This Debit Note can only be edited while it is in draft status. Once submitted for approval, it cannot be modified.
-                </div>
+                {{-- Note removed: All forms can now be edited regardless of approval status --}}
             </div>
             
             <div class="card-footer">
