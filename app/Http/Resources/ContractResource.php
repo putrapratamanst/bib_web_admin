@@ -32,6 +32,7 @@ class ContractResource extends JsonResource
             'coverage_amount' => $this->coverage_amount,
             'gross_premium' => $this->gross_premium,
             'discount' => $this->discount,
+            'discount_amount' => $this->discount_amount,
             'stamp_fee' => $this->stamp_fee,
             'amount' => $this->amount,
             'installment_count' => $this->installment_count,

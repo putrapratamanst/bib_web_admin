@@ -181,6 +181,36 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="gross_premium" class="form-label">Gross Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="gross-premium-currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
+                                <input type="text" class="form-control autonumeric text-end" id="gross_premium" value="{{ $debitNote->contract->gross_premium_formatted ?? '0' }}" readonly style="background-color: #e9ecef;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control autonumeric text-end" id="discount" value="{{ $debitNote->contract->discount ?? '0' }}" readonly style="background-color: #e9ecef;">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="discount-amount-currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
+                                <input type="text" class="form-control autonumeric text-end" id="discount_amount" value="{{ $debitNote->contract->discount_amount_formatted ?? '0' }}" readonly style="background-color: #e9ecef;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-8">
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
@@ -344,9 +374,12 @@
                 });
                 $('#currency_value').val('');
                 $('#currency').val('');
-                $('#currency-text, #amount-currency-text').text('');
+                $('#currency-text, #amount-currency-text, #gross-premium-currency-text, #discount-amount-currency-text').text('');
                 $('#exchange_rate').autoNumeric('set', '0.00');
                 $('#amount').autoNumeric('set', '0.00');
+                $('#gross_premium').autoNumeric('set', '0.00');
+                $('#discount').autoNumeric('set', '0.00');
+                $('#discount_amount').autoNumeric('set', '0.00');
                 $('#installment_value').val('0');
                 $('#installment').val('0');
                 $('#insured_name').val('');
@@ -429,6 +462,25 @@
                         $('#amount').autoNumeric('set', contract.amount);
                     } else {
                         $('#amount').autoNumeric('set', '0.00');
+                    }
+                    
+                    // Set gross premium, discount, and discount amount
+                    if (contract.gross_premium) {
+                        $('#gross_premium').autoNumeric('set', parseFloat(contract.gross_premium));
+                    } else {
+                        $('#gross_premium').autoNumeric('set', '0.00');
+                    }
+                    
+                    if (contract.discount !== undefined && contract.discount !== null) {
+                        $('#discount').autoNumeric('set', parseFloat(contract.discount));
+                    } else {
+                        $('#discount').autoNumeric('set', '0.00');
+                    }
+                    
+                    if (contract.discount_amount) {
+                        $('#discount_amount').autoNumeric('set', parseFloat(contract.discount_amount));
+                    } else {
+                        $('#discount_amount').autoNumeric('set', '0.00');
                     }
                     
                     // Auto-select billing address from contract if available

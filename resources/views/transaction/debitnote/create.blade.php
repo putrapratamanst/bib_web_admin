@@ -172,6 +172,36 @@
                 <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="gross_premium" class="form-label">Gross Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;" id="gross-premium-currency-prefix">IDR</span>
+                                <input type="text" class="form-control autonumeric text-end" id="gross_premium" readonly style="background-color: #e9ecef;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control autonumeric text-end" id="discount" readonly style="background-color: #e9ecef;">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;" id="discount-amount-currency-prefix">IDR</span>
+                                <input type="text" class="form-control autonumeric text-end" id="discount_amount" readonly style="background-color: #e9ecef;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="status_display" class="form-label">Status</label>
                             <input type="text" class="form-control" id="status_display" value="Active" readonly style="background-color: #e9ecef;">
                             <input type="hidden" name="status" value="active">
@@ -392,6 +422,8 @@ $(document).ready(function() {
                         if (contract.currency_code) {
                             $('#currency_value').val(contract.currency_code);
                             $('#currency').val(contract.currency_code).trigger('change');
+                            $('#gross-premium-currency-prefix').text(contract.currency_code);
+                            $('#discount-amount-currency-prefix').text(contract.currency_code);
                             console.log('Currency set to:', contract.currency_code);
                         }
                         // Update policy number if available
@@ -451,8 +483,55 @@ $(document).ready(function() {
                                 }
                             } else {
                                 console.log('Amount not found in contract data');
+                            }                            
+                            
+                            // Log contract data for debugging
+                            console.log('Contract data received:', {
+                                gross_premium: contract.gross_premium,
+                                discount: contract.discount,
+                                discount_amount: contract.discount_amount
+                            });
+                            
+                            // Set gross premium, discount, and discount amount
+                            if (contract.gross_premium !== undefined && contract.gross_premium !== null) {
+                                try {
+                                    $('#gross_premium').autoNumeric('set', parseFloat(contract.gross_premium));
+                                    console.log('Gross premium set to:', contract.gross_premium);
+                                } catch (error) {
+                                    console.warn('AutoNumeric not available for gross_premium:', error);
+                                    $('#gross_premium').val(parseFloat(contract.gross_premium));
+                                }
+                            } else {
+                                $('#gross_premium').autoNumeric('set', 0);
+                                console.log('Gross premium not found, set to 0');
                             }
-                        }, 200);
+                            
+                            if (contract.discount !== undefined && contract.discount !== null) {
+                                try {
+                                    $('#discount').autoNumeric('set', parseFloat(contract.discount));
+                                    console.log('Discount set to:', contract.discount);
+                                } catch (error) {
+                                    console.warn('AutoNumeric not available for discount:', error);
+                                    $('#discount').val(parseFloat(contract.discount));
+                                }
+                            } else {
+                                $('#discount').autoNumeric('set', 0);
+                                console.log('Discount not found, set to 0');
+                            }
+                            
+                            if (contract.discount_amount !== undefined && contract.discount_amount !== null) {
+                                try {
+                                    $('#discount_amount').autoNumeric('set', parseFloat(contract.discount_amount));
+                                    console.log('Discount amount set to:', contract.discount_amount);
+                                } catch (error) {
+                                    console.warn('AutoNumeric not available for discount_amount:', error);
+                                    $('#discount_amount').val(parseFloat(contract.discount_amount));
+                                }
+                            } else {
+                                $('#discount_amount').autoNumeric('set', 0);
+                                console.log('Discount amount not found, set to 0');
+                            }
+                        }, 300);
                     }
                 })
                 .fail(function(xhr) {
@@ -488,10 +567,16 @@ $(document).ready(function() {
             try {
                 $('#exchange_rate').autoNumeric('set', '1');
                 $('#amount').autoNumeric('set', '0');
+                $('#gross_premium').autoNumeric('set', '0');
+                $('#discount').autoNumeric('set', '0');
+                $('#discount_amount').autoNumeric('set', '0');
             } catch (error) {
                 console.error('Error clearing AutoNumeric values:', error);
                 $('#exchange_rate').val('1');
                 $('#amount').val('0');
+                $('#gross_premium').val('0');
+                $('#discount').val('0');
+                $('#discount_amount').val('0');
             }
         }, 100);
     });
@@ -505,6 +590,8 @@ $(document).ready(function() {
         $('#currency_value').val($(this).val());
         $('#currency-prefix').text(currency);
         $('#amount-currency-prefix').text(currency);
+        $('#gross-premium-currency-prefix').text(currency);
+        $('#discount-amount-currency-prefix').text(currency);
         
         // Set default exchange rate based on currency
         if (currency === 'IDR') {

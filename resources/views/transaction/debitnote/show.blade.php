@@ -114,6 +114,36 @@
                 <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="gross_premium" class="form-label">Gross Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
+                                <input type="text" class="form-control text-end autonumeric" readonly id="gross_premium" value="{{ $debitNote->contract->gross_premium_formatted ?? '0' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control text-end autonumeric" readonly id="discount" value="{{ $debitNote->contract->discount ?? '0' }}">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
+                                <input type="text" class="form-control text-end autonumeric" readonly id="discount_amount" value="{{ $debitNote->contract->discount_amount_formatted ?? '0' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <input type="text" class="form-control" readonly name="status" id="status" value="{{ ucfirst($debitNote->status) }}">
                         </div>

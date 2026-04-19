@@ -99,14 +99,13 @@ class Contract extends Model
         return number_format($this->stamp_fee, 2, ".", ",");
     }
 
-    public function getDiscountAmountAttribute(): float
-    {
-        return $this->gross_premium * ($this->discount / 100);
-    }
-
+    // Accessor removed - use database value instead
+    // If you need calculated discount amount, use: gross_premium * (discount / 100)
+    
     public function getDiscountAmountFormattedAttribute(): string
     {
-        $discountAmount = $this->gross_premium * ($this->discount / 100);
+        // Use database value, fallback to calculation if null
+        $discountAmount = $this->attributes['discount_amount'] ?? ($this->gross_premium * ($this->discount / 100));
 
         return number_format($discountAmount, 2, ".", ",");
     }
