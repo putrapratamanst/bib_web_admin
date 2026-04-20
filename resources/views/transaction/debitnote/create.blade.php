@@ -433,6 +433,22 @@ $(document).ready(function() {
                         } else {
                             $('#policy_number_display').val('-');
                         }
+                        
+                        // Set Date from contract period_start
+                        if (contract.period_start) {
+                            // Convert date format from Y-m-d to d-m-Y
+                            const periodStart = new Date(contract.period_start);
+                            const day = String(periodStart.getDate()).padStart(2, '0');
+                            const month = String(periodStart.getMonth() + 1).padStart(2, '0');
+                            const year = periodStart.getFullYear();
+                            const formattedDate = day + '-' + month + '-' + year;
+                            $('#date').val(formattedDate);
+                            console.log('Date set to period_start:', formattedDate);
+                            
+                            // Set Due Date = Date + 7 days
+                            setDueDate(periodStart);
+                        }
+                        
                         // Update installment count if available (use installment_count from API)
                         if (contract.installment_count !== undefined && contract.installment_count !== null) {
                             $('#installment_value').val(contract.installment_count);
@@ -625,24 +641,35 @@ $(document).ready(function() {
         }
     });
 
-    // Set initial due date and handle date change
+    // Set due date helper function
     function setDueDate(baseDate) {
         const dueDate = new Date(baseDate);
-        dueDate.setDate(dueDate.getDate() + 10); // Add 10 days
-        const dueDateString = dueDate.toISOString().split('T')[0];
+        dueDate.setDate(dueDate.getDate() + 7); // Add 7 days
+        const day = String(dueDate.getDate()).padStart(2, '0');
+        const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+        const year = dueDate.getFullYear();
+        const dueDateString = day + '-' + month + '-' + year;
         $('#due_date').val(dueDateString);
+        console.log('Due date set to:', dueDateString);
     }
 
-    // Set initial due date if empty
-    if (!$('#due_date').val()) {
-        setDueDate(new Date());
-    }
+    // Set initial due date if empty (not needed anymore, will be set from contract)
+    // if (!$('#due_date').val()) {
+    //     setDueDate(new Date());
+    // }
 
     // Handle date change to auto-set due date
     $('#date').on('change', function() {
-        const selectedDate = new Date($(this).val());
-        if (selectedDate) {
-            setDueDate(selectedDate);
+        const dateValue = $(this).val();
+        if (dateValue) {
+            // Parse d-m-Y format
+            const parts = dateValue.split('-');
+            if (parts.length === 3) {
+                const selectedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                if (!isNaN(selectedDate)) {
+                    setDueDate(selectedDate);
+                }
+            }
         }
     });
 

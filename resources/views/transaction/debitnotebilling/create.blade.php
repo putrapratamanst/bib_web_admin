@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
 @section('title', 'Create Debit Note Billing')
-
+@php
+    // Calculate default dates from contract period_start
+    $defaultDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->format('d-m-Y') : date('d-m-Y');
+    $defaultDueDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->addDays(7)->format('d-m-Y') : date('d-m-Y', strtotime('+7 days'));
+@endphp
 @section('content')
 <div class="container">
     <div class="card">
@@ -130,7 +134,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="date_{{ $i }}" class="form-label">Date <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control datepicker @error('date.' . ($i-1)) is-invalid @enderror" name="date[]" id="date_{{ $i }}" value="{{ old('date.' . ($i-1)) }}">
+                                    <input type="text" class="form-control datepicker @error('date.' . ($i-1)) is-invalid @enderror" name="date[]" id="date_{{ $i }}" value="{{ old('date.' . ($i-1), $defaultDate) }}">
                                     @error('date.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -140,7 +144,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="due_date_{{ $i }}" class="form-label">Due Date <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control datepicker @error('due_date.' . ($i-1)) is-invalid @enderror" name="due_date[]" id="due_date_{{ $i }}" value="{{ old('due_date.' . ($i-1)) }}">
+                                    <input type="text" class="form-control datepicker @error('due_date.' . ($i-1)) is-invalid @enderror" name="due_date[]" id="due_date_{{ $i }}" value="{{ old('due_date.' . ($i-1), $defaultDueDate) }}">
                                     @error('due_date.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -184,7 +188,7 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="date" class="form-label">Date <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control datepicker @error('date.0') is-invalid @enderror" name="date[]" id="date" value="{{ old('date.0') }}">
+                                <input type="text" class="form-control datepicker @error('date.0') is-invalid @enderror" name="date[]" id="date" value="{{ old('date.0', $defaultDate) }}">
                                 @error('date.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -193,7 +197,7 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="due_date" class="form-label">Due Date <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control datepicker @error('due_date.0') is-invalid @enderror" name="due_date[]" id="due_date" value="{{ old('due_date.0') }}">
+                                <input type="text" class="form-control datepicker @error('due_date.0') is-invalid @enderror" name="due_date[]" id="due_date" value="{{ old('due_date.0', $defaultDueDate) }}">
                                 @error('due_date.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -351,6 +355,40 @@
 
     // Show error messages if they exist in session
     // Error and success messages are shown via HTML alerts above
+
+    // Auto-update due_date when date changes (+7 days)
+    function setDueDateFromDate(dateInput, dueDateInput) {
+        const dateValue = $(dateInput).val();
+        if (dateValue) {
+            // Parse d-m-Y format
+            const parts = dateValue.split('-');
+            if (parts.length === 3) {
+                const selectedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                if (!isNaN(selectedDate)) {
+                    const dueDate = new Date(selectedDate);
+                    dueDate.setDate(dueDate.getDate() + 7); // Add 7 days
+                    const day = String(dueDate.getDate()).padStart(2, '0');
+                    const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+                    const year = dueDate.getFullYear();
+                    const dueDateString = day + '-' + month + '-' + year;
+                    $(dueDateInput).val(dueDateString);
+                }
+            }
+        }
+    }
+
+    // Attach change handlers for all date inputs
+    @if($debitNote->installment > 0)
+        @for ($i = 1; $i <= $debitNote->installment; $i++)
+            $('#date_{{ $i }}').on('change', function() {
+                setDueDateFromDate('#date_{{ $i }}', '#due_date_{{ $i }}');
+            });
+        @endfor
+    @else
+        $('#date').on('change', function() {
+            setDueDateFromDate('#date', '#due_date');
+        });
+    @endif
 
 </script>
 @endpush
