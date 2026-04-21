@@ -88,7 +88,7 @@ class CreditNote extends Model
     // Check if credit note can be approved
     public function canBeApproved(): bool
     {
-        return $this->approval_status === 'pending';
+        return $this->approval_status !== 'approved';
     }
 
     public function canBeEdited(): bool

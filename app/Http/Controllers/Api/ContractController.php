@@ -356,7 +356,9 @@ class ContractController extends Controller
             }
 
             $data = $request->validated();
-            $contract->update([
+            
+            // Prepare update data
+            $updateData = [
                 'contract_status' => $data['contract_status'],
                 'contract_type_id' => $data['contract_type_id'],
                 // 'number' => $data['number'], // Keep existing number - don't change it during updates
@@ -377,7 +379,17 @@ class ContractController extends Controller
                 'memo' => $data['memo'],
                 'covered_item' => $data['covered_item'],
                 'billing_address_id' => $data['billing_address_id'] ?? null,
-            ]);
+            ];
+            
+            // If contract is rejected, change status to pending when updated
+            if ($contract->approval_status === 'rejected') {
+                $updateData['approval_status'] = 'pending';
+                $updateData['approved_by'] = null;
+                $updateData['approved_at'] = null;
+                $updateData['rejection_reason'] = null;
+            }
+            
+            $contract->update($updateData);
 
             // Delete existing details and recreate
             $contract->details()->delete();

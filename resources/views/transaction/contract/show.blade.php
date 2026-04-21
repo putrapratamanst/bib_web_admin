@@ -345,7 +345,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()->role === 'approver' && $contract->approval_status === 'pending')
+                    @if(auth()->user()->role === 'approver' && $contract->approval_status !== 'approved')
                     <div>
                         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
                             <i class="bi bi-x-circle"></i> Reject
