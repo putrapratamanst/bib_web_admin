@@ -104,8 +104,8 @@ class Contract extends Model
     
     public function getDiscountAmountFormattedAttribute(): string
     {
-        // Use database value, fallback to calculation if null
-        $discountAmount = $this->attributes['discount_amount'] ?? ($this->gross_premium * ($this->discount / 100));
+        // Use database value directly, default to 0 if null
+        $discountAmount = $this->attributes['discount_amount'] ?? 0;
 
         return number_format($discountAmount, 2, ".", ",");
     }

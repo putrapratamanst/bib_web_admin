@@ -14,29 +14,29 @@
             <input type="hidden" name="contact_id" id="contact_id" value="{{ old('contact_id', $debitNote->contact_id) }}">
             <div class="card-body">
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Validation Error!</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Validation Error!</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 <div class="row">
@@ -47,16 +47,17 @@
                             <input type="hidden" name="number" value="{{ $debitNote->number }}">
                         </div>
                     </div>
-                    <div class="col-md-4 col-lg-3">\n                        <div class="mb-3">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="contract_id" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
                             <select class="form-select @error('contract_id') is-invalid @enderror" name="contract_id" id="contract_id" required>
                                 <option value="">Select Placing Number</option>
                                 @if($debitNote->contract)
-                                    <option value="{{ $debitNote->contract->id }}" selected>{{ $debitNote->contract->number }}</option>
+                                <option value="{{ $debitNote->contract->id }}" selected>{{ $debitNote->contract->number }}</option>
                                 @endif
                             </select>
                             @error('contract_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -66,17 +67,29 @@
                             <input type="text" class="form-control" readonly name="policy_number" id="policy_number" value="{{ $debitNote->contract->policy_number ?? old('policy_number') }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="ref_sistem_lama" class="form-label">Ref Sistem Lama</label>
+                            <input type="text" class="form-control @error('ref_sistem_lama') is-invalid @enderror" name="ref_sistem_lama" id="ref_sistem_lama" value="{{ old('ref_sistem_lama', $debitNote->ref_sistem_lama) }}" placeholder="Ref Sistem Lama">
+                            @error('ref_sistem_lama')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <select class="form-select @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
                                 <option value="">Select Billing Address</option>
                                 @if($debitNote->billingAddress)
-                                    <option value="{{ $debitNote->billingAddress->id }}" selected>{{ $debitNote->billingAddress->address }}</option>
+                                <option value="{{ $debitNote->billingAddress->id }}" selected>{{ $debitNote->billingAddress->address }}</option>
                                 @endif
                             </select>
                             @error('billing_address_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -103,7 +116,7 @@
                             <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>
                             <input type="date" class="form-control @error('date') is-invalid @enderror" name="date" id="date" value="{{ old('date', $debitNote->date->format('Y-m-d')) }}" required>
                             @error('date')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -112,7 +125,7 @@
                             <label for="due_date" class="form-label">Due Date<sup class="text-danger">*</sup></label>
                             <input type="date" class="form-control @error('due_date') is-invalid @enderror" name="due_date" id="due_date" value="{{ old('due_date', $debitNote->due_date->format('Y-m-d')) }}" required>
                             @error('due_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -129,10 +142,10 @@
                             <select class="form-select @error('installment') is-invalid @enderror" id="installment" required disabled>
                                 @for ($i = 0; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ old('installment', $debitNote->installment) == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
+                                    @endfor
                             </select>
                             @error('installment')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -146,11 +159,11 @@
                             <select class="form-select @error('currency') is-invalid @enderror" id="currency" required disabled>
                                 <option value="">Select Currency</option>
                                 @foreach($currencies as $currencyOption)
-                                    <option value="{{ $currencyOption->code }}" {{ old('currency', $debitNote->currency_code) == $currencyOption->code ? 'selected' : '' }}>{{ $currencyOption->code }} - {{ $currencyOption->name }}</option>
+                                <option value="{{ $currencyOption->code }}" {{ old('currency', $debitNote->currency_code) == $currencyOption->code ? 'selected' : '' }}>{{ $currencyOption->code }} - {{ $currencyOption->name }}</option>
                                 @endforeach
                             </select>
                             @error('currency')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -161,7 +174,7 @@
                                 <span class="input-group-text" id="currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
                                 <input type="text" class="form-control autonumeric text-end @error('exchange_rate') is-invalid @enderror" name="exchange_rate" id="exchange_rate" value="{{ old('exchange_rate', $debitNote->exchange_rate_formatted) }}" required readonly style="background-color: #e9ecef;">
                                 @error('exchange_rate')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -173,7 +186,7 @@
                                 <span class="input-group-text" id="amount-currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
                                 <input type="text" class="form-control text-end autonumeric @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', $debitNote->amount_formatted) }}" required readonly style="background-color: #e9ecef;">
                                 @error('amount')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -239,7 +252,7 @@
 
                 {{-- Note removed: All forms can now be edited regardless of approval status --}}
             </div>
-            
+
             <div class="card-footer">
                 <a href="{{ route('transaction.debit-notes.show', $debitNote->id) }}" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">
@@ -425,15 +438,15 @@
 
                 if (response.data) {
                     var contract = response.data;
-                    
+
                     // Update policy number
                     $('#policy_number').val(contract.policy_number || '-');
-                    
+
                     // Update contact_id hidden field
                     if (contract.contact_id) {
                         $('#contact_id').val(contract.contact_id);
                     }
-                    
+
                     // Update currency if available
                     if (contract.currency_code) {
                         $('#currency_value').val(contract.currency_code);
@@ -450,7 +463,7 @@
                         $('#installment_value').val('0');
                         $('#installment').val('0');
                     }
-                    
+
                     // Update exchange rate if available
                     if (contract.exchange_rate !== undefined && contract.exchange_rate !== null) {
                         $('#exchange_rate').autoNumeric('set', contract.exchange_rate);
@@ -463,26 +476,26 @@
                     } else {
                         $('#amount').autoNumeric('set', '0.00');
                     }
-                    
+
                     // Set gross premium, discount, and discount amount
                     if (contract.gross_premium) {
                         $('#gross_premium').autoNumeric('set', parseFloat(contract.gross_premium));
                     } else {
                         $('#gross_premium').autoNumeric('set', '0.00');
                     }
-                    
+
                     if (contract.discount !== undefined && contract.discount !== null) {
                         $('#discount').autoNumeric('set', parseFloat(contract.discount));
                     } else {
                         $('#discount').autoNumeric('set', '0.00');
                     }
-                    
+
                     if (contract.discount_amount) {
                         $('#discount_amount').autoNumeric('set', parseFloat(contract.discount_amount));
                     } else {
                         $('#discount_amount').autoNumeric('set', '0.00');
                     }
-                    
+
                     // Auto-select billing address from contract if available
                     if (contract.billing_address_id && contract.billing_address) {
                         // Clear and set the billing address from contract
@@ -494,25 +507,27 @@
                                 true
                             )
                         ).trigger('change');
-                        
+
                         // Lock the billing address dropdown (prevent opening but keep submittable)
                         $('#billing_address_id').data('locked', true);
                         $('#billing_address_id').next('.select2').find('.select2-selection').css({
                             'background-color': '#e9ecef',
                             'cursor': 'not-allowed'
                         });
-                        
+
                         // Populate insured name and correspondence address
                         $('#insured_name').val(contract.billing_address.name || '');
                         $('#correspondence_address').val(contract.billing_address.address || '');
-                        
+
                         console.log('Billing address auto-selected from contract:', contract.billing_address.name);
                     } else {
                         // Fallback: try to get from contact billing addresses
                         if (contract.contact && contract.contact.billing_addresses && contract.contact.billing_addresses.length > 0) {
-                            var primaryAddress = contract.contact.billing_addresses.find(function(addr) { return addr.is_primary; });
+                            var primaryAddress = contract.contact.billing_addresses.find(function(addr) {
+                                return addr.is_primary;
+                            });
                             var addressToUse = primaryAddress || contract.contact.billing_addresses[0];
-                            
+
                             if (addressToUse) {
                                 $('#billing_address_id').empty().append(
                                     new Option(
@@ -522,17 +537,17 @@
                                         true
                                     )
                                 ).trigger('change');
-                                
+
                                 // Lock the billing address dropdown (prevent opening but keep submittable)
                                 $('#billing_address_id').data('locked', true);
                                 $('#billing_address_id').next('.select2').find('.select2-selection').css({
                                     'background-color': '#e9ecef',
                                     'cursor': 'not-allowed'
                                 });
-                                
+
                                 $('#insured_name').val(addressToUse.name || '');
                                 $('#correspondence_address').val(addressToUse.address || '');
-                                
+
                                 console.log('Billing address auto-selected from contact:', addressToUse.name);
                             }
                         } else {
@@ -560,23 +575,23 @@
 
     function loadBillingAddresses(contactId) {
         $('#billing_address_id').empty().append('<option value="">Loading...</option>');
-        
+
         $.get("{{ route('api.billing-addresses.by-contact', '') }}/" + contactId)
             .done(function(response) {
                 $('#billing_address_id').empty().append('<option value="">Select Billing Address</option>');
-                
+
                 if (response.data && response.data.length > 0) {
                     var selectedAddress = null;
                     $.each(response.data, function(index, address) {
                         var selected = address.id == "{{ $debitNote->billing_address_id }}" ? 'selected' : '';
                         $('#billing_address_id').append('<option value="' + address.id + '" ' + selected + '>' + address.address + '</option>');
-                        
+
                         // Keep track of the selected address
                         if (selected) {
                             selectedAddress = address;
                         }
                     });
-                    
+
                     // Populate insured name and correspondence address if an address is selected
                     if (selectedAddress) {
                         $('#insured_name').val(selectedAddress.name || '');

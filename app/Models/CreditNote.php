@@ -21,6 +21,7 @@ class CreditNote extends Model
         'contract_id',
         'debit_note_id',
         'number',
+        'ref_sistem_lama',
         'date',
         'description',
         'currency_code',

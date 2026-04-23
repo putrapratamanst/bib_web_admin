@@ -34,6 +34,15 @@
                             <input type="text" class="form-control" readonly name="policy_number" id="policy_number" value="{{ $debitNote->contract->policy_number ?? '-' }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="ref_sistem_lama" class="form-label">Ref Sistem Lama</label>
+                            <input type="text" class="form-control" readonly name="ref_sistem_lama" id="ref_sistem_lama" value="{{ $debitNote->ref_sistem_lama ?? '-' }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
@@ -285,12 +294,12 @@
                                         <i class="fas fa-check-circle"></i> Post
                                     </button>
                                 @endif
-                                @if ($billing->status === 'posted' && $debitNote->installment == 0)
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing">
+                                @if ($billing->status === 'posted')
+                                    <!-- <a href="javascript:void(0);" class="btn btn-sm btn-info me-1" onclick="printBillingDirectory('{{ $billing->id }}')" title="Print Billing">
                                         <i class="fas fa-print"></i> Print
-                                    </a>
+                                    </a> -->
                                     <a href="javascript:void(0);" class="btn btn-sm btn-success" onclick="printBilling('{{ $billing->id }}')" title="Print Design Lama">
-                                        <i class="fas fa-print"></i> Print Design Lama
+                                        <i class="fas fa-print"></i> Print Carbon
                                     </a>
                                 @endif
                             </td>

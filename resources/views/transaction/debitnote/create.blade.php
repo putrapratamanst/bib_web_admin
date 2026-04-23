@@ -57,6 +57,15 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
+                            <label for="ref_sistem_lama" class="form-label">Ref Sistem Lama</label>
+                            <input type="text" class="form-control @error('ref_sistem_lama') is-invalid @enderror" name="ref_sistem_lama" id="ref_sistem_lama" value="{{ old('ref_sistem_lama') }}" placeholder="Ref Sistem Lama">
+                            @error('ref_sistem_lama')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
                             <label for="billing_address_id" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
                             <select class="form-select select2 @error('billing_address_id') is-invalid @enderror" name="billing_address_id" id="billing_address_id" required>
                                 <option value="">Select Billing Address</option>

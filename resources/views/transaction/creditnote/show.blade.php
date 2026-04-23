@@ -35,6 +35,12 @@
                             <input type="text" class="form-control" readonly name="number" id="number" value="{{ $creditNote->number }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="ref_sistem_lama" class="form-label">Ref Sistem Lama</label>
+                            <input type="text" class="form-control" readonly name="ref_sistem_lama" id="ref_sistem_lama" value="{{ $creditNote->ref_sistem_lama ?? '-' }}" style="background-color: #e9ecef;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

@@ -154,6 +154,31 @@
                     name: 'actions',
                     orderable: false,
                     searchable: false
+                },
+                // Hidden columns for searching: DN Number, DN Billing Number, Policy Number, Placing Number
+                { 
+                    data: 'debit_note_number', 
+                    name: 'debit_note_number',
+                    visible: false,
+                    searchable: true
+                },
+                { 
+                    data: 'billing_number', 
+                    name: 'billing_number',
+                    visible: false,
+                    searchable: true
+                },
+                { 
+                    data: 'policy_number', 
+                    name: 'policy_number',
+                    visible: false,
+                    searchable: true
+                },
+                { 
+                    data: 'placing_number', 
+                    name: 'placing_number',
+                    visible: false,
+                    searchable: true
                 }
             ]
         });

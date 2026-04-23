@@ -23,6 +23,7 @@ class DebitNote extends Model
         'contact_id',
         'billing_address_id',
         'number',
+        'ref_sistem_lama',
         'date',
         'due_date',
         'installment',

@@ -24,7 +24,13 @@ class CreditNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = CreditNote::with(['contract.contractType', 'contract.billingAddress', 'contract.contact'])->orderBy('created_at', 'desc');
+        $query = CreditNote::with([
+            'contract.contractType', 
+            'contract.billingAddress', 
+            'contract.contact',
+            'debitNote',
+            'billing'
+        ])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -61,6 +67,19 @@ class CreditNoteController extends Controller
             ->addColumn('approval_status_badge', function (CreditNote $b) {
                 return $b->approval_status_badge;
             })
+            // Add searchable columns for DN Number, DN Billing Number, Policy Number, and Placing Number
+            ->addColumn('debit_note_number', function (CreditNote $b) {
+                return $b->debitNote ? $b->debitNote->number : '-';
+            })
+            ->addColumn('billing_number', function (CreditNote $b) {
+                return $b->billing ? $b->billing->billing_number : '-';
+            })
+            ->addColumn('policy_number', function (CreditNote $b) {
+                return $b->contract->policy_number ?? '-';
+            })
+            ->addColumn('placing_number', function (CreditNote $b) {
+                return $b->contract->number;
+            })
             ->addColumn('actions', function (CreditNote $b) {
                 /** @var \App\Models\User|null $user */
                 $user = Auth::user();
@@ -90,6 +109,26 @@ class CreditNoteController extends Controller
                     ->join('contracts', 'contracts.id', '=', 'credit_notes.contract_id')
                     ->join('contacts', 'contacts.id', '=', 'contracts.contact_id')
                     ->orderBy('contacts.display_name', $order);
+            })
+            ->filterColumn('debit_note_number', function($query, $keyword) {
+                $query->whereHas('debitNote', function($q) use ($keyword) {
+                    $q->where('number', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('billing_number', function($query, $keyword) {
+                $query->whereHas('billing', function($q) use ($keyword) {
+                    $q->where('billing_number', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('policy_number', function($query, $keyword) {
+                $query->whereHas('contract', function($q) use ($keyword) {
+                    $q->where('policy_number', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('placing_number', function($query, $keyword) {
+                $query->whereHas('contract', function($q) use ($keyword) {
+                    $q->where('number', 'like', "%{$keyword}%");
+                });
             })
             ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);
@@ -147,6 +186,7 @@ class CreditNoteController extends Controller
                 'contract_id' => $contractID,
                 'debit_note_id' => $debitNoteID,
                 'number' => $creditNoteNumber,
+                'ref_sistem_lama' => $data['ref_sistem_lama'] ?? null,
                 'date' => $data['date'],
                 'description' => $data['description'],
                 'currency_code' => $data['currency_code'],
@@ -275,6 +315,7 @@ class CreditNoteController extends Controller
                 'contract_id' => $billing->debitNote->contract_id ?? null,
                 'debit_note_id' => $billing->debitNote->id ?? null,
                 'billing_id' => $request->billing_id,
+                'ref_sistem_lama' => $request->ref_sistem_lama,
                 'date' => $request->date,
                 'description' => $request->description,
                 'currency_code' => $request->currency_code,

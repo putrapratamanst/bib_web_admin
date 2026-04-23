@@ -109,6 +109,7 @@ class DebitNoteController extends Controller
             // Create Debit Note
             $debitNote = DebitNote::create([
                 'number' => $debitNoteNumber,
+                'ref_sistem_lama' => $request->ref_sistem_lama,
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,
@@ -218,6 +219,7 @@ class DebitNoteController extends Controller
 
             // Prepare update data (number is auto-generated and should not be changed)
             $updateData = [
+                'ref_sistem_lama' => $request->ref_sistem_lama,
                 'contact_id' => $contract->contact_id,
                 'contract_id' => $request->contract_id,
                 'billing_address_id' => $request->billing_address_id,

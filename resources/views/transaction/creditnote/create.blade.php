@@ -38,6 +38,15 @@
                             <input type="text" name="number" id="number" class="form-control" readonly style="background-color: #e9ecef;" placeholder="Auto generated">
                         </div>
                     </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="ref_sistem_lama" class="form-label">Ref Sistem Lama</label>
+                            <input type="text" name="ref_sistem_lama" id="ref_sistem_lama" class="form-control @error('ref_sistem_lama') is-invalid @enderror" value="{{ old('ref_sistem_lama') }}" placeholder="Ref Sistem Lama">
+                            @error('ref_sistem_lama')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -178,6 +187,7 @@
             var formData = {
                 billing_id: $("#billing_id").val(),
                 number: $("#number").val(),
+                ref_sistem_lama: $("#ref_sistem_lama").val(),
                 date: $("#date").val(),
                 currency_code: $("#currency_code").val(),
                 exchange_rate: $("#exchange_rate").autoNumeric('get'),
