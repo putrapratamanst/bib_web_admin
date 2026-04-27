@@ -398,7 +398,7 @@
                         $discount = $contract ? $contract->discount : 0;
                         $stampFee = $contract ? $contract->stamp_fee : 0;
                         $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
-                        $discountAmount = $grossPremium * ($discount / 100);
+                        $discountAmount = $contract ? $contract->discount_amount : 0;
                         $netPremium = $grossPremium - $discountAmount + $stampFee;
                         $currency = $debitNote->currency_code ?? 'IDR';
                         @endphp
