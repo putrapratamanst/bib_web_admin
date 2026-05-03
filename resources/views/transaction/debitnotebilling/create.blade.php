@@ -5,6 +5,8 @@
     // Calculate default dates from contract period_start
     $defaultDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->format('d-m-Y') : date('d-m-Y');
     $defaultDueDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->addDays(7)->format('d-m-Y') : date('d-m-Y', strtotime('+7 days'));
+    $existingBilledAmount = $existingBilledAmount ?? (float) $debitNote->debitNoteBillings()->sum('amount');
+    $remainingAvailableAmount = $remainingAvailableAmount ?? max(0, (float) $debitNote->amount - $existingBilledAmount);
 @endphp
 @section('content')
 <div class="container">
@@ -40,11 +42,11 @@
                             </div>
                             <div class="col-md-4">
                                 <small><strong>Total Billed:</strong></small><br>
-                                <strong id="totalBilled">0.00 {{ $debitNote->currency_code }}</strong>
+                                <strong id="totalBilled">{{ number_format($existingBilledAmount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
                             </div>
                             <div class="col-md-4">
                                 <small><strong>Remaining Available:</strong></small><br>
-                                <strong id="remainingAmount">{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
+                                <strong id="remainingAmount">{{ number_format($remainingAvailableAmount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
                             </div>
                         </div>
                     </div>
@@ -228,6 +230,7 @@
 @push('scripts')
 <script>
     const debitNoteAmount = {{ $debitNote->amount }};
+    const existingBilledAmount = {{ $existingBilledAmount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
 
     // Initialize currency formatter (US format: 1,234.56)
@@ -271,6 +274,8 @@
             }
         });
 
+        totalBilled += existingBilledAmount;
+
         const remainingAmount = debitNoteAmount - totalBilled;
         
         // Update display
@@ -290,21 +295,13 @@
     // Add event listener to all amount inputs
     $(document).on('change keyup', 'input[name="amount[]"]', function() {
         const remainingAmount = updateBillingTotals();
-        
-        // Get the current input's value
-        let currentValue = 0;
-        try {
-            currentValue = parseFloat($(this).autoNumeric('get')) || 0;
-        } catch(e) {
-            currentValue = parseFloat(this.value.replace(/,/g, '')) || 0;
-        }
-        
-        // Warn if individual input exceeds remaining
-        if (currentValue > debitNoteAmount) {
+
+        // Warn when total billed exceeds remaining available.
+        if (remainingAmount < 0) {
             const alertHtml = `
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     <strong><i class="fas fa-exclamation-triangle"></i> Warning!</strong> 
-                    The billing amount exceeds the total debit note amount  <strong>({{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }})  </strong>. Please adjust the amount.
+                    Total billing amount exceeds remaining available. Remaining available: <strong>${formatCurrency(Math.abs(remainingAmount))} ${currencyCode}</strong> (over limit).
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             `;

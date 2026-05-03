@@ -16,9 +16,15 @@ class DebitNoteBillingController extends Controller
     {
         // If $id provided, it's from Debit Note
         if ($id) {
-            $debitNote = DebitNote::findOrFail($id);
+            $debitNote = DebitNote::with('debitNoteBillings')->findOrFail($id);
+
+            $existingBilledAmount = (float) $debitNote->debitNoteBillings->sum('amount');
+            $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
+
             return view('transaction.debitnotebilling.create', [
                 'debitNote' => $debitNote,
+                'existingBilledAmount' => $existingBilledAmount,
+                'remainingAvailableAmount' => $remainingAvailableAmount,
             ]);
         }
         
@@ -52,12 +58,19 @@ class DebitNoteBillingController extends Controller
             foreach ($request->amount as $amount) {
                 $totalNewBillingAmount += floatval($amount);
             }
+
+            // Calculate total existing billing amount for this debit note
+            $existingBilledAmount = (float) DebitNoteBilling::where('debit_note_id', $debitNote->id)->sum('amount');
+            $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
+
+            // Total billed after creating new billing(s)
+            $totalBilledAfterCreate = $existingBilledAmount + $totalNewBillingAmount;
             
-            // Check if total new billing exceeds debit note amount
-            if ($totalNewBillingAmount > $debitNote->amount) {
+            // Check if total billing exceeds debit note amount (existing + new)
+            if ($totalBilledAfterCreate > (float) $debitNote->amount) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Total billing amount (' . number_format($totalNewBillingAmount, 2) . ') exceeds the debit note amount (' . number_format($debitNote->amount, 2) . '). Please adjust the amounts.');
+                    ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
             }
 
             DB::beginTransaction();
