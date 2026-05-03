@@ -799,15 +799,15 @@
         });
 
         $("#gross_premium").on("change", function() {
-            calculateDiscount();
+            calculateNetPremium();
         });
 
         $("#stamp_fee").on("change", function() {
-            calculateDiscount();
+            calculateNetPremium();
         });
 
         $("#policy_fee").on("change", function() {
-            calculateDiscount();
+            calculateNetPremium();
         });
 
         $("#discount_amount").on("change", function() {
