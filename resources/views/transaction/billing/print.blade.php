@@ -208,7 +208,7 @@
         $bpolis = $contract?->policy_fee ?? 0;
         $bmaterai = $contract?->stamp_fee ?? 0;
         $disc = $contract?->discount ?? 0;
-        $jmldisc = ($grosspremi * $disc) / 100;
+        $jmldisc = $contract?->discount_amount ?? 0;
 
         $billingNumber = $billing->number ?? $billing->billing_number ?? '';
         $installmentNumber = 0;
