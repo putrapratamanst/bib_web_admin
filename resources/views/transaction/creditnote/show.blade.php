@@ -145,10 +145,10 @@
                 @endif
 
                 @if($creditNote->canBePrinted())
-                <button class="btn btn-success me-2" onclick="printCreditNoteDirectory('{{ $creditNote->id }}')">
+                <button type="button" class="btn btn-success me-2" onclick="printCreditNoteDirectory('{{ $creditNote->id }}')">
                     <i class="fas fa-print"></i> Print
                 </button>
-                <button class="btn btn-info" onclick="printCreditNote('{{ $creditNote->id }}')">
+                <button type="button" class="btn btn-info" onclick="printCreditNote('{{ $creditNote->id }}')">
                     <i class="fas fa-map"></i> Print Design Lama
                 </button>
 
