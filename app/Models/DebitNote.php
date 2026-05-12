@@ -30,6 +30,10 @@ class DebitNote extends Model
         'currency_code',
         'exchange_rate',
         'amount',
+        'gross_premium',
+        'discount_percent',
+        'discount_amount',
+        'net_premium_amount',
         'status',
         'approval_status',
         'approved_by',
@@ -45,6 +49,10 @@ class DebitNote extends Model
         'due_date' => 'date',
         'exchange_rate' => 'decimal:2',
         'amount' => 'decimal:2',
+        'gross_premium' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'net_premium_amount' => 'decimal:2',
         'approved_at' => 'datetime',
     ];
 

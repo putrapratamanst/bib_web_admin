@@ -86,10 +86,33 @@ class DebitNoteBillingController extends Controller
     {
         try {
             $billing = DebitNoteBilling::with(['debitNote.contract.contact'])->findOrFail($id);
+            $debitNote = $billing->debitNote;
+            $contract = $debitNote?->contract;
+
+            $grossPremiumDefault = $debitNote?->gross_premium;
+            if ($grossPremiumDefault === null) {
+                $grossPremiumDefault = ($debitNote?->installment ?? 0) > 0
+                    ? null
+                    : ($contract?->gross_premium ?? null);
+            }
+
+            $discountPercentDefault = $debitNote?->discount_percent ?? ($contract?->discount ?? null);
+            $discountAmountDefault = $debitNote?->discount_amount ?? ($contract?->discount_amount ?? null);
+            $netPremiumDefault = $debitNote?->net_premium_amount;
+
+            if ($netPremiumDefault === null && $grossPremiumDefault !== null && $discountAmountDefault !== null) {
+                $netPremiumDefault = floatval($grossPremiumDefault) - floatval($discountAmountDefault);
+            }
 
             return response()->json([
                 'success' => true,
-                'data' => $billing
+                'data' => $billing,
+                'defaults' => [
+                    'gross_premium' => $grossPremiumDefault,
+                    'discount_percent' => $discountPercentDefault,
+                    'discount_amount' => $discountAmountDefault,
+                    'net_premium_amount' => $netPremiumDefault,
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
