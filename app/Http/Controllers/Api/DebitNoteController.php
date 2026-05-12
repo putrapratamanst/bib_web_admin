@@ -66,6 +66,9 @@ class DebitNoteController extends Controller
             ->addColumn('approval_status_badge', function (DebitNote $b) {
                 return $b->approval_status_badge;
             })
+            ->addColumn('approval_status_raw', function (DebitNote $b) {
+                return $b->approval_status;
+            })
             ->addColumn('actions', function (DebitNote $b) {
                 $actions = '<div class="btn-group" role="group">';
                 $actions .= '<a href="' . route('transaction.debit-notes.show', $b->id) . '" class="btn btn-sm btn-outline-primary">View</a>';

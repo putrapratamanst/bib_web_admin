@@ -104,6 +104,10 @@ Route::prefix('transaction')->group(function () {
     Route::post('/debit-notes', 
     [\App\Http\Controllers\Transaction\DebitNoteController::class, 'store'])->name('transaction.debit-notes.store');
     Route::get(
+        '/debit-notes/print-directory-bulk',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'printDirectoryBulk']
+    )->name('transaction.debit-notes.print-directory-bulk');
+    Route::get(
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']
     )->name('transaction.debit-notes.show');

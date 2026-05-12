@@ -6,6 +6,9 @@
         <div class="card-header">
             List of Debit Notes
             <div class="float-end">
+                <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="btn-print-selected" disabled>
+                    <i class="fas fa-print me-1"></i> Print Selected
+                </button>
                 <a href="{{ route('transaction.debit-notes.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus me-1"></i> Add New Debit Note
                 </a>
@@ -54,6 +57,9 @@
                 <table class="table table-new table-hover table-striped table-bordered" id="dn-table">
                     <thead class="table-header">
                         <tr>
+                            <th class="text-center" style="width: 40px;">
+                                <input type="checkbox" id="select-all" />
+                            </th>
                             <th>Number</th>
                             <th>Date</th>
                             <th>Due Date</th>
@@ -82,6 +88,8 @@
         // Load insurance types for filter
         loadInsuranceTypes();
         
+        var selectedDebitNoteIds = new Set();
+
         var table = $('#dn-table').DataTable({
             processing: true,
             serverSide: true,
@@ -96,7 +104,20 @@
                     d.is_posted = $('#posted-filter').val();
                 }
             },
-            columns: [{
+            columns: [
+                {
+                    data: 'id',
+                    name: 'id',
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        const isApproved = row.approval_status_raw === 'approved';
+                        const disabledAttr = isApproved ? '' : ' disabled';
+                        return '<input type="checkbox" class="dn-select" value="' + row.id + '"' + disabledAttr + '>';
+                    }
+                },
+                {
                     data: 'number',
                     name: 'number',
                     render: function(data, type, row) {
@@ -206,9 +227,62 @@
             ]
         });
 
+        function updatePrintSelectedState() {
+            const hasSelection = selectedDebitNoteIds.size > 0;
+            $('#btn-print-selected').prop('disabled', !hasSelection);
+        }
+
+        function syncSelectedFromPage() {
+            $('.dn-select').each(function() {
+                const id = $(this).val();
+                if ($(this).is(':checked')) {
+                    selectedDebitNoteIds.add(id);
+                } else {
+                    selectedDebitNoteIds.delete(id);
+                }
+            });
+        }
+
+        function restoreSelectionOnPage() {
+            $('.dn-select').each(function() {
+                const id = $(this).val();
+                if (selectedDebitNoteIds.has(id)) {
+                    $(this).prop('checked', true);
+                }
+            });
+        }
+
         // Handle filter changes
         $('#status-filter, #approval-status-filter, #insurance-type-filter, #posted-filter').on('change', function() {
             table.ajax.reload();
+        });
+
+        $('#select-all').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            $('.dn-select:not(:disabled)').prop('checked', isChecked);
+            syncSelectedFromPage();
+            updatePrintSelectedState();
+        });
+
+        $(document).on('change', '.dn-select', function() {
+            const total = $('.dn-select').length;
+            const enabledTotal = $('.dn-select:not(:disabled)').length;
+            const checked = $('.dn-select:checked').length;
+            $('#select-all').prop('checked', enabledTotal > 0 && enabledTotal === checked);
+            syncSelectedFromPage();
+            updatePrintSelectedState();
+        });
+
+        $('#btn-print-selected').on('click', function() {
+            const ids = Array.from(selectedDebitNoteIds);
+
+            if (ids.length === 0) {
+                alert('Please select at least one Debit Note to print.');
+                return;
+            }
+
+            const url = "{{ route('transaction.debit-notes.print-directory-bulk') }}";
+            window.open(url + '?ids=' + ids.join(','), '_blank');
         });
 
         // Handle approve button click
@@ -271,11 +345,12 @@
             }
         });
 
-        // Handle print button click
-        $(document).on('click', '.print-btn', function() {
-            const debitNoteId = $(this).data('id');
-            alert('Print functionality will be implemented here');
-            // TODO: Implement actual print functionality
+        table.on('draw', function() {
+            restoreSelectionOnPage();
+            const enabledTotal = $('.dn-select:not(:disabled)').length;
+            const checked = $('.dn-select:checked').length;
+            $('#select-all').prop('checked', enabledTotal > 0 && enabledTotal === checked);
+            updatePrintSelectedState();
         });
     });
 
