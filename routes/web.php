@@ -78,6 +78,10 @@ Route::prefix('transaction')->group(function () {
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'create']
     )->name('transaction.credit-notes.create');
     Route::get(
+        '/credit-notes/print-directory-bulk',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'printDirectoryBulk']
+    )->name('transaction.credit-notes.print-directory-bulk');
+    Route::get(
         '/credit-notes/{id}',
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'show']
     )->name('transaction.credit-notes.show');

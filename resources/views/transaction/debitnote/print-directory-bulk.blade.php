@@ -263,12 +263,18 @@
                 max-width: 100%;
                 width: 210mm;
                 margin: 0;
-                padding: 10mm;
+                padding: 8mm;
                 box-shadow: none;
-                min-height: 297mm;
+                min-height: auto;
+                display: block;
             }
 
             .content-wrap {
+            }
+
+            .footer {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
 
             @page {
