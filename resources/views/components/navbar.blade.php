@@ -56,6 +56,9 @@
                             <a class="dropdown-item" href="{{ route('transaction.debit-notes.index') }}">Debit Note</a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('transaction.billings.index') }}">Billing</a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ route('transaction.credit-notes.index') }}">Credit Note</a>
                         </li>
                         <li>

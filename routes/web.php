@@ -139,6 +139,7 @@ Route::prefix('transaction')->group(function () {
     Route::post('/debit-note-billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'store'])->name('transaction.debit-note-billings.store');
     Route::post('/debit-note-billings/{id}/post-to-cashout', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'postToCashout'])->name('transaction.debit-note-billings.post-to-cashout');
     Route::get('/billings', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'index'])->name('transaction.billings.index');
+    Route::get('/billings/print-directory-bulk', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'printBillingDirectoryBulk'])->name('transaction.billings.print-directory-bulk');
     Route::get('/billings/print/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'printBilling'])->name('transaction.billings.print');
     Route::get('/billings/print-directory/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'printBillingDirectory'])->name('transaction.billings.print-directory');
     Route::get('/billings/{id}', [\App\Http\Controllers\Transaction\DebitNoteBillingController::class, 'show'])->name('transaction.billings.show');

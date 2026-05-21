@@ -371,6 +371,46 @@ class DebitNoteBillingController extends Controller
         }
     }
 
+    public function printBillingDirectoryBulk(Request $request)
+    {
+        $idsParam = $request->query('ids', '');
+        $ids = collect(is_array($idsParam) ? $idsParam : explode(',', (string) $idsParam))
+            ->map(function ($id) {
+                return trim($id);
+            })
+            ->filter(function ($id) {
+                return $id !== '';
+            })
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404, 'Billings not found.');
+        }
+
+        $placeholders = $ids->map(function () {
+            return '?';
+        })->implode(',');
+
+        $billings = DebitNoteBilling::with([
+            'debitNote.contract',
+            'debitNote.contract.contact',
+            'debitNote.contract.billingAddress',
+            'debitNote.contract.contractType',
+            'debitNote.currency'
+        ])
+            ->whereIn('id', $ids->all())
+            ->orderByRaw("FIELD(id, {$placeholders})", $ids->all())
+            ->get();
+
+        if ($billings->count() !== $ids->count()) {
+            abort(404, 'Billings not found.');
+        }
+
+        return view('transaction.billing.print-directory-bulk', [
+            'billings' => $billings,
+        ]);
+    }
+
     // Method untuk post billing ke cashout
     public function postToCashout($id)
     {

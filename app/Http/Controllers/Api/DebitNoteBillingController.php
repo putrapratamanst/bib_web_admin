@@ -13,14 +13,36 @@ class DebitNoteBillingController extends Controller
 {
     public function datatables(Request $request)
     {
-        $query = DebitNoteBilling::with(['debitNote', 'debitNote.contract']);
+        $query = DebitNoteBilling::with([
+            'debitNote',
+            'debitNote.contract',
+            'debitNote.contract.contractType',
+            'debitNote.contract.contact',
+            'debitNote.billingAddress'
+        ]);
 
         return DataTables::of($query)
+            ->addColumn('number', function (DebitNoteBilling $billing) {
+                return $billing->billing_number ?? '-';
+            })
+            ->addColumn('type', function (DebitNoteBilling $billing) {
+                return $billing->debitNote?->contract?->contractType?->name ?? '-';
+            })
+            ->addColumn('contact', function (DebitNoteBilling $billing) {
+                $billingAddressName = $billing->debitNote?->billingAddress?->name;
+                if ($billingAddressName) {
+                    return $billingAddressName;
+                }
+
+                return $billing->debitNote?->contract?->contact?->display_name
+                    ?? $billing->debitNote?->contract?->contact?->name
+                    ?? '-';
+            })
             ->addColumn('contract_number', function (DebitNoteBilling $billing) {
-                return $billing->debitNote->contract->number ?? '-';
+                return $billing->debitNote?->contract?->number ?? '-';
             })
             ->addColumn('debit_note_number', function (DebitNoteBilling $billing) {
-                return $billing->debitNote->number ?? '-';
+                return $billing->debitNote?->number ?? '-';
             })
             ->addColumn('is_posted_to_cashout', function (DebitNoteBilling $billing) {
                 $hasLinkedCashout = Cashout::where('debit_note_billing_id', $billing->id)->exists();
