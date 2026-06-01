@@ -45,6 +45,50 @@ class DebitNoteController extends Controller
         return view('transaction.debitnote.print-directory', compact('debitNote'));
     }
 
+    public function printDirectoryBulk(Request $request)
+    {
+        $idsParam = $request->query('ids', '');
+        $ids = collect(is_array($idsParam) ? $idsParam : explode(',', (string) $idsParam))
+            ->map(function ($id) {
+                return trim($id);
+            })
+            ->filter(function ($id) {
+                return $id !== '';
+            })
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404, 'Debit Notes not found.');
+        }
+
+        $placeholders = $ids->map(function () {
+            return '?';
+        })->implode(',');
+
+        $debitNotes = DebitNote::with([
+            'contract',
+            'contract.contact',
+            'contract.billingAddress',
+            'contract.contractType',
+            'currency',
+            'debitNoteBillings' => function ($query) {
+                $query->orderBy('due_date')->orderBy('created_at');
+            }
+        ])
+            ->whereIn('id', $ids->all())
+            ->where('approval_status', 'approved')
+            ->orderByRaw("FIELD(id, {$placeholders})", $ids->all())
+            ->get();
+
+        if ($debitNotes->count() !== $ids->count()) {
+            abort(404, 'Debit Notes not found.');
+        }
+
+        return view('transaction.debitnote.print-directory-bulk', [
+            'debitNotes' => $debitNotes,
+        ]);
+    }
+
     public function create()
     {
         $currencies = Currency::orderBy('code')->get();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\CreditNote;
 
 class CreditNoteController extends Controller
 {
@@ -58,7 +59,7 @@ class CreditNoteController extends Controller
 
     public function printDirectory($id)
     {
-        $creditNote = \App\Models\CreditNote::with([
+        $creditNote = CreditNote::with([
             'contract', 
             'contract.contact', 
             'contract.billingAddress',
@@ -68,5 +69,48 @@ class CreditNoteController extends Controller
         ])->findOrFail($id);
 
         return view('transaction.creditnote.print-directory', compact('creditNote'));
+    }
+
+    public function printDirectoryBulk(Request $request)
+    {
+        $idsParam = $request->query('ids', '');
+        $ids = collect(is_array($idsParam) ? $idsParam : explode(',', (string) $idsParam))
+            ->map(function ($id) {
+                return trim($id);
+            })
+            ->filter(function ($id) {
+                return $id !== '';
+            })
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404, 'Credit Notes not found.');
+        }
+
+        $placeholders = $ids->map(function () {
+            return '?';
+        })->implode(',');
+
+        $creditNotes = CreditNote::with([
+            'contract',
+            'contract.contact',
+            'contract.billingAddress',
+            'contract.contractType',
+            'currency',
+            'debitNote',
+            'billing'
+        ])
+            ->whereIn('id', $ids->all())
+            ->where('approval_status', 'approved')
+            ->orderByRaw("FIELD(id, {$placeholders})", $ids->all())
+            ->get();
+
+        if ($creditNotes->count() !== $ids->count()) {
+            abort(404, 'Credit Notes not found.');
+        }
+
+        return view('transaction.creditnote.print-directory-bulk', [
+            'creditNotes' => $creditNotes,
+        ]);
     }
 }

@@ -3,6 +3,20 @@
 @section('title', 'Edit Debit Note Billings')
 
 @section('content')
+@php
+    $grossPremiumDefault = $debitNote->gross_premium;
+    if ($grossPremiumDefault === null) {
+        $grossPremiumDefault = $debitNote->installment > 0 ? null : ($debitNote->contract->gross_premium ?? null);
+    }
+
+    $discountPercentDefault = $debitNote->discount_percent ?? ($debitNote->contract->discount ?? null);
+    $discountAmountDefault = $debitNote->discount_amount ?? ($debitNote->contract->discount_amount ?? null);
+    $netPremiumDefault = $debitNote->net_premium_amount;
+
+    if ($netPremiumDefault === null && $grossPremiumDefault !== null) {
+        $netPremiumDefault = floatval($grossPremiumDefault) - floatval($discountAmountDefault ?? 0);
+    }
+@endphp
 <div class="container">
     <div class="card">
         <div class="card-header">
@@ -89,7 +103,38 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="gross_premium" class="form-label">Gross Premium</label>
+                            <input type="text" class="form-control autonumeric" name="gross_premium" id="gross_premium" value="{{ old('gross_premium', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_percent" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control autonumeric" name="discount_percent" id="discount_percent" value="{{ old('discount_percent', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount</label>
+                            <input type="text" class="form-control autonumeric" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', $discountAmountDefault) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="net_premium_amount" class="form-label">Net Amount Premi</label>
+                            <input type="text" class="form-control autonumeric" name="net_premium_amount" id="net_premium_amount" value="{{ old('net_premium_amount', $netPremiumDefault) }}">
+                        </div>
+                    </div>
+                </div>
                 
+                <div style="max-height: 420px; overflow-y: auto;">
                 {{-- Loop through existing billings --}}
                 @foreach($billings as $index => $billing)
                     @php
@@ -165,15 +210,16 @@
                                 @error('amount.' . $index)
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                @if($hasFees)
+                                <!-- @if($hasFees)
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle"></i> Fees {{ number_format($totalFees, 2, ',', '.') }} akan ditambahkan otomatis saat save
                                     </small>
-                                @endif
+                                @endif -->
                             </div>
                         </div>
                     </div>
                 @endforeach
+                </div>
 
             </div>
             <div class="card-footer">
@@ -192,6 +238,7 @@
     const debitNoteAmount = {{ $debitNote->amount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
     const totalFees = {{ $totalFees }};
+    let netPremiumManuallyEdited = false;
 
     // Initialize currency formatter (US format: 1,234.56)
     function formatCurrency(value) {
@@ -199,6 +246,37 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(value);
+    }
+
+    function setAutoNumericValue(selector, value) {
+        if (value === null || value === undefined || value === '') {
+            $(selector).val('');
+            return;
+        }
+
+        if ($(selector).data('autoNumeric')) {
+            $(selector).autoNumeric('set', value);
+            return;
+        }
+
+        $(selector).val(value);
+    }
+
+    function recomputeNetPremium() {
+        if (netPremiumManuallyEdited) {
+            return;
+        }
+
+        const grossPremium = $('#gross_premium').autoNumeric('get');
+        const discountAmount = $('#discount_amount').autoNumeric('get');
+
+        if (!grossPremium) {
+            setAutoNumericValue('#net_premium_amount', null);
+            return;
+        }
+
+        const netPremium = parseFloat(grossPremium) - parseFloat(discountAmount || 0);
+        setAutoNumericValue('#net_premium_amount', netPremium);
     }
 
     // Calculate and update total billed amount
@@ -287,16 +365,51 @@
                 aForm: true,
             });
         });
+
+        $('#gross_premium, #discount_percent, #discount_amount, #net_premium_amount').each(function() {
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
+            }
+
+            $(this).autoNumeric('init', {
+                aSep: ',',
+                aDec: '.',
+                aForm: true,
+            });
+        });
         
         // Update totals after initialization with slight delay to ensure autoNumeric is ready
         setTimeout(function() {
             updateBillingTotals();
+            recomputeNetPremium();
         }, 100);
+    });
+
+    $(document).on('change keyup', '#discount_amount', function() {
+        recomputeNetPremium();
+    });
+
+    $(document).on('change keyup', '#net_premium_amount', function() {
+        netPremiumManuallyEdited = true;
     });
 
     // Handle form submission
     $('#formEdit').on('submit', function(e) {
         e.preventDefault();
+
+        const grossPremium = $('#gross_premium').autoNumeric('get');
+        const netPremium = $('#net_premium_amount').autoNumeric('get');
+
+        if (grossPremium && netPremium && parseFloat(netPremium) > parseFloat(grossPremium)) {
+            $('#validationAlert').html(`
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong>
+                    Net Amount Premi tidak boleh lebih besar dari Gross Premium.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `).show();
+            return false;
+        }
         
         // Calculate total billing amount first (before cleaning)
         let totalBilling = 0;
@@ -330,6 +443,16 @@
                 var cleanValue = currentValue.trim()
                     .replace(/,/g, '');  // Remove all commas
                 $(this).val(cleanValue);
+            }
+        });
+
+        $('#gross_premium, #discount_percent, #discount_amount, #net_premium_amount').each(function() {
+            try {
+                const cleanValue = $(this).autoNumeric('get');
+                $(this).val(cleanValue);
+            } catch (err) {
+                const value = $(this).val().replace(/,/g, '');
+                $(this).val(value);
             }
         });
         

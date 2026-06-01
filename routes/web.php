@@ -78,6 +78,10 @@ Route::prefix('transaction')->group(function () {
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'create']
     )->name('transaction.credit-notes.create');
     Route::get(
+        '/credit-notes/print-directory-bulk',
+        [\App\Http\Controllers\Transaction\CreditNoteController::class, 'printDirectoryBulk']
+    )->name('transaction.credit-notes.print-directory-bulk');
+    Route::get(
         '/credit-notes/{id}',
         [\App\Http\Controllers\Transaction\CreditNoteController::class, 'show']
     )->name('transaction.credit-notes.show');
@@ -103,6 +107,10 @@ Route::prefix('transaction')->group(function () {
     [\App\Http\Controllers\Transaction\DebitNoteController::class, 'create'])->name('transaction.debit-notes.create');
     Route::post('/debit-notes', 
     [\App\Http\Controllers\Transaction\DebitNoteController::class, 'store'])->name('transaction.debit-notes.store');
+    Route::get(
+        '/debit-notes/print-directory-bulk',
+        [\App\Http\Controllers\Transaction\DebitNoteController::class, 'printDirectoryBulk']
+    )->name('transaction.debit-notes.print-directory-bulk');
     Route::get(
         '/debit-notes/{id}',
         [\App\Http\Controllers\Transaction\DebitNoteController::class, 'show']

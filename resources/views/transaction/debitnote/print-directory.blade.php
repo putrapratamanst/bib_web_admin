@@ -351,13 +351,7 @@
                 <div class="notes-column">
                     <div>
                         <div style="margin-bottom: 12px;">
-                            <strong>Risk Location: </strong>{{ $debitNote->contract->contact->address ?? '-' }}
-                        </div>
-                        <div style="margin-bottom: 12px;">
-                            <strong>Subject: </strong>{{ $debitNote->contract->covered_item ?? 'Property All Risk' }}
-                        </div>
-                        <div style="margin-bottom: 12px;">
-                            Adalah benar bahwa 7 hari setelah jatuh tempo dari tanggal dikeluarkannya premi maupun jatuh tempo pembayaran Premi dianggap dan dianggap sebagai Debit Note & Polis terlambat.
+                          <strong>{!! nl2br(e($debitNote->contract?->memo ?? '-')) !!}</strong>
                         </div>
                         <div style="margin-top: 30px;margin-bottom: 15px;">
                             <strong>Tanggal Pembayaran<br><i>Date of Payment</i></strong><br>

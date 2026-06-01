@@ -7,6 +7,19 @@
     $defaultDueDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->addDays(7)->format('d-m-Y') : date('d-m-Y', strtotime('+7 days'));
     $existingBilledAmount = $existingBilledAmount ?? (float) $debitNote->debitNoteBillings()->sum('amount');
     $remainingAvailableAmount = $remainingAvailableAmount ?? max(0, (float) $debitNote->amount - $existingBilledAmount);
+
+    $grossPremiumDefault = $debitNote->gross_premium;
+    if ($grossPremiumDefault === null) {
+        $grossPremiumDefault = $debitNote->installment > 0 ? null : ($debitNote->contract->gross_premium ?? null);
+    }
+
+    $discountPercentDefault = $debitNote->discount_percent ?? ($debitNote->contract->discount ?? null);
+    $discountAmountDefault = $debitNote->discount_amount ?? ($debitNote->contract->discount_amount ?? null);
+    $netPremiumDefault = $debitNote->net_premium_amount;
+
+    if ($netPremiumDefault === null && $grossPremiumDefault !== null) {
+        $netPremiumDefault = floatval($grossPremiumDefault) - floatval($discountAmountDefault ?? 0);
+    }
 @endphp
 @section('content')
 <div class="container">
@@ -101,6 +114,36 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
+
+                <div class="row">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="gross_premium" class="form-label">Gross Premium</label>
+                            <input type="text" class="form-control autonumeric" name="gross_premium" id="gross_premium" value="{{ old('gross_premium', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_percent" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control autonumeric" name="discount_percent" id="discount_percent" value="{{ old('discount_percent', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount</label>
+                            <input type="text" class="form-control autonumeric" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', $discountAmountDefault) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="net_premium_amount" class="form-label">Net Amount Premi</label>
+                            <input type="text" class="form-control autonumeric" name="net_premium_amount" id="net_premium_amount" value="{{ old('net_premium_amount', $netPremiumDefault) }}">
+                        </div>
+                    </div>
+                </div>
                 
                 @if ($debitNote->installment > 0)
                     {{-- Looping sesuai jumlah installment --}}
@@ -232,6 +275,7 @@
     const debitNoteAmount = {{ $debitNote->amount }};
     const existingBilledAmount = {{ $existingBilledAmount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
+    let netPremiumManuallyEdited = false;
 
     // Initialize currency formatter (US format: 1,234.56)
     function formatCurrency(value) {
@@ -239,6 +283,37 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(value);
+    }
+
+    function setAutoNumericValue(selector, value) {
+        if (value === null || value === undefined || value === '') {
+            $(selector).val('');
+            return;
+        }
+
+        if ($(selector).data('autoNumeric')) {
+            $(selector).autoNumeric('set', value);
+            return;
+        }
+
+        $(selector).val(value);
+    }
+
+    function recomputeNetPremium() {
+        if (netPremiumManuallyEdited) {
+            return;
+        }
+
+        const grossPremium = $('#gross_premium').autoNumeric('get');
+        const discountAmount = $('#discount_amount').autoNumeric('get');
+
+        if (!grossPremium) {
+            setAutoNumericValue('#net_premium_amount', null);
+            return;
+        }
+
+        const netPremium = parseFloat(grossPremium) - parseFloat(discountAmount || 0);
+        setAutoNumericValue('#net_premium_amount', netPremium);
     }
 
     // Calculate and update total billed and remaining amount
@@ -326,13 +401,49 @@
                 aForm: true,
             });
         });
+
+        $('#gross_premium, #discount_percent, #discount_amount, #net_premium_amount').each(function() {
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
+            }
+
+            $(this).autoNumeric('init', {
+                aSep: ',',
+                aDec: '.',
+                aForm: true,
+            });
+        });
         
         // Update totals after initialization
         updateBillingTotals();
+        recomputeNetPremium();
+    });
+
+    $(document).on('change keyup', '#discount_amount', function() {
+        recomputeNetPremium();
+    });
+
+    $(document).on('change keyup', '#net_premium_amount', function() {
+        netPremiumManuallyEdited = true;
     });
 
     // Handle form submission to clean AutoNumeric values
     $('#formCreate').on('submit', function(e) {
+        const grossPremium = $('#gross_premium').autoNumeric('get');
+        const netPremium = $('#net_premium_amount').autoNumeric('get');
+
+        if (grossPremium && netPremium && parseFloat(netPremium) > parseFloat(grossPremium)) {
+            e.preventDefault();
+            $('#validationAlert').html(`
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong>
+                    Net Amount Premi tidak boleh lebih besar dari Gross Premium.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `).show();
+            return false;
+        }
+
         // Clean all amount inputs before submit
         $('input[name="amount[]"]').each(function() {
             try {
@@ -343,6 +454,16 @@
             } catch(e) {
                 // If AutoNumeric fails, manually clean (remove commas)
                 var value = $(this).val().replace(/,/g, '');
+                $(this).val(value);
+            }
+        });
+
+        $('#gross_premium, #discount_percent, #discount_amount, #net_premium_amount').each(function() {
+            try {
+                const cleanValue = $(this).autoNumeric('get');
+                $(this).val(cleanValue);
+            } catch (err) {
+                const value = $(this).val().replace(/,/g, '');
                 $(this).val(value);
             }
         });

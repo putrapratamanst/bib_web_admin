@@ -67,6 +67,9 @@ class CreditNoteController extends Controller
             ->addColumn('approval_status_badge', function (CreditNote $b) {
                 return $b->approval_status_badge;
             })
+            ->addColumn('approval_status_raw', function (CreditNote $b) {
+                return $b->approval_status;
+            })
             // Add searchable columns for DN Number, DN Billing Number, Policy Number, and Placing Number
             ->addColumn('debit_note_number', function (CreditNote $b) {
                 return $b->debitNote ? $b->debitNote->number : '-';
