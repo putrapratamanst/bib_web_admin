@@ -45,10 +45,14 @@ class DebitNoteBillingController extends Controller
                 'due_date.*' => 'required|date|after_or_equal:date.*',
                 'amount'   => 'required|array',
                 'amount.*' => 'required|numeric|min:0',
-                'gross_premium' => 'nullable|numeric',
-                'discount_percent' => 'nullable|numeric',
-                'discount_amount' => 'nullable|numeric',
-                'net_premium_amount' => 'nullable|numeric',
+                'gross_premium' => 'nullable|array',
+                'gross_premium.*' => 'nullable|numeric',
+                'discount_percent' => 'nullable|array',
+                'discount_percent.*' => 'nullable|numeric',
+                'discount_amount' => 'nullable|array',
+                'discount_amount.*' => 'nullable|numeric',
+                'net_premium_amount' => 'nullable|array',
+                'net_premium_amount.*' => 'nullable|numeric',
                 // kalau status juga array
                 // 'status'   => 'required|array',
                 // 'status.*' => 'required|in:unpaid,paid,overdue',
@@ -77,26 +81,26 @@ class DebitNoteBillingController extends Controller
                     ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
             }
 
-            $grossPremium = $request->input('gross_premium');
-            $netPremium = $request->input('net_premium_amount');
+            $grossPremiums = $request->input('gross_premium', []);
+            $netPremiums = $request->input('net_premium_amount', []);
 
-            if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
-                if (floatval($netPremium) > floatval($grossPremium)) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium.');
+            foreach ($request->billing_number as $i => $billingNumber) {
+                $grossPremium = $grossPremiums[$i] ?? null;
+                $netPremium = $netPremiums[$i] ?? null;
+
+                if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
+                    if (floatval($netPremium) > floatval($grossPremium)) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium untuk billing ' . $billingNumber . '.');
+                    }
                 }
             }
 
             DB::beginTransaction();
 
-            $debitNote->update([
-                'gross_premium' => $grossPremium === '' ? null : $grossPremium,
-                'discount_percent' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
-                'discount_amount' => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
-                'net_premium_amount' => $netPremium === '' ? null : $netPremium,
-                'updated_by' => auth()->id(),
-            ]);
+            $discountPercents = $request->input('discount_percent', []);
+            $discountAmounts = $request->input('discount_amount', []);
 
             foreach ($request->billing_number as $i => $billingNumber) {
                 $debitNoteBilling = new DebitNoteBilling();
@@ -104,6 +108,10 @@ class DebitNoteBillingController extends Controller
                 $debitNoteBilling->billing_number = $billingNumber;
                 $debitNoteBilling->date = $request->date[$i];
                 $debitNoteBilling->due_date = $request->due_date[$i];
+                $debitNoteBilling->gross_premium = ($grossPremiums[$i] ?? '') === '' ? null : $grossPremiums[$i];
+                $debitNoteBilling->discount_percent = ($discountPercents[$i] ?? '') === '' ? null : $discountPercents[$i];
+                $debitNoteBilling->discount_amount = ($discountAmounts[$i] ?? '') === '' ? null : $discountAmounts[$i];
+                $debitNoteBilling->net_premium_amount = ($netPremiums[$i] ?? '') === '' ? null : $netPremiums[$i];
                 
                 // Calculate amount with policy_fee + stamp_fee for first installment
                 $amount = floatval($request->amount[$i]);
@@ -148,7 +156,7 @@ class DebitNoteBillingController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollback();
             Log::error('Database error in DebitNoteBilling store: ' . $e->getMessage());
-            
+            dd($e->getMessage());
             $errorMessage = 'Database error occurred.';
             if (str_contains($e->getMessage(), 'Duplicate entry')) {
                 $errorMessage = 'Billing number already exists. Please use different billing numbers.';
@@ -229,10 +237,14 @@ class DebitNoteBillingController extends Controller
                 'due_date.*' => 'required|date|after_or_equal:date.*',
                 'amount'   => 'required|array',
                 'amount.*' => 'required|numeric|min:0',
-                'gross_premium' => 'nullable|numeric',
-                'discount_percent' => 'nullable|numeric',
-                'discount_amount' => 'nullable|numeric',
-                'net_premium_amount' => 'nullable|numeric',
+                'gross_premium' => 'nullable|array',
+                'gross_premium.*' => 'nullable|numeric',
+                'discount_percent' => 'nullable|array',
+                'discount_percent.*' => 'nullable|numeric',
+                'discount_amount' => 'nullable|array',
+                'discount_amount.*' => 'nullable|numeric',
+                'net_premium_amount' => 'nullable|array',
+                'net_premium_amount.*' => 'nullable|numeric',
             ]);
             
             // Calculate total all billings + fees untuk INST1
@@ -261,27 +273,28 @@ class DebitNoteBillingController extends Controller
                 $totalAllBillings += $amountValue;
             }
 
-            $grossPremium = $request->input('gross_premium');
-            $netPremium = $request->input('net_premium_amount');
+            $grossPremiums = $request->input('gross_premium', []);
+            $netPremiums = $request->input('net_premium_amount', []);
 
-            if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
-                if (floatval($netPremium) > floatval($grossPremium)) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium.');
+            foreach ($request->billing_id as $i => $billingId) {
+                $billing = DebitNoteBilling::findOrFail($billingId);
+                $grossPremium = $grossPremiums[$i] ?? null;
+                $netPremium = $netPremiums[$i] ?? null;
+
+                if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
+                    if (floatval($netPremium) > floatval($grossPremium)) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium untuk billing ' . $billing->billing_number . '.');
+                    }
                 }
             }
             
            
             DB::beginTransaction();
 
-            $debitNote->update([
-                'gross_premium' => $grossPremium === '' ? null : $grossPremium,
-                'discount_percent' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
-                'discount_amount' => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
-                'net_premium_amount' => $netPremium === '' ? null : $netPremium,
-                'updated_by' => auth()->id(),
-            ]);
+            $discountPercents = $request->input('discount_percent', []);
+            $discountAmounts = $request->input('discount_amount', []);
 
             foreach ($request->billing_id as $i => $billingId) {
                 $billing = DebitNoteBilling::findOrFail($billingId);
@@ -293,6 +306,10 @@ class DebitNoteBillingController extends Controller
                 
                 $billing->date = $request->date[$i];
                 $billing->due_date = $request->due_date[$i];
+                $billing->gross_premium = ($grossPremiums[$i] ?? '') === '' ? null : $grossPremiums[$i];
+                $billing->discount_percent = ($discountPercents[$i] ?? '') === '' ? null : $discountPercents[$i];
+                $billing->discount_amount = ($discountAmounts[$i] ?? '') === '' ? null : $discountAmounts[$i];
+                $billing->net_premium_amount = ($netPremiums[$i] ?? '') === '' ? null : $netPremiums[$i];
                 
                 // Calculate amount with policy_fee + stamp_fee for INST1
                 $amount = floatval($request->amount[$i]);

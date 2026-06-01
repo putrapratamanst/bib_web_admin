@@ -24,6 +24,10 @@ class DebitNoteBilling extends Model
         'date',
         'due_date',
         'amount',
+        'gross_premium',
+        'discount_percent',
+        'discount_amount',
+        'net_premium_amount',
         'status',
         'created_by',
         'updated_by',
@@ -33,6 +37,10 @@ class DebitNoteBilling extends Model
         'date' => 'date',
         'due_date' => 'date',
         'amount' => 'decimal:2',
+        'gross_premium' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'net_premium_amount' => 'decimal:2',
     ];
 
     protected $appends = [

@@ -111,16 +111,14 @@ class DebitNoteBillingController extends Controller
             $debitNote = $billing->debitNote;
             $contract = $debitNote?->contract;
 
-            $grossPremiumDefault = $debitNote?->gross_premium;
+            $grossPremiumDefault = $billing->gross_premium;
             if ($grossPremiumDefault === null) {
-                $grossPremiumDefault = ($debitNote?->installment ?? 0) > 0
-                    ? null
-                    : ($contract?->gross_premium ?? null);
+                $grossPremiumDefault = $contract?->gross_premium ?? null;
             }
 
-            $discountPercentDefault = $debitNote?->discount_percent ?? ($contract?->discount ?? null);
-            $discountAmountDefault = $debitNote?->discount_amount ?? ($contract?->discount_amount ?? null);
-            $netPremiumDefault = $debitNote?->net_premium_amount;
+            $discountPercentDefault = $billing->discount_percent ?? ($contract?->discount ?? null);
+            $discountAmountDefault = $billing->discount_amount ?? ($contract?->discount_amount ?? null);
+            $netPremiumDefault = $billing->net_premium_amount;
 
             if ($netPremiumDefault === null && $grossPremiumDefault !== null && $discountAmountDefault !== null) {
                 $netPremiumDefault = floatval($grossPremiumDefault) - floatval($discountAmountDefault);
