@@ -32,144 +32,185 @@ class DebitNoteBillingController extends Controller
         return view('transaction.billing.create');
     }
 
-    public function store(Request $request)
-    {
-        try {
-            $request->validate([
-                'debit_note_id' => 'required|exists:debit_notes,id',
-                'billing_number'   => 'required|array',
-                'billing_number.*' => 'required|string|max:50|distinct|unique:debit_note_billings,billing_number',
-                'date'   => 'required|array',
-                'date.*' => 'required|date',
-                'due_date'   => 'required|array',
-                'due_date.*' => 'required|date|after_or_equal:date.*',
-                'amount'   => 'required|array',
-                'amount.*' => 'required|numeric|min:0',
-                'gross_premium' => 'nullable|numeric',
-                'discount_percent' => 'nullable|numeric',
-                'discount_amount' => 'nullable|numeric',
-                'net_premium_amount' => 'nullable|numeric',
-                // kalau status juga array
-                // 'status'   => 'required|array',
-                // 'status.*' => 'required|in:unpaid,paid,overdue',
-            ]);
+public function store(Request $request)
+{
+    try {
+        // Clean numeric values from AutoNumeric format (remove commas)
+        $grossPremium = $request->input('gross_premium');
+        if ($grossPremium) {
+            $grossPremium = str_replace(',', '', $grossPremium);
+            $request->merge(['gross_premium' => $grossPremium]);
+        }
+        
+        $discountPercent = $request->input('discount_percent');
+        if ($discountPercent) {
+            $discountPercent = str_replace(',', '', $discountPercent);
+            $request->merge(['discount_percent' => $discountPercent]);
+        }
+        
+        $discountAmount = $request->input('discount_amount');
+        if ($discountAmount) {
+            $discountAmount = str_replace(',', '', $discountAmount);
+            $request->merge(['discount_amount' => $discountAmount]);
+        }
+        
+        // Clean amount array
+        $amounts = $request->input('amount', []);
+        $cleanedAmounts = array_map(function($amount) {
+            return is_string($amount) ? str_replace(',', '', $amount) : $amount;
+        }, $amounts);
+        $request->merge(['amount' => $cleanedAmounts]);
+        
+        $request->validate([
+            'debit_note_id'    => 'required|exists:debit_notes,id',
+            'billing_number'   => 'required|array',
+            'billing_number.*' => 'required|string|max:50|distinct|unique:debit_note_billings,billing_number',
+            'date'             => 'required|array',
+            'date.*'           => 'required|date',
+            'due_date'         => 'required|array',
+            'due_date.*'       => 'required|date|after_or_equal:date.*',
+            'amount'           => 'required|array',
+            'amount.*'         => 'required|numeric|min:0',
+            'gross_premium'       => 'nullable|numeric',
+            'discount_percent'    => 'nullable|numeric',
+            'discount_amount'     => 'nullable|numeric',
+            'net_premium_amount'  => 'nullable|numeric',
+        ]);
 
-            // Get the debit note with contract to check amount limit
-            $debitNote = DebitNote::with('contract')->findOrFail($request->debit_note_id);
-            
-            // Calculate total billing amount being added
-            $totalNewBillingAmount = 0;
-            foreach ($request->amount as $amount) {
-                $totalNewBillingAmount += floatval($amount);
-            }
+        // Get the debit note with contract to check amount limit
+        $debitNote = DebitNote::with('contract')->findOrFail($request->debit_note_id);
+        
+        // Calculate total billing amount being added
+        $totalNewBillingAmount = 0;
+        foreach ($request->amount as $amount) {
+            $totalNewBillingAmount += floatval($amount);
+        }
 
-            // Calculate total existing billing amount for this debit note
-            $existingBilledAmount = (float) DebitNoteBilling::where('debit_note_id', $debitNote->id)->sum('amount');
-            $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
+        // Calculate total existing billing amount for this debit note
+        $existingBilledAmount    = (float) DebitNoteBilling::where('debit_note_id', $debitNote->id)->sum('amount');
+        $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
+        $totalBilledAfterCreate  = $existingBilledAmount + $totalNewBillingAmount;
+        
+        // Check if total billing exceeds debit note amount
+        if ($totalBilledAfterCreate > (float) $debitNote->amount) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
+        }
 
-            // Total billed after creating new billing(s)
-            $totalBilledAfterCreate = $existingBilledAmount + $totalNewBillingAmount;
-            
-            // Check if total billing exceeds debit note amount (existing + new)
-            if ($totalBilledAfterCreate > (float) $debitNote->amount) {
+        $grossPremium = $request->input('gross_premium');
+        $netPremium   = $request->input('net_premium_amount');
+
+        if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
+            if (floatval($netPremium) > floatval($grossPremium)) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
+                    ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium.');
             }
-
-            $grossPremium = $request->input('gross_premium');
-            $netPremium = $request->input('net_premium_amount');
-
-            if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
-                if (floatval($netPremium) > floatval($grossPremium)) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'Net Amount Premi tidak boleh lebih besar dari Gross Premium.');
-                }
-            }
-
-            DB::beginTransaction();
-
-            $debitNote->update([
-                'gross_premium' => $grossPremium === '' ? null : $grossPremium,
-                'discount_percent' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
-                'discount_amount' => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
-                'net_premium_amount' => $netPremium === '' ? null : $netPremium,
-                'updated_by' => auth()->id(),
-            ]);
-
-            foreach ($request->billing_number as $i => $billingNumber) {
-                $debitNoteBilling = new DebitNoteBilling();
-                $debitNoteBilling->debit_note_id = $request->debit_note_id;
-                $debitNoteBilling->billing_number = $billingNumber;
-                $debitNoteBilling->date = $request->date[$i];
-                $debitNoteBilling->due_date = $request->due_date[$i];
-                
-                // Calculate amount with policy_fee + stamp_fee for first installment
-                $amount = floatval($request->amount[$i]);
-                
-                // Check if this is installment 1 (first billing)
-                $isFirstInstallment = false;
-                if (preg_match('/-INST(\d+)/i', $billingNumber, $matches)) {
-                    $isFirstInstallment = ((int)$matches[1] === 1);
-                } else {
-                    // If no INST pattern, check if this is the first entry in the array
-                    $isFirstInstallment = ($i === 0);
-                }
-                
-                // Add policy_fee and stamp_fee for first installment
-                if ($isFirstInstallment && $debitNote->contract) {
-                    $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
-                    $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
-                    $amount += $policyFee + $stampFee;
-                }
-                
-                $debitNoteBilling->amount = $amount;
-                $debitNoteBilling->status = 'pending'; // default status is pending
-                
-                if (!$debitNoteBilling->save()) {
-                    throw new \Exception("Failed to save billing: {$billingNumber}");
-                }
-            }
-
-            DB::commit();
-
-            return redirect()
-                ->route('transaction.debit-notes.show', ['id' => $request->debit_note_id])
-                ->with('success', 'Debit Note Billings created successfully.');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollback();
-            return redirect()->back()
-                ->withErrors($e->validator)
-                ->withInput()
-                ->with('error', 'Validation Error: ' . implode(', ', $e->validator->errors()->all()));
-
-        } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollback();
-            Log::error('Database error in DebitNoteBilling store: ' . $e->getMessage());
-            
-            $errorMessage = 'Database error occurred.';
-            if (str_contains($e->getMessage(), 'Duplicate entry')) {
-                $errorMessage = 'Billing number already exists. Please use different billing numbers.';
-            } elseif (str_contains($e->getMessage(), 'foreign key constraint')) {
-                $errorMessage = 'Invalid debit note. Please refresh and try again.';
-            }
-            
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $errorMessage);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error in DebitNoteBilling store: ' . $e->getMessage());
-            
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Error saving billings: ' . $e->getMessage());
         }
-    }
 
+        DB::beginTransaction();
+
+        $debitNote->update([
+            'gross_premium'      => $grossPremium === '' ? null : $grossPremium,
+            'discount_percent'   => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
+            'discount_amount'    => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
+            'net_premium_amount' => $netPremium === '' ? null : $netPremium,
+            'updated_by'         => auth()->id(),
+        ]);
+        
+        // Update contract (placing) dengan data yang sama
+        if ($debitNote->contract) {
+            $newGrossPremium  = $grossPremium === '' ? null : $grossPremium;
+            $newDiscountAmount = $request->input('discount_amount') === '' ? null : $request->input('discount_amount');
+            
+            // Calculate net premium (amount) = gross_premium - discount_amount
+            $newAmount = null;
+            if ($newGrossPremium !== null && $newDiscountAmount !== null) {
+                $newAmount = floatval($newGrossPremium) - floatval($newDiscountAmount);
+            } elseif ($newGrossPremium !== null) {
+                $newAmount = floatval($newGrossPremium);
+            }
+            
+            $debitNote->contract->update([
+                'gross_premium'   => $newGrossPremium,
+                'discount'        => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
+                'discount_amount' => $newDiscountAmount,
+                'amount'          => $newAmount,
+                'updated_by'      => auth()->id(),
+            ]);
+        }
+
+        // ✅ Loop yang hilang — iterasi setiap billing_number
+        foreach ($request->billing_number as $i => $billingNumber) {
+            $debitNoteBilling = new DebitNoteBilling();
+            $debitNoteBilling->debit_note_id    = $request->debit_note_id;
+            $debitNoteBilling->billing_number   = $billingNumber;
+            $debitNoteBilling->date             = $request->date[$i];
+            $debitNoteBilling->due_date         = $request->due_date[$i];
+            
+            $amount = floatval($request->amount[$i]);
+            
+            // Check if this is installment 1 (first billing)
+            $isFirstInstallment = false;
+            if (preg_match('/-INST(\d+)/i', $billingNumber, $matches)) {
+                $isFirstInstallment = ((int)$matches[1] === 1);
+            } else {
+                $isFirstInstallment = ($i === 0);
+            }
+            
+            // Add policy_fee and stamp_fee for first installment
+            if ($isFirstInstallment && $debitNote->contract) {
+                $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
+                $stampFee  = floatval($debitNote->contract->stamp_fee ?? 0);
+                $amount   += $policyFee + $stampFee;
+            }
+            
+            $debitNoteBilling->amount = $amount;
+            $debitNoteBilling->status = 'pending';
+            
+            if (!$debitNoteBilling->save()) {
+                throw new \Exception("Failed to save billing: {$billingNumber}");
+            }
+        }
+
+        DB::commit();
+
+        return redirect()
+            ->route('transaction.debit-notes.show', ['id' => $request->debit_note_id])
+            ->with('success', 'Debit Note Billings created successfully.');
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollback();
+        return redirect()->back()
+            ->withErrors($e->validator)
+            ->withInput()
+            ->with('error', 'Validation Error: ' . implode(', ', $e->validator->errors()->all()));
+
+    } catch (\Illuminate\Database\QueryException $e) {
+        DB::rollback();
+        Log::error('Database error in DebitNoteBilling store: ' . $e->getMessage());
+        
+        $errorMessage = 'Database error occurred.';
+        if (str_contains($e->getMessage(), 'Duplicate entry')) {
+            $errorMessage = 'Billing number already exists. Please use different billing numbers.';
+        } elseif (str_contains($e->getMessage(), 'foreign key constraint')) {
+            $errorMessage = 'Invalid debit note. Please refresh and try again.';
+        }
+        
+        return redirect()->back()
+            ->withInput()
+            ->with('error', $errorMessage);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error('Error in DebitNoteBilling store: ' . $e->getMessage());
+        
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error saving billings: ' . $e->getMessage());
+    }
+}
     // Method untuk menampilkan list billing
     public function index()
     {
@@ -217,6 +258,32 @@ class DebitNoteBillingController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            // Clean numeric values from AutoNumeric format (remove commas)
+            $grossPremium = $request->input('gross_premium');
+            if ($grossPremium) {
+                $grossPremium = str_replace(',', '', $grossPremium);
+                $request->merge(['gross_premium' => $grossPremium]);
+            }
+            
+            $discountPercent = $request->input('discount_percent');
+            if ($discountPercent) {
+                $discountPercent = str_replace(',', '', $discountPercent);
+                $request->merge(['discount_percent' => $discountPercent]);
+            }
+            
+            $discountAmount = $request->input('discount_amount');
+            if ($discountAmount) {
+                $discountAmount = str_replace(',', '', $discountAmount);
+                $request->merge(['discount_amount' => $discountAmount]);
+            }
+            
+            // Clean amount array
+            $amounts = $request->input('amount', []);
+            $cleanedAmounts = array_map(function($amount) {
+                return is_string($amount) ? str_replace(',', '', $amount) : $amount;
+            }, $amounts);
+            $request->merge(['amount' => $cleanedAmounts]);
+            
             // $id adalah debit note ID
             $debitNote = DebitNote::with('contract')->findOrFail($id);
             
@@ -282,9 +349,29 @@ class DebitNoteBillingController extends Controller
                 'net_premium_amount' => $netPremium === '' ? null : $netPremium,
                 'updated_by' => auth()->id(),
             ]);
-
-            foreach ($request->billing_id as $i => $billingId) {
-                $billing = DebitNoteBilling::findOrFail($billingId);
+            
+            // Update contract (placing) dengan data yang sama
+            if ($debitNote->contract) {
+                $newGrossPremium = $grossPremium === '' ? null : $grossPremium;
+                $newDiscountAmount = $request->input('discount_amount') === '' ? null : $request->input('discount_amount');
+                
+                // Calculate net premium (amount) = gross_premium - discount_amount
+                $newAmount = null;
+                if ($newGrossPremium !== null && $newDiscountAmount !== null) {
+                    $newAmount = floatval($newGrossPremium) - floatval($newDiscountAmount);
+                } elseif ($newGrossPremium !== null) {
+                    $newAmount = floatval($newGrossPremium);
+                }
+                
+                $debitNote->contract->update([
+                    'gross_premium' => $newGrossPremium,
+                    'discount' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
+                    'discount_amount' => $newDiscountAmount,
+                    'amount' => $newAmount,
+                    'updated_by' => auth()->id(),
+                ]);
+            }
+            foreach ($request->billing_id as $i => $billingId) {                $billing = DebitNoteBilling::findOrFail($billingId);
                 
                 // Check if billing can be edited (only pending status)
                 if ($billing->status !== 'pending') {
