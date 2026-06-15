@@ -115,36 +115,6 @@
                     </div>
                 @endif
 
-                <div class="row">
-                    <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="gross_premium" class="form-label">Gross Premium</label>
-                            <input type="text" class="form-control autonumeric" name="gross_premium" id="gross_premium" value="{{ old('gross_premium') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="discount_percent" class="form-label">Discount %</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control autonumeric" name="discount_percent" id="discount_percent" value="{{ old('discount_percent') }}">
-                                <span class="input-group-text" style="font-size: 14px;">%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="discount_amount" class="form-label">Discount Amount</label>
-                            <input type="text" class="form-control autonumeric" name="discount_amount" id="discount_amount" value="{{ old('discount_amount') }}">
-                        </div>
-                    </div>
-                    {{-- <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="net_premium_amount" class="form-label">Net Amount Premi</label>
-                            <input type="text" class="form-control autonumeric" name="net_premium_amount" id="net_premium_amount" value="{{ old('net_premium_amount') }}">
-                        </div>
-                    </div> --}}
-                </div>
-                
                 @if ($debitNote->installment > 0)
                     {{-- Looping sesuai jumlah installment --}}
                     @for ($i = 1; $i <= $debitNote->installment; $i++)
@@ -221,14 +191,14 @@
                                 <div class="col-md-4 col-lg-3">
                                     <div class="mb-3">
                                         <label for="gross_premium_{{ $i }}" class="form-label">Gross Premium</label>
-                                        <input type="text" class="form-control autonumeric premium-input gross-premium" name="gross_premium[]" id="gross_premium_{{ $i }}" value="{{ old('gross_premium.' . ($i-1), $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                                        <input type="text" class="form-control autonumeric premium-input gross-premium" name="gross_premium[]" id="gross_premium_{{ $i }}" value="{{ old('gross_premium.' . ($i-1), $grossPremiumDefault) }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3">
                                     <div class="mb-3">
                                         <label for="discount_percent_{{ $i }}" class="form-label">Discount %</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control autonumeric premium-input discount-percent" name="discount_percent[]" id="discount_percent_{{ $i }}" value="{{ old('discount_percent.' . ($i-1), $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                            <input type="text" class="form-control autonumeric premium-input discount-percent" name="discount_percent[]" id="discount_percent_{{ $i }}" value="{{ old('discount_percent.' . ($i-1), $discountPercentDefault) }}">
                                             <span class="input-group-text" style="font-size: 14px;">%</span>
                                         </div>
                                     </div>
@@ -295,14 +265,14 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="gross_premium_1" class="form-label">Gross Premium</label>
-                                    <input type="text" class="form-control autonumeric premium-input gross-premium" name="gross_premium[]" id="gross_premium_1" value="{{ old('gross_premium.0', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                                    <input type="text" class="form-control autonumeric premium-input gross-premium" name="gross_premium[]" id="gross_premium_1" value="{{ old('gross_premium.0', $grossPremiumDefault) }}">
                                 </div>
                             </div>
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="discount_percent_1" class="form-label">Discount %</label>
                                     <div class="input-group">
-                                        <input type="text" class="form-control autonumeric premium-input discount-percent" name="discount_percent[]" id="discount_percent_1" value="{{ old('discount_percent.0', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                        <input type="text" class="form-control autonumeric premium-input discount-percent" name="discount_percent[]" id="discount_percent_1" value="{{ old('discount_percent.0', $discountPercentDefault) }}">
                                         <span class="input-group-text" style="font-size: 14px;">%</span>
                                     </div>
                                 </div>
@@ -339,7 +309,7 @@
     const debitNoteAmount = {{ $debitNote->amount }};
     const existingBilledAmount = {{ $existingBilledAmount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
-    // let netPremiumManuallyEdited = false;
+    const netPremiumManuallyEdited = {};
 
     // Initialize currency formatter (US format: 1,234.56)
     function formatCurrency(value) {
@@ -364,33 +334,23 @@
         $target.val(value);
     }
 
-    // function recomputeNetPremium(source) {
-    //     if (netPremiumManuallyEdited && source !== 'gross' && source !== 'percent') {
-    //         return;
-    //     }
-    //
-    //     const grossPremium = parseFloat($('#gross_premium').autoNumeric('get') || 0);
-    //     const discountPercent = parseFloat($('#discount_percent').autoNumeric('get') || 0);
-    //     let discountAmount = parseFloat($('#discount_amount').autoNumeric('get') || 0);
-    //
-    //     if (grossPremium && discountPercent) {
-    //         const computedDiscountAmount = grossPremium * discountPercent / 100;
-    //         if (source === 'percent' || source === 'gross') {
-    //             discountAmount = computedDiscountAmount;
-    //             setAutoNumericValue('#discount_amount', discountAmount);
-    //         } else if (!discountAmount) {
-    //             discountAmount = computedDiscountAmount;
-    //         }
-    //     }
-    //
-    //     if (!grossPremium) {
-    //         setAutoNumericValue('#net_premium_amount', null);
-    //         return;
-    //     }
-    //
-    //     const netPremium = grossPremium - discountAmount;
-    //     setAutoNumericValue('#net_premium_amount', netPremium);
-    // }
+    function recomputeNetPremiumForBlock($block) {
+        const index = $block.data('index');
+        if (netPremiumManuallyEdited[index]) {
+            return;
+        }
+
+        const grossPremium = $block.find('.gross-premium').autoNumeric('get');
+        const discountAmount = $block.find('.discount-amount').autoNumeric('get');
+
+        if (!grossPremium) {
+            setAutoNumericValue($block.find('.net-premium'), null);
+            return;
+        }
+
+        const netPremium = parseFloat(grossPremium) - parseFloat(discountAmount || 0);
+        setAutoNumericValue($block.find('.net-premium'), netPremium);
+    }
 
     // Calculate and update total billed and remaining amount
     function updateBillingTotals() {
@@ -478,51 +438,78 @@
             });
         });
 
-        // $('#net_premium_amount').each(function() {
-        //     if ($(this).data('autoNumeric')) {
-        //         $(this).autoNumeric('destroy');
-        //     }
-        //
-        //     $(this).autoNumeric('init', {
-        //         aSep: ',',
-        //         aDec: '.',
-        //         aForm: true,
-        //     });
-        // });
+        $('.premium-input').each(function() {
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
+            }
+
+            $(this).autoNumeric('init', {
+                aSep: ',',
+                aDec: '.',
+                aForm: true,
+            });
+        });
         
         // Update totals after initialization
         updateBillingTotals();
-        // recomputeNetPremium();
+        $('.billing-block').each(function() {
+            recomputeNetPremiumForBlock($(this));
+        });
     });
 
-    // $(document).on('change keyup', '#gross_premium, #discount_percent', function() {
-    //     recomputeNetPremium(this.id === 'gross_premium' ? 'gross' : 'percent');
-    // });
-    //
-    // $(document).on('change keyup', '#discount_amount', function() {
-    //     recomputeNetPremium('amount');
-    // });
+    function recomputeDiscountAmountForBlock($block) {
+        const grossPremium = parseFloat($block.find('.gross-premium').autoNumeric('get') || 0);
+        const discountPercent = parseFloat($block.find('.discount-percent').autoNumeric('get') || 0);
+        if (!grossPremium) return;
+        const discountAmount = grossPremium * discountPercent / 100;
+        setAutoNumericValue($block.find('.discount-amount'), discountAmount);
+        recomputeNetPremiumForBlock($block);
+    }
 
-    // $(document).on('change keyup', '#net_premium_amount', function() {
-    //     netPremiumManuallyEdited = true;
-    // });
+    $(document).on('change keyup', '.gross-premium', function() {
+        const $block = $(this).closest('.billing-block');
+        recomputeDiscountAmountForBlock($block);
+    });
+
+    $(document).on('change keyup', '.discount-percent', function() {
+        const $block = $(this).closest('.billing-block');
+        recomputeDiscountAmountForBlock($block);
+    });
+
+    $(document).on('change keyup', '.discount-amount', function() {
+        const $block = $(this).closest('.billing-block');
+        recomputeNetPremiumForBlock($block);
+    });
+
+    $(document).on('change keyup', '.net-premium', function() {
+        const $block = $(this).closest('.billing-block');
+        const index = $block.data('index');
+        netPremiumManuallyEdited[index] = true;
+    });
 
     // Handle form submission to clean AutoNumeric values
     $('#formCreate').on('submit', function(e) {
-        const grossPremium = $('#gross_premium').autoNumeric('get');
-        // const netPremium = $('#net_premium_amount').autoNumeric('get');
-        //
-        // if (grossPremium && netPremium && parseFloat(netPremium) > parseFloat(grossPremium)) {
-        //     e.preventDefault();
-        //     $('#validationAlert').html(`
-        //         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        //             <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong>
-        //             Net Amount Premi tidak boleh lebih besar dari Gross Premium.
-        //             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        //         </div>
-        //     `).show();
-        //     return false;
-        // }
+        let premiumInvalid = false;
+        $('.billing-block').each(function() {
+            const grossPremium = $(this).find('.gross-premium').autoNumeric('get');
+            const netPremium = $(this).find('.net-premium').autoNumeric('get');
+
+            if (grossPremium && netPremium && parseFloat(netPremium) > parseFloat(grossPremium)) {
+                premiumInvalid = true;
+            }
+        });
+
+        if (premiumInvalid) {
+            e.preventDefault();
+            $('#validationAlert').html(`
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong>
+                    Net Amount Premi tidak boleh lebih besar dari Gross Premium.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `).show();
+            return false;
+        }
 
         // Clean all amount inputs before submit
         $('input[name="amount[]"]').each(function() {
@@ -538,15 +525,15 @@
             }
         });
 
-        // $('#gross_premium, #discount_percent, #discount_amount, #net_premium_amount').each(function() {
-        //     try {
-        //         const cleanValue = $(this).autoNumeric('get');
-        //         $(this).val(cleanValue);
-        //     } catch (err) {
-        //         const value = $(this).val().replace(/,/g, '');
-        //         $(this).val(value);
-        //     }
-        // });
+        $('.premium-input').each(function() {
+            try {
+                const cleanValue = $(this).autoNumeric('get');
+                $(this).val(cleanValue);
+            } catch (err) {
+                const value = $(this).val().replace(/,/g, '');
+                $(this).val(value);
+            }
+        });
         // Allow form to submit normally
         return true;
     });

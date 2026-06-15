@@ -35,31 +35,31 @@ class DebitNoteBillingController extends Controller
 public function store(Request $request)
 {
     try {
-        // Clean numeric values from AutoNumeric format (remove commas)
-        $grossPremium = $request->input('gross_premium');
-        if ($grossPremium) {
-            $grossPremium = str_replace(',', '', $grossPremium);
-            $request->merge(['gross_premium' => $grossPremium]);
-        }
-        
-        $discountPercent = $request->input('discount_percent');
-        if ($discountPercent) {
-            $discountPercent = str_replace(',', '', $discountPercent);
-            $request->merge(['discount_percent' => $discountPercent]);
-        }
-        
-        $discountAmount = $request->input('discount_amount');
-        if ($discountAmount) {
-            $discountAmount = str_replace(',', '', $discountAmount);
-            $request->merge(['discount_amount' => $discountAmount]);
-        }
-        
-        // Clean amount array
-        $amounts = $request->input('amount', []);
-        $cleanedAmounts = array_map(function($amount) {
-            return is_string($amount) ? str_replace(',', '', $amount) : $amount;
-        }, $amounts);
-        $request->merge(['amount' => $cleanedAmounts]);
+        $cleanNumericValue = function ($value) {
+            return is_string($value) ? str_replace(',', '', $value) : $value;
+        };
+
+        $cleanNumericValues = function ($values) {
+            if (!is_array($values)) {
+                $values = [$values];
+            }
+
+            return array_map(function ($value) {
+                return is_string($value) ? str_replace(',', '', $value) : $value;
+            }, $values);
+        };
+
+        $request->merge([
+            'amount'             => $cleanNumericValues($request->input('amount', [])),
+            'gross_premium'      => $cleanNumericValues($request->input('gross_premium', [])),
+            'discount_percent'   => $cleanNumericValues($request->input('discount_percent', [])),
+            'discount_amount'    => $cleanNumericValues($request->input('discount_amount', [])),
+            'net_premium_amount' => $cleanNumericValues($request->input('net_premium_amount', [])),
+            'total_gross_premium'      => $cleanNumericValue($request->input('total_gross_premium')),
+            'total_discount_percent'   => $cleanNumericValue($request->input('total_discount_percent')),
+            'total_discount_amount'    => $cleanNumericValue($request->input('total_discount_amount')),
+            'total_net_premium_amount' => $cleanNumericValue($request->input('total_net_premium_amount')),
+        ]);
         
         $request->validate([
             'debit_note_id'    => 'required|exists:debit_notes,id',
@@ -71,10 +71,18 @@ public function store(Request $request)
             'due_date.*'       => 'required|date|after_or_equal:date.*',
             'amount'           => 'required|array',
             'amount.*'         => 'required|numeric|min:0',
-            'gross_premium'       => 'nullable|numeric',
-            'discount_percent'    => 'nullable|numeric',
-            'discount_amount'     => 'nullable|numeric',
-            'net_premium_amount'  => 'nullable|numeric',
+            'gross_premium'       => 'nullable|array',
+            'gross_premium.*'     => 'nullable|numeric',
+            'discount_percent'    => 'nullable|array',
+            'discount_percent.*'  => 'nullable|numeric',
+            'discount_amount'     => 'nullable|array',
+            'discount_amount.*'   => 'nullable|numeric',
+            'net_premium_amount'  => 'nullable|array',
+            'net_premium_amount.*'=> 'nullable|numeric',
+            'total_gross_premium'      => 'nullable|numeric',
+            'total_discount_percent'   => 'nullable|numeric',
+            'total_discount_amount'    => 'nullable|numeric',
+            'total_net_premium_amount' => 'nullable|numeric',
         ]);
 
         // Get the debit note with contract to check amount limit
@@ -98,8 +106,33 @@ public function store(Request $request)
                 ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
         }
 
-        $grossPremium = $request->input('gross_premium');
-        $netPremium   = $request->input('net_premium_amount');
+        $firstFilledValue = function (array $values) {
+            foreach ($values as $value) {
+                if ($value !== null && $value !== '') {
+                    return $value;
+                }
+            }
+
+            return null;
+        };
+
+        $grossPremiums    = $request->input('gross_premium', []);
+        $discountPercents = $request->input('discount_percent', []);
+        $discountAmounts  = $request->input('discount_amount', []);
+        $netPremiums      = $request->input('net_premium_amount', []);
+
+        $grossPremium    = $request->input('total_gross_premium') !== null && $request->input('total_gross_premium') !== ''
+            ? $request->input('total_gross_premium')
+            : $firstFilledValue($grossPremiums);
+        $discountPercent = $request->input('total_discount_percent') !== null && $request->input('total_discount_percent') !== ''
+            ? $request->input('total_discount_percent')
+            : $firstFilledValue($discountPercents);
+        $discountAmount  = $request->input('total_discount_amount') !== null && $request->input('total_discount_amount') !== ''
+            ? $request->input('total_discount_amount')
+            : $firstFilledValue($discountAmounts);
+        $netPremium      = $request->input('total_net_premium_amount') !== null && $request->input('total_net_premium_amount') !== ''
+            ? $request->input('total_net_premium_amount')
+            : $firstFilledValue($netPremiums);
 
         if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
             if (floatval($netPremium) > floatval($grossPremium)) {
@@ -112,17 +145,17 @@ public function store(Request $request)
         DB::beginTransaction();
 
         $debitNote->update([
-            'gross_premium'      => $grossPremium === '' ? null : $grossPremium,
-            'discount_percent'   => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
-            'discount_amount'    => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
-            'net_premium_amount' => $netPremium === '' ? null : $netPremium,
+            'gross_premium'      => $grossPremium,
+            'discount_percent'   => $discountPercent,
+            'discount_amount'    => $discountAmount,
+            'net_premium_amount' => $netPremium,
             'updated_by'         => auth()->id(),
         ]);
         
         // Update contract (placing) dengan data yang sama
         if ($debitNote->contract) {
-            $newGrossPremium  = $grossPremium === '' ? null : $grossPremium;
-            $newDiscountAmount = $request->input('discount_amount') === '' ? null : $request->input('discount_amount');
+            $newGrossPremium  = $grossPremium;
+            $newDiscountAmount = $discountAmount;
             
             // Calculate net premium (amount) = gross_premium - discount_amount
             $newAmount = null;
@@ -134,7 +167,7 @@ public function store(Request $request)
             
             $debitNote->contract->update([
                 'gross_premium'   => $newGrossPremium,
-                'discount'        => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
+                'discount'        => $discountPercent,
                 'discount_amount' => $newDiscountAmount,
                 'amount'          => $newAmount,
                 'updated_by'      => auth()->id(),
@@ -168,6 +201,10 @@ public function store(Request $request)
             
             $debitNoteBilling->amount = $amount;
             $debitNoteBilling->status = 'pending';
+            $debitNoteBilling->gross_premium = ($grossPremiums[$i] ?? '') === '' ? null : $grossPremiums[$i];
+            $debitNoteBilling->discount_percent = ($discountPercents[$i] ?? '') === '' ? null : $discountPercents[$i];
+            $debitNoteBilling->discount_amount = ($discountAmounts[$i] ?? '') === '' ? null : $discountAmounts[$i];
+            $debitNoteBilling->net_premium_amount = ($netPremiums[$i] ?? '') === '' ? null : $netPremiums[$i];
             
             if (!$debitNoteBilling->save()) {
                 throw new \Exception("Failed to save billing: {$billingNumber}");
@@ -258,6 +295,10 @@ public function store(Request $request)
     public function update(Request $request, $id)
     {
         try {
+            $cleanNumericValue = function ($value) {
+                return is_string($value) ? str_replace(',', '', $value) : $value;
+            };
+
             // Clean numeric values from AutoNumeric format (remove commas)
             $grossPremium = $request->input('gross_premium');
             if ($grossPremium) {
@@ -282,7 +323,13 @@ public function store(Request $request)
             $cleanedAmounts = array_map(function($amount) {
                 return is_string($amount) ? str_replace(',', '', $amount) : $amount;
             }, $amounts);
-            $request->merge(['amount' => $cleanedAmounts]);
+            $request->merge([
+                'amount' => $cleanedAmounts,
+                'total_gross_premium'      => $cleanNumericValue($request->input('total_gross_premium')),
+                'total_discount_percent'   => $cleanNumericValue($request->input('total_discount_percent')),
+                'total_discount_amount'    => $cleanNumericValue($request->input('total_discount_amount')),
+                'total_net_premium_amount' => $cleanNumericValue($request->input('total_net_premium_amount')),
+            ]);
             
             // $id adalah debit note ID
             $debitNote = DebitNote::with('contract')->findOrFail($id);
@@ -304,6 +351,10 @@ public function store(Request $request)
                 'discount_amount.*' => 'nullable|numeric',
                 'net_premium_amount' => 'nullable|array',
                 'net_premium_amount.*' => 'nullable|numeric',
+                'total_gross_premium' => 'nullable|numeric',
+                'total_discount_percent' => 'nullable|numeric',
+                'total_discount_amount' => 'nullable|numeric',
+                'total_net_premium_amount' => 'nullable|numeric',
             ]);
             
             // Calculate total all billings + fees untuk INST1
@@ -333,7 +384,32 @@ public function store(Request $request)
             }
 
             $grossPremiums = $request->input('gross_premium', []);
+            $discountPercents = $request->input('discount_percent', []);
+            $discountAmounts = $request->input('discount_amount', []);
             $netPremiums = $request->input('net_premium_amount', []);
+
+            $firstFilledValue = function (array $values) {
+                foreach ($values as $value) {
+                    if ($value !== null && $value !== '') {
+                        return $value;
+                    }
+                }
+
+                return null;
+            };
+
+            $debitNoteGrossPremium = $request->input('total_gross_premium') !== null && $request->input('total_gross_premium') !== ''
+                ? $request->input('total_gross_premium')
+                : $firstFilledValue($grossPremiums);
+            $debitNoteDiscountPercent = $request->input('total_discount_percent') !== null && $request->input('total_discount_percent') !== ''
+                ? $request->input('total_discount_percent')
+                : $firstFilledValue($discountPercents);
+            $debitNoteDiscountAmount = $request->input('total_discount_amount') !== null && $request->input('total_discount_amount') !== ''
+                ? $request->input('total_discount_amount')
+                : $firstFilledValue($discountAmounts);
+            $debitNoteNetPremium = $request->input('total_net_premium_amount') !== null && $request->input('total_net_premium_amount') !== ''
+                ? $request->input('total_net_premium_amount')
+                : $firstFilledValue($netPremiums);
 
             foreach ($request->billing_id as $i => $billingId) {
                 $billing = DebitNoteBilling::findOrFail($billingId);
@@ -353,17 +429,17 @@ public function store(Request $request)
             DB::beginTransaction();
 
             $debitNote->update([
-                'gross_premium' => $grossPremium === '' ? null : $grossPremium,
-                'discount_percent' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
-                'discount_amount' => $request->input('discount_amount') === '' ? null : $request->input('discount_amount'),
-                'net_premium_amount' => $netPremium === '' ? null : $netPremium,
+                'gross_premium' => $debitNoteGrossPremium,
+                'discount_percent' => $debitNoteDiscountPercent,
+                'discount_amount' => $debitNoteDiscountAmount,
+                'net_premium_amount' => $debitNoteNetPremium,
                 'updated_by' => auth()->id(),
             ]);
             
             // Update contract (placing) dengan data yang sama
             if ($debitNote->contract) {
-                $newGrossPremium = $grossPremium === '' ? null : $grossPremium;
-                $newDiscountAmount = $request->input('discount_amount') === '' ? null : $request->input('discount_amount');
+                $newGrossPremium = $debitNoteGrossPremium;
+                $newDiscountAmount = $debitNoteDiscountAmount;
                 
                 // Calculate net premium (amount) = gross_premium - discount_amount
                 $newAmount = null;
@@ -375,7 +451,7 @@ public function store(Request $request)
                 
                 $debitNote->contract->update([
                     'gross_premium' => $newGrossPremium,
-                    'discount' => $request->input('discount_percent') === '' ? null : $request->input('discount_percent'),
+                    'discount' => $debitNoteDiscountPercent,
                     'discount_amount' => $newDiscountAmount,
                     'amount' => $newAmount,
                     'updated_by' => auth()->id(),

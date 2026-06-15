@@ -179,7 +179,7 @@
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="gross_premium" id="gross_premium" class="form-control autonumeric" value="{{ $contract->gross_premium }}" required {{ $lock }} />
+                                <input type="text" name="gross_premium" id="gross_premium" class="form-control autonumeric" value="{{ $contract->gross_premium }}" required {{ $lock }} readonly style="background-color: #e9ecef;" />
                             </div>
                         </div>
                     </div>
@@ -190,7 +190,7 @@
                         <div class="mb-3">
                             <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
-                                <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount }}" required {{ $lock }} />
+                                <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount }}" required {{ $lock }} readonly style="background-color: #e9ecef;" />
                                 <span class="input-group-text" style="font-size: 14px;">%</span>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
                             <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="discount_amount" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount ?? 0 }}" required {{ $lock }} />
+                                <input type="text" name="discount_amount" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount ?? 0 }}" required {{ $lock }} readonly style="background-color: #e9ecef;"  />
                             </div>
                         </div>
                     </div>
@@ -209,7 +209,7 @@
                             <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required {{ $lock }} />
+                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required {{ $lock }} readonly style="background-color: #e9ecef;" />
                             </div>
                         </div>
                     </div>
