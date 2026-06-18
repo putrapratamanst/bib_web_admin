@@ -94,17 +94,16 @@ public function store(Request $request)
             $totalNewBillingAmount += floatval($amount);
         }
 
+        // Calculate total billing amount being added from all amounts in request
+        $totalNewBillingAmount = 0;
+        foreach ($request->amount as $amount) {
+            $totalNewBillingAmount += floatval($amount);
+        }
+
         // Calculate total existing billing amount for this debit note
         $existingBilledAmount    = (float) DebitNoteBilling::where('debit_note_id', $debitNote->id)->sum('amount');
         $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
         $totalBilledAfterCreate  = $existingBilledAmount + $totalNewBillingAmount;
-        
-        // Check if total billing exceeds debit note amount
-        if ($totalBilledAfterCreate > (float) $debitNote->amount) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
-        }
 
         $firstFilledValue = function (array $values) {
             foreach ($values as $value) {
