@@ -469,6 +469,18 @@
                 aForm: true,
             });
         });
+
+        $('.total-premium-input').each(function() {
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
+            }
+
+            $(this).autoNumeric('init', {
+                aSep: ',',
+                aDec: '.',
+                aForm: true,
+            });
+        });
         
         // Update totals after initialization
         $('.billing-block').each(function() {
@@ -514,6 +526,16 @@
         });
 
         $('.premium-input').each(function() {
+            try {
+                const cleanValue = $(this).autoNumeric('get');
+                $(this).val(cleanValue);
+            } catch (err) {
+                const value = $(this).val().replace(/,/g, '');
+                $(this).val(value);
+            }
+        });
+
+        $('.total-premium-input').each(function() {
             try {
                 const cleanValue = $(this).autoNumeric('get');
                 $(this).val(cleanValue);

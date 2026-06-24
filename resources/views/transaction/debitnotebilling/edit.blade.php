@@ -398,6 +398,18 @@
                 aForm: true,
             });
         });
+
+        $('.total-premium-input').each(function() {
+            if ($(this).data('autoNumeric')) {
+                $(this).autoNumeric('destroy');
+            }
+
+            $(this).autoNumeric('init', {
+                aSep: ',',
+                aDec: '.',
+                aForm: true,
+            });
+        });
         
         // Update totals after initialization with slight delay to ensure autoNumeric is ready
         setTimeout(function() {
