@@ -37,25 +37,14 @@
                     $stampFee = $debitNote->contract->stamp_fee ?? 0;
                     $totalFees = $policyFee + $stampFee;
                 @endphp
+                <input type="hidden" id="total_fees" value="{{ $totalFees }}">
 
                 {{-- Display Debit Note Amount Information --}}
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
                     <strong><i class="fas fa-info-circle"></i> Billing Amount Information</strong>
                     <div class="mt-2">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <small><strong>Total Debit Note Amount:</strong></small><br>
-                                <strong>{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small><strong>Total Billed:</strong></small><br>
-                                <strong id="totalBilled">0,00 {{ $debitNote->currency_code }}</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small><strong>Remaining Available:</strong></small><br>
-                                <strong id="remainingAmount">{{ number_format($debitNote->amount, 2, ',', '.') }} {{ $debitNote->currency_code }}</strong>
-                            </div>
-                        </div>
+                        <small><strong>Total Debit Note Amount:</strong></small><br>
+                        <strong id="totalDebitNoteAmount">0,00 {{ $debitNote->currency_code }}</strong>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -103,6 +92,36 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
+
+                <div class="row mb-2">
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="total_gross_premium" class="form-label">Gross Premium</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_gross_premium" id="total_gross_premium" value="{{ old('total_gross_premium', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="total_discount_percent" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_percent" id="total_discount_percent" value="{{ old('total_discount_percent', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="total_discount_amount" class="form-label">Discount Amount</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_amount" id="total_discount_amount" value="{{ old('total_discount_amount', $discountAmountDefault) }}" readonly style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="total_net_premium_amount" class="form-label">Net Premi</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_net_premium_amount" id="total_net_premium_amount" value="{{ old('total_net_premium_amount', $netPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                        </div>
+                    </div>
+                </div>
 
                 <div style="max-height: 420px; overflow-y: auto;">
                 {{-- Loop through existing billings --}}
@@ -162,31 +181,14 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-lg-3">
-                            <div class="mb-3">
-                                <label for="amount_{{ $index }}" class="form-label">
-                                    Amount <sup class="text-danger">*</sup>
-                                    @if($hasFees)
-                                        <small class="text-warning">(+fees otomatis)</small>
-                                    @endif
-                                </label>
-                                <input type="text" 
-                                       class="form-control autonumeric @error('amount.' . $index) is-invalid @enderror" 
-                                       name="amount[]" 
-                                       id="amount_{{ $index }}" 
-                                       value="{{ old('amount.' . $index, $hasFees ? $billing->amount - $totalFees : $billing->amount) }}"
-                                       data-billing-number="{{ $billing->billing_number }}"
-                                       data-is-first="{{ $isFirstBilling ? '1' : '0' }}">
-                                @error('amount.' . $index)
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <!-- @if($hasFees)
-                                    <small class="text-muted">
-                                        <i class="fas fa-info-circle"></i> Fees {{ number_format($totalFees, 2, ',', '.') }} akan ditambahkan otomatis saat save
-                                    </small>
-                                @endif -->
-                            </div>
-                        </div>
+                        <input type="hidden"
+                               class="billing-amount"
+                               name="amount[]"
+                               id="amount_{{ $index }}"
+                               value="{{ old('amount.' . $index, $hasFees ? $billing->amount - $totalFees : $billing->amount) }}"
+                               data-billing-number="{{ $billing->billing_number }}"
+                               data-is-first="{{ $isFirstBilling ? '1' : '0' }}"
+                               data-fees-included="{{ $hasFees ? '0' : '1' }}">
 
                         <div class="col-12">
                             <div class="row mt-2">
@@ -211,12 +213,15 @@
                                     <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_{{ $index }}" value="{{ old('discount_amount.' . $index, $billing->discount_amount ?? $discountAmountDefault) }}">
                                 </div>
                             </div>
-                            <div class="col-md-4 col-lg-3">
-                                <div class="mb-3">
-                                    <label for="net_premium_amount_{{ $index }}" class="form-label">Net Amount Premi</label>
-                                    <input type="text" class="form-control autonumeric premium-input net-premium" name="net_premium_amount[]" id="net_premium_amount_{{ $index }}" value="{{ old('net_premium_amount.' . $index, $billing->net_premium_amount ?? $netPremiumDefault) }}">
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="mb-3">
+                                        <label for="net_premium_amount_{{ $index }}" class="form-label">Net Premi</label>
+                                        <input type="text" class="form-control autonumeric premium-input net-premium @error('amount.' . $index) is-invalid @enderror" name="net_premium_amount[]" id="net_premium_amount_{{ $index }}" value="{{ old('net_premium_amount.' . $index, $billing->net_premium_amount ?? ($hasFees ? $billing->amount - $totalFees : $billing->amount)) }}">
+                                        @error('amount.' . $index)
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
                             </div>
                         </div>
                     </div>
@@ -237,9 +242,8 @@
 
 @push('scripts')
 <script>
-    const debitNoteAmount = {{ $debitNote->amount }};
     const currencyCode = "{{ $debitNote->currency_code }}";
-    const totalFees = {{ $totalFees }};
+    const totalFees = parseFloat(document.getElementById('total_fees').value || '0');
     const netPremiumManuallyEdited = {};
 
     // Initialize currency formatter (US format: 1,234.56)
@@ -265,14 +269,15 @@
         $target.val(value);
     }
 
-    function recomputeNetPremiumForBlock($block) {
-        const index = $block.data('index');
-        if (netPremiumManuallyEdited[index]) {
-            return;
-        }
-
+    function recomputeNetPremiumForBlock($block, source) {
         const grossPremium = $block.find('.gross-premium').autoNumeric('get');
-        const discountAmount = $block.find('.discount-amount').autoNumeric('get');
+        const discountPercent = $block.find('.discount-percent').autoNumeric('get');
+        let discountAmount = $block.find('.discount-amount').autoNumeric('get');
+
+        if ((source === 'gross' || source === 'percent') && grossPremium && discountPercent) {
+            discountAmount = parseFloat(grossPremium) * parseFloat(discountPercent) / 100;
+            setAutoNumericValue($block.find('.discount-amount'), discountAmount);
+        }
 
         if (!grossPremium) {
             setAutoNumericValue($block.find('.net-premium'), null);
@@ -283,94 +288,106 @@
         setAutoNumericValue($block.find('.net-premium'), netPremium);
     }
 
-    // Calculate and update total billed amount
-    function updateBillingTotals() {
-        const amountInputs = document.querySelectorAll('input[name="amount[]"]');
-        let totalBilled = 0;
+    function recomputeTotalPremiums() {
+        let totalGrossPremium = 0;
+        let totalDiscountAmount = 0;
 
-        amountInputs.forEach((input, index) => {
-            // Skip if input is empty
-            if (!input.value || input.value.trim() === '') {
-                return;
+        $('.billing-block').each(function() {
+            const $block = $(this);
+            const grossPremium = parseFloat($block.find('.gross-premium').autoNumeric('get') || 0);
+            const discountAmount = parseFloat($block.find('.discount-amount').autoNumeric('get') || 0);
+
+            if (!isNaN(grossPremium) && isFinite(grossPremium)) {
+                totalGrossPremium += grossPremium;
             }
 
-            let numValue = 0;
-            try {
-                // Try to get value from AutoNumeric
-                const autoNumericValue = $(input).autoNumeric('get');
-                if (autoNumericValue !== null && autoNumericValue !== undefined) {
-                    numValue = parseFloat(autoNumericValue) || 0;
-                } else {
-                    throw new Error('AutoNumeric not initialized');
-                }
-            } catch(e) {
-                // Fallback to manual parsing for US format (1,234.56)
-                const value = input.value.trim()
-                    .replace(/,/g, '');  // Remove thousand separators (commas)
-                numValue = parseFloat(value) || 0;
-            }
-
-            // Display total tanpa tambah fees (as-is dari input)
-            // Fees akan ditambahkan saat validasi submit
-            if (!isNaN(numValue) && isFinite(numValue)) {
-                totalBilled += numValue;
+            if (!isNaN(discountAmount) && isFinite(discountAmount)) {
+                totalDiscountAmount += discountAmount;
             }
         });
-        
-        const remainingAmount = debitNoteAmount - totalBilled;
-        
-        // Update display
-        document.getElementById('totalBilled').innerHTML = `${formatCurrency(totalBilled)} ${currencyCode}`;
-        document.getElementById('remainingAmount').innerHTML = `${formatCurrency(remainingAmount)} ${currencyCode}`;
 
-        // Check if total exceeds debit note amount
-        if (totalBilled > debitNoteAmount) {
-            document.getElementById('totalBilled').innerHTML = `<span class="text-danger">${formatCurrency(totalBilled)} ${currencyCode}</span>`;
-            document.getElementById('remainingAmount').innerHTML = `<span class="text-danger">${formatCurrency(remainingAmount)} ${currencyCode}</span>`;
-        } else {
-            document.getElementById('totalBilled').innerHTML = `<span class="text-success">${formatCurrency(totalBilled)} ${currencyCode}</span>`;
-            document.getElementById('remainingAmount').innerHTML = `${formatCurrency(remainingAmount)} ${currencyCode}`;
-        }
+        const totalDiscountPercent = totalGrossPremium > 0 ? (totalDiscountAmount / totalGrossPremium) * 100 : null;
+        const totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
 
-        return totalBilled;
+        setAutoNumericValue('#total_gross_premium', totalGrossPremium > 0 ? totalGrossPremium : null);
+        setAutoNumericValue('#total_discount_amount', totalDiscountAmount > 0 ? totalDiscountAmount : null);
+        setAutoNumericValue('#total_discount_percent', totalDiscountPercent);
+        $('#total_net_premium_amount').val(totalNetPremium === null ? '' : totalNetPremium);
     }
 
-    // Add event listener to all amount inputs
-    $(document).on('change keyup', 'input[name="amount[]"]', function() {
-        const totalBilled = updateBillingTotals();
-        
-        // Warn if total exceeds debit note amount
-        if (totalBilled > debitNoteAmount) {
-            const alertHtml = `
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Warning!</strong> 
-                    Total billing amount (${formatCurrency(totalBilled)} ${currencyCode}) exceeds debit note amount <strong>(${formatCurrency(debitNoteAmount)} ${currencyCode})</strong>. Please adjust the amounts.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
-            $('#validationAlert').html(alertHtml).show();
-        } else {
-            $('#validationAlert').html('').hide();
+    function parseAmountInput(input) {
+        if (!input.value || input.value.trim() === '') {
+            return 0;
         }
+
+        try {
+            const autoNumericValue = $(input).autoNumeric('get');
+            if (autoNumericValue !== null && autoNumericValue !== undefined) {
+                return parseFloat(autoNumericValue) || 0;
+            }
+        } catch (e) {
+        }
+
+        const value = input.value.trim().replace(/,/g, '');
+        return parseFloat(value) || 0;
+    }
+
+    function syncBillingAmountFromNetPremium($block) {
+        const $netPremium = $block.find('.net-premium');
+        const $amount = $block.find('input[name="amount[]"]');
+        if ($netPremium.length === 0 || $amount.length === 0) {
+            return;
+        }
+
+        const amountValue = parseAmountInput($netPremium.get(0));
+        $amount.val(amountValue || 0);
+    }
+
+    // Calculate and update total debit note amount from all billing amounts.
+    function updateBillingTotals() {
+        const amountInputs = document.querySelectorAll('input[name="amount[]"]');
+        let totalDebitNoteAmount = 0;
+
+        amountInputs.forEach((input) => {
+            let amountValue = parseAmountInput(input);
+            const isFirstInstallment = input.dataset.isFirst === '1';
+            const feesIncluded = input.dataset.feesIncluded === '1';
+
+            if (isFirstInstallment && totalFees > 0 && !feesIncluded) {
+                amountValue += totalFees;
+            }
+
+            if (!isNaN(amountValue) && isFinite(amountValue)) {
+                totalDebitNoteAmount += amountValue;
+            }
+        });
+
+        document.getElementById('totalDebitNoteAmount').innerHTML = `${formatCurrency(totalDebitNoteAmount)} ${currencyCode}`;
+
+        return totalDebitNoteAmount;
+    }
+
+    // Recalculate totals when Net Premi changes.
+    $(document).on('change keyup', '.net-premium', function() {
+        syncBillingAmountFromNetPremium($(this).closest('.billing-block'));
+        updateBillingTotals();
     });
 
     // Initialize on page load
     $(document).ready(function() {
-        // Re-initialize AutoNumeric for all amount inputs to ensure proper formatting
-        $('input[name="amount[]"]').each(function() {
-            // Destroy existing autoNumeric instance if any to prevent conflicts
+        $('.premium-input').each(function() {
             if ($(this).data('autoNumeric')) {
                 $(this).autoNumeric('destroy');
             }
-            // Initialize with US format
+
             $(this).autoNumeric('init', {
-                aSep: ',',  // Thousand separator: comma
-                aDec: '.',  // Decimal separator: dot (period)
+                aSep: ',',
+                aDec: '.',
                 aForm: true,
             });
         });
 
-        $('.premium-input').each(function() {
+        $('.total-premium-input').each(function() {
             if ($(this).data('autoNumeric')) {
                 $(this).autoNumeric('destroy');
             }
@@ -384,41 +401,19 @@
         
         // Update totals after initialization with slight delay to ensure autoNumeric is ready
         setTimeout(function() {
-            updateBillingTotals();
             $('.billing-block').each(function() {
                 recomputeNetPremiumForBlock($(this));
+                syncBillingAmountFromNetPremium($(this));
             });
+            updateBillingTotals();
         }, 100);
     });
 
-    function recomputeDiscountAmountForBlock($block) {
-        const grossPremium = parseFloat($block.find('.gross-premium').autoNumeric('get') || 0);
-        const discountPercent = parseFloat($block.find('.discount-percent').autoNumeric('get') || 0);
-        if (!grossPremium) return;
-        const discountAmount = grossPremium * discountPercent / 100;
-        setAutoNumericValue($block.find('.discount-amount'), discountAmount);
-        recomputeNetPremiumForBlock($block);
-    }
-
-    $(document).on('change keyup', '.gross-premium', function() {
+    $(document).on('change keyup', '.gross-premium, .discount-percent, .discount-amount', function() {
         const $block = $(this).closest('.billing-block');
-        recomputeDiscountAmountForBlock($block);
-    });
-
-    $(document).on('change keyup', '.discount-percent', function() {
-        const $block = $(this).closest('.billing-block');
-        recomputeDiscountAmountForBlock($block);
-    });
-
-    $(document).on('change keyup', '.discount-amount', function() {
-        const $block = $(this).closest('.billing-block');
-        recomputeNetPremiumForBlock($block);
-    });
-
-    $(document).on('change keyup', '.net-premium', function() {
-        const $block = $(this).closest('.billing-block');
-        const index = $block.data('index');
-        netPremiumManuallyEdited[index] = true;
+        const source = $(this).hasClass('discount-amount') ? 'amount' : ($(this).hasClass('gross-premium') ? 'gross' : 'percent');
+        recomputeNetPremiumForBlock($block, source);
+        recomputeTotalPremiums();
     });
 
     // Handle form submission
@@ -428,7 +423,7 @@
         let premiumInvalid = false;
         $('.billing-block').each(function() {
             const grossPremium = $(this).find('.gross-premium').autoNumeric('get');
-            const netPremium = $(this).find('.net-premium').autoNumeric('get');
+            const netPremium = $(this).find('.net-premium').val();
 
             if (grossPremium && netPremium && parseFloat(netPremium) > parseFloat(grossPremium)) {
                 premiumInvalid = true;
@@ -446,42 +441,21 @@
             return false;
         }
         
-        // Calculate total billing amount first (before cleaning)
-        let totalBilling = 0;
-        $('input[name="amount[]"]').each(function(index) {
-            let numValue = 0;
-            try {
-                const autoNumericValue = $(this).autoNumeric('get');
-                numValue = parseFloat(autoNumericValue) || 0;
-            } catch(err) {
-                const value = $(this).val().trim()
-                    .replace(/,/g, '');  // Remove commas
-                numValue = parseFloat(value) || 0;
-            }
-            
-            totalBilling += numValue;
-            
-            // Check if this is INST1 - add fees (fees ditambahkan otomatis saat save)
-            const isFirstBilling = $(this).attr('data-is-first') === '1';
-            if (isFirstBilling && totalFees > 0) {
-                totalBilling += totalFees;
-            }
-        });
-        
-      
-        
-        // Clean all amount inputs before submit (convert to standard format)
-        $('input[name="amount[]"]').each(function() {
-            var currentValue = $(this).val();
-            if (currentValue && currentValue.trim() !== '') {
-                // Manual cleaning: remove commas (thousand separator)
-                var cleanValue = currentValue.trim()
-                    .replace(/,/g, '');  // Remove all commas
-                $(this).val(cleanValue);
-            }
+        $('.billing-block').each(function() {
+            syncBillingAmountFromNetPremium($(this));
         });
 
         $('.premium-input').each(function() {
+            try {
+                const cleanValue = $(this).autoNumeric('get');
+                $(this).val(cleanValue);
+            } catch (err) {
+                const value = $(this).val().replace(/,/g, '');
+                $(this).val(value);
+            }
+        });
+
+        $('.total-premium-input').each(function() {
             try {
                 const cleanValue = $(this).autoNumeric('get');
                 $(this).val(cleanValue);

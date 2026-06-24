@@ -94,18 +94,6 @@ public function store(Request $request)
             $totalNewBillingAmount += floatval($amount);
         }
 
-        // Calculate total existing billing amount for this debit note
-        $existingBilledAmount    = (float) DebitNoteBilling::where('debit_note_id', $debitNote->id)->sum('amount');
-        $remainingAvailableAmount = max(0, (float) $debitNote->amount - $existingBilledAmount);
-        $totalBilledAfterCreate  = $existingBilledAmount + $totalNewBillingAmount;
-        
-        // Check if total billing exceeds debit note amount
-        if ($totalBilledAfterCreate > (float) $debitNote->amount) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Total billing amount melebihi sisa available. Remaining available saat ini: ' . number_format($remainingAvailableAmount, 2) . '.');
-        }
-
         $firstFilledValue = function (array $values) {
             foreach ($values as $value) {
                 if ($value !== null && $value !== '') {
@@ -357,31 +345,9 @@ public function store(Request $request)
                 'total_net_premium_amount' => 'nullable|numeric',
             ]);
             
-            // Calculate total all billings + fees untuk INST1
             $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
             $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
             $totalFees = $policyFee + $stampFee;
-            
-            $totalAllBillings = 0;
-            foreach ($request->billing_id as $i => $billingId) {
-                $billing = DebitNoteBilling::findOrFail($billingId);
-                $amountValue = floatval($request->amount[$i]);
-                
-                // Check if this is INST1
-                $isFirstInstallment = false;
-                if (preg_match('/-INST(\d+)/i', $billing->billing_number, $matches)) {
-                    $isFirstInstallment = ((int)$matches[1] === 1);
-                } else {
-                    $firstBilling = $debitNote->billings()->orderBy('created_at')->first();
-                    $isFirstInstallment = ($billing->id === $firstBilling->id);
-                }
-                
-                // Tambahkan fees untuk INST1 saat validasi
-                if ($isFirstInstallment && $totalFees > 0) {
-                    $amountValue += $totalFees;
-                }
-                $totalAllBillings += $amountValue;
-            }
 
             $grossPremiums = $request->input('gross_premium', []);
             $discountPercents = $request->input('discount_percent', []);
