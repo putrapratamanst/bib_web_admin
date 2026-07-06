@@ -358,13 +358,13 @@
                             @if($debitNote->debitNoteBillings->isNotEmpty())
                                 @foreach($debitNote->debitNoteBillings as $index => $billing)
                                     @php
-                                        // Display amount: remove policy_fee and stamp_fee from first installment (for existing data)
+                                        // Display amount: for first installment, ensure policy_fee + stamp_fee are included
                                         $displayAmount = $billing->amount;
-                                        if ($index === 0 && $debitNote->contract) {
-                                            $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
-                                            $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
-                                            $displayAmount = $billing->amount - $policyFee - $stampFee;
-                                        }
+                                        // if ($index === 0 && $debitNote->contract) {
+                                           // $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
+                                            // $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
+                                            // $displayAmount = (float) $billing->amount + $policyFee + $stampFee;
+                                       // }
                                     @endphp
                                     Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
                                 @endforeach

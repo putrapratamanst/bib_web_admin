@@ -204,7 +204,7 @@
         $currencyName = $contract?->currency?->name ?? 'Rupiah Indonesia';
         $currencyCode = $contract?->currency_code ?? 'IDR';
 
-        $grosspremi = $billing->amount ?? 0;
+        $grosspremi = $billing->gross_premium ?? 0;
         $bpolis = $contract?->policy_fee ?? 0;
         $bmaterai = $contract?->stamp_fee ?? 0;
         $disc = $contract?->discount ?? 0;
@@ -217,7 +217,7 @@
         }
 
         // Nett premium (sesuai dn_print_ok_popup.php)
-        $nettpremi = $grosspremi + $bpolis + $bmaterai - $jmldisc;
+        $nettpremi = $billing->net_premium_amount ?? 0;
         if ($installmentNumber > 1) {
             $nettpremi = $grosspremi;
             $bpolis = 0;
