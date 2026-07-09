@@ -358,15 +358,13 @@
                             @if($debitNote->debitNoteBillings->isNotEmpty())
                                 @foreach($debitNote->debitNoteBillings as $index => $billing)
                                     @php
-                                        // Display amount: for first installment, ensure policy_fee + stamp_fee are included
                                         $displayAmount = $billing->amount;
-                                        // if ($index === 0 && $debitNote->contract) {
-                                           // $policyFee = floatval($debitNote->contract->policy_fee ?? 0);
-                                            // $stampFee = floatval($debitNote->contract->stamp_fee ?? 0);
-                                            // $displayAmount = (float) $billing->amount + $policyFee + $stampFee;
-                                       // }
                                     @endphp
-                                    Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                                    @if($debitNote->debitNoteBillings->count() > 1)
+                                        Installment {{ $index + 1 }}: {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                                    @else
+                                        {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($displayAmount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($billing->due_date)->format('d/m/Y') }}<br>
+                                    @endif
                                 @endforeach
                             @else
                                 {{ $debitNote->currency_code ?? 'IDR' }} {{ number_format($debitNote->amount, 2, ',', '.') }} - {{ \Carbon\Carbon::parse($debitNote->due_date)->format('d/m/Y') }}
