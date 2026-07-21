@@ -269,7 +269,62 @@
     let activeContractRequest = null;
     let latestRequestedContractId = null;
 
+    // Helper functions (global scope so they can be used in loadContractData and elsewhere)
+    function normalizeNumberString(s) {
+        if (s === null || s === undefined) return '';
+        s = String(s).trim();
+        if (s === '') return '';
+        var cleaned = s.replace(/[^0-9.,-]/g, '');
+        var lastDot = cleaned.lastIndexOf('.');
+        var lastComma = cleaned.lastIndexOf(',');
+        if (lastDot > -1 && lastComma > -1) {
+            if (lastDot > lastComma) {
+                cleaned = cleaned.replace(/,/g, '');
+            } else {
+                cleaned = cleaned.replace(/\./g, '').replace(/,/g, '.');
+            }
+        } else if (lastComma > -1) {
+            cleaned = cleaned.replace(/\./g, '').replace(/,/g, '.');
+        } else {
+            cleaned = cleaned.replace(/,/g, '');
+        }
+        return cleaned;
+    }
+
+    function isParsableNumber(s) {
+        var n = normalizeNumberString(s);
+        return n !== '' && !isNaN(+n);
+    }
+
+    var AN_OPTIONS = {
+        digitGroupSeparator: ',',
+        decimalCharacter: '.',
+        decimalPlaces: 2,
+        minimumValue: '0'
+    };
+
+    function setAutoNumericValue(selectorOrEl, value) {
+        var $el = selectorOrEl instanceof jQuery ? selectorOrEl : $(selectorOrEl);
+        if (!$el.length) return;
+        var v = value === null || value === undefined ? '' : value;
+        var clean = normalizeNumberString(v);
+        if (clean === '' || isNaN(+clean)) {
+            return;
+        }
+        try {
+            $el.autoNumeric('set', clean);
+        } catch (err) {
+            try {
+                $el.autoNumeric('init', AN_OPTIONS);
+                $el.autoNumeric('set', clean);
+            } catch (err2) {
+                $el.val(clean);
+            }
+        }
+    }
+
     $(document).ready(function() {
+        console.log('debitnote edit script loaded');
         // Initialize Select2 for contract selection
         $('#contract_id').select2({
             theme: 'bootstrap-5',
@@ -298,6 +353,7 @@
             },
             minimumInputLength: 0
         });
+        console.log('contract select2 initialized, element count=', $('#contract_id').length);
 
         // Initialize Select2 for billing address
         $('#billing_address_id').select2({
@@ -365,16 +421,35 @@
             }
         });
 
-        // Initialize AutoNumeric for decimal inputs
-        $('.autonumeric').autoNumeric('init', {
-            digitGroupSeparator: ',',
-            decimalCharacter: '.',
-            decimalPlaces: 2,
-            minimumValue: '0'
+        // NOTE: AutoNumeric initialization moved below to avoid initializing with already-formatted values
+
+        // Safe initialize AutoNumeric after helpers are ready
+        $('.autonumeric').each(function() {
+            var $el = $(this);
+            var v = $el.val();
+            if (!v) {
+                // empty, initialize
+                try { $el.autoNumeric('init', AN_OPTIONS); } catch (e) { console.warn('AN init failed (empty)', e); }
+            } else if (isParsableNumber(v)) {
+                // if parsable, normalize and init
+                var clean = normalizeNumberString(v);
+                $el.val(clean);
+                try { $el.autoNumeric('init', AN_OPTIONS); $el.autoNumeric('set', clean); } catch (e) { console.warn('AN init/set failed (parsable)', e); }
+            }
+            // else: leave formatted value as-is (do not init AutoNumeric to preserve display)
         });
 
-        // Handle contract change to load billing addresses
+        // Handle contract selection (Select2) and fallback change
+        $('#contract_id').on('select2:select', function(e) {
+            var contractId = e.params && e.params.data ? e.params.data.id : null;
+            if (contractId) {
+                loadContractData(contractId);
+            }
+        });
+
+        // Fallback: native change event
         $('#contract_id').on('change', function() {
+            console.log('native change on #contract_id', $(this).val());
             var contractId = $(this).val();
             if (contractId) {
                 loadContractData(contractId);
@@ -388,11 +463,11 @@
                 $('#currency_value').val('');
                 $('#currency').val('');
                 $('#currency-text, #amount-currency-text, #gross-premium-currency-text, #discount-amount-currency-text').text('');
-                $('#exchange_rate').autoNumeric('set', '0.00');
-                $('#amount').autoNumeric('set', '0.00');
-                $('#gross_premium').autoNumeric('set', '0.00');
-                $('#discount').autoNumeric('set', '0.00');
-                $('#discount_amount').autoNumeric('set', '0.00');
+                setAutoNumericValue('#exchange_rate', '0.00');
+                setAutoNumericValue('#amount', '0.00');
+                setAutoNumericValue('#gross_premium', '0.00');
+                setAutoNumericValue('#discount', '0.00');
+                setAutoNumericValue('#discount_amount', '0.00');
                 $('#installment_value').val('0');
                 $('#installment').val('0');
                 $('#insured_name').val('');
@@ -466,34 +541,34 @@
 
                     // Update exchange rate if available
                     if (contract.exchange_rate !== undefined && contract.exchange_rate !== null) {
-                        $('#exchange_rate').autoNumeric('set', contract.exchange_rate);
+                        setAutoNumericValue('#exchange_rate', contract.exchange_rate);
                     } else {
-                        $('#exchange_rate').autoNumeric('set', '1.00');
+                        setAutoNumericValue('#exchange_rate', '1.00');
                     }
 
                     if (contract.amount !== undefined && contract.amount !== null) {
-                        $('#amount').autoNumeric('set', contract.amount);
+                        setAutoNumericValue('#amount', contract.amount);
                     } else {
-                        $('#amount').autoNumeric('set', '0.00');
+                        setAutoNumericValue('#amount', '0.00');
                     }
 
                     // Set gross premium, discount, and discount amount
                     if (contract.gross_premium) {
-                        $('#gross_premium').autoNumeric('set', parseFloat(contract.gross_premium));
+                        setAutoNumericValue('#gross_premium', contract.gross_premium);
                     } else {
-                        $('#gross_premium').autoNumeric('set', '0.00');
+                        setAutoNumericValue('#gross_premium', '0.00');
                     }
 
                     if (contract.discount !== undefined && contract.discount !== null) {
-                        $('#discount').autoNumeric('set', parseFloat(contract.discount));
+                        setAutoNumericValue('#discount', contract.discount);
                     } else {
-                        $('#discount').autoNumeric('set', '0.00');
+                        setAutoNumericValue('#discount', '0.00');
                     }
 
                     if (contract.discount_amount) {
-                        $('#discount_amount').autoNumeric('set', parseFloat(contract.discount_amount));
+                        setAutoNumericValue('#discount_amount', contract.discount_amount);
                     } else {
-                        $('#discount_amount').autoNumeric('set', '0.00');
+                        setAutoNumericValue('#discount_amount', '0.00');
                     }
 
                     // Auto-select billing address from contract if available

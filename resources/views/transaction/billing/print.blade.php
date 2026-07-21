@@ -334,7 +334,7 @@
 
         {{-- Nett Premium (bydes7-3=107) --}}
         <div class="data calc-nett-cur">{{ $currencyCode }}</div>
-        <div class="data calc-nett-val">{{ number_format($nettpremi, 2, ',', '.') }}</div>
+        <div class="data calc-nett-val">{{ number_format($nettpremi + $bpolis + $bmaterai, 2, ',', '.') }}</div>
 
     </div>
 

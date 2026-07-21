@@ -802,13 +802,13 @@
             calculateNetPremium();
         });
 
-        $("#stamp_fee").on("change", function() {
-            calculateNetPremium();
-        });
+        // $("#stamp_fee").on("change", function() {
+        //     calculateNetPremium();
+        // });
 
-        $("#policy_fee").on("change", function() {
-            calculateNetPremium();
-        });
+        // $("#policy_fee").on("change", function() {
+        //     calculateNetPremium();
+        // });
 
         $("#discount_amount").on("change", function() {
             calculateNetPremium();

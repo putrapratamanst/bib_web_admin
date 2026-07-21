@@ -215,7 +215,7 @@
                     <span class="text-muted"><i class="fas fa-info-circle"></i> Only users with approver role can approve this Debit Note</span>
                 @endif
                 
-                @if($debitNote->canBePrinted() && $debitNote->installment > 0)
+                @if($debitNote->canBePrinted())
                     <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-print"></i> Print
                     </button>

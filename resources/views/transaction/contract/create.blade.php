@@ -142,7 +142,7 @@
                             <label for="exchange_rate" class="form-label">Exchange Rate</label>
                             <div class="input-group">
                                 <span class="input-group-text curr-code" style="font-size: 14px;"></span>
-                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" />
+                                <input type="text" name="exchange_rate" id="exchange_rate" class="form-control autonumeric" value="0" />
                             </div>
                         </div>
                     </div>
@@ -572,13 +572,13 @@
             calculateNetPremium();
         });
 
-        $("#stamp_fee").on("change", function() {
-            calculateNetPremium();
-        });
+        // $("#stamp_fee").on("change", function() {
+        //     calculateNetPremium();
+        // });
 
-        $("#policy_fee").on("change", function() {
-            calculateNetPremium();
-        });
+        // $("#policy_fee").on("change", function() {
+        //     calculateNetPremium();
+        // });
 
         $("#discount_amount").on("change", function() {
             calculateNetPremium();

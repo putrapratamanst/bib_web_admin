@@ -424,7 +424,7 @@
                         <div class="premium-row" style="border-top: 1px solid #000; margin-top: 10px; padding-top: 10px;">
                             <span class="premium-label"><strong>Premi Neto<br><i>Nett Premium</i></strong></span>
                             <span class="premium-currency"><strong>{{ $currency }}</strong></span>
-                            <span class="premium-value"><strong>{{ number_format($debitNote->amount, 2, ',', '.') }}</strong></span>
+                            <span class="premium-value"><strong>{{ number_format($debitNote->amount + ($policyCost + $stampFee), 2, ',', '.') }}</strong></span>
                         </div>
                     </div>
 

@@ -121,7 +121,7 @@ public function store(Request $request)
         $netPremium      = $request->input('total_net_premium_amount') !== null && $request->input('total_net_premium_amount') !== ''
             ? $request->input('total_net_premium_amount')
             : $firstFilledValue($netPremiums);
-
+dd($request->input('total_discount_percent'));
         if ($grossPremium !== null && $netPremium !== null && is_numeric($grossPremium) && is_numeric($netPremium)) {
             if (floatval($netPremium) > floatval($grossPremium)) {
                 return redirect()->back()
@@ -131,12 +131,12 @@ public function store(Request $request)
         }
 
         DB::beginTransaction();
-
         $debitNote->update([
             'gross_premium'      => $grossPremium,
             'discount_percent'   => $discountPercent,
             'discount_amount'    => $discountAmount,
             'net_premium_amount' => $netPremium,
+            'amount' => $netPremium,
             'updated_by'         => auth()->id(),
         ]);
         
