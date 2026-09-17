@@ -96,13 +96,13 @@
                 <div class="row mb-2">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_gross_premium" class="form-label">Gross Premium</label>
+                            <label for="total_gross_premium" class="form-label">Total Gross Premium</label>
                             <input type="text" class="form-control autonumeric total-premium-input" name="total_gross_premium" id="total_gross_premium" value="{{ old('total_gross_premium', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_discount_percent" class="form-label">Discount %</label>
+                            <label for="total_discount_percent" class="form-label">Total Discount %</label>
                             <div class="input-group">
                                 <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_percent" id="total_discount_percent" value="{{ old('total_discount_percent', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
                                 <span class="input-group-text" style="font-size: 14px;">%</span>
@@ -111,8 +111,8 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_discount_amount" class="form-label">Discount Amount</label>
-                            <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_amount" id="total_discount_amount" value="{{ old('total_discount_amount', $discountAmountDefault) }}" readonly style="background-color: #e9ecef;">
+                            <label for="total_discount_amount" class="form-label">Total Discount Amount</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_amount" id="total_discount_amount" value="{{ old('total_discount_amount') }}" readonly style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -210,7 +210,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="discount_amount_{{ $index }}" class="form-label">Discount Amount</label>
-                                    <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_{{ $index }}" value="{{ old('discount_amount.' . $index, $billing->discount_amount ?? $discountAmountDefault) }}">
+                                    <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_{{ $index }}" value="{{ old('discount_amount.' . $index, $billing->discount_amount) }}">
                                 </div>
                             </div>
                                 <div class="col-md-4 col-lg-3">
@@ -269,6 +269,35 @@
         $target.val(value);
     }
 
+    // Robust numeric extractor for elements (handles autoNumeric and formatted values)
+    function getNumericElement($el) {
+        if (!$el || $el.length === 0) return 0;
+        try {
+            if ($el.data && $el.data('autoNumeric')) {
+                const v = $el.autoNumeric('get');
+                return parseFloat(v) || 0;
+            }
+        } catch (e) {
+            // ignore and fallback
+        }
+
+        let raw = ($el.val() || '').toString().trim();
+        if (!raw) return 0;
+        raw = raw.replace(/\s/g, '');
+        if (raw.indexOf('.') !== -1 && raw.indexOf(',') !== -1) {
+            if (raw.lastIndexOf(',') > raw.lastIndexOf('.')) {
+                raw = raw.replace(/\./g, '').replace(/,/g, '.');
+            } else {
+                raw = raw.replace(/,/g, '').replace(/\./g, '');
+            }
+        } else {
+            raw = raw.replace(/,/g, '').replace(/\./g, '');
+        }
+
+        const num = parseFloat(raw);
+        return isNaN(num) ? 0 : num;
+    }
+
     function recomputeNetPremiumForBlock($block, source) {
         const grossPremium = $block.find('.gross-premium').autoNumeric('get');
         const discountPercent = $block.find('.discount-percent').autoNumeric('get');
@@ -294,8 +323,8 @@
 
         $('.billing-block').each(function() {
             const $block = $(this);
-            const grossPremium = parseFloat($block.find('.gross-premium').autoNumeric('get') || 0);
-            const discountAmount = parseFloat($block.find('.discount-amount').autoNumeric('get') || 0);
+            const grossPremium = getNumericElement($block.find('.gross-premium')) || 0;
+            const discountAmount = getNumericElement($block.find('.discount-amount')) || 0;
 
             if (!isNaN(grossPremium) && isFinite(grossPremium)) {
                 totalGrossPremium += grossPremium;
@@ -306,9 +335,45 @@
             }
         });
 
-        const totalDiscountPercent = totalGrossPremium > 0 ? (totalDiscountAmount / totalGrossPremium) * 100 : null;
-        const totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
+        let totalDiscountPercent = null;
+        let accumulatedPercent = 0;
+        let percentProvided = false;
+        $('.billing-block').each(function() {
+            const $raw = $(this).find('.discount-percent');
+            if ($raw.length) {
+                const percent = getNumericElement($raw) || 0;
+                if (!isNaN(percent) && isFinite(percent) && percent !== 0) {
+                    percentProvided = true;
+                    accumulatedPercent += percent;
+                }
+            }
+        });
 
+        if (percentProvided) {
+            totalDiscountPercent = accumulatedPercent / $('.billing-block').length;
+        } else {
+            totalDiscountPercent = totalGrossPremium > 0 ? (totalDiscountAmount / totalGrossPremium) * 100 : null;
+        }
+
+        let totalNetPremium = null;
+        const installmentCount = $('.billing-block').length;
+        if (installmentCount > 1) {
+            let sumNet = 0;
+            $('.billing-block').each(function() {
+                const $b = $(this);
+                const net = getNumericElement($b.find('.net-premium')) || 0;
+                if (!isNaN(net) && isFinite(net)) {
+                    sumNet += net;
+                }
+            });
+            totalNetPremium = sumNet;
+        } else {
+            totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
+        }
+
+        if (totalNetPremium !== null) {
+            totalNetPremium += totalFees;
+        }
         setAutoNumericValue('#total_gross_premium', totalGrossPremium > 0 ? totalGrossPremium : null);
         setAutoNumericValue('#total_discount_amount', totalDiscountAmount > 0 ? totalDiscountAmount : null);
         setAutoNumericValue('#total_discount_percent', totalDiscountPercent);
@@ -339,7 +404,9 @@
             return;
         }
 
-        const amountValue = parseAmountInput($netPremium.get(0));
+        const amountValue = (function() {
+            try { return getNumericElement($netPremium) || 0; } catch (e) { return parseAmountInput($netPremium.get(0)); }
+        })();
         $amount.val(amountValue || 0);
     }
 
@@ -347,9 +414,9 @@
     function updateBillingTotals() {
         const amountInputs = document.querySelectorAll('input[name="amount[]"]');
         let totalDebitNoteAmount = 0;
-
         amountInputs.forEach((input) => {
-            let amountValue = parseAmountInput(input);
+            let amountValue = 0;
+            try { amountValue = getNumericElement($(input)) || 0; } catch (e) { amountValue = parseAmountInput(input); }
             const isFirstInstallment = input.dataset.isFirst === '1';
             const feesIncluded = input.dataset.feesIncluded === '1';
 
@@ -371,6 +438,7 @@
     $(document).on('change keyup', '.net-premium', function() {
         syncBillingAmountFromNetPremium($(this).closest('.billing-block'));
         updateBillingTotals();
+        recomputeTotalPremiums();
     });
 
     // Initialize on page load
@@ -418,6 +486,7 @@
                 syncBillingAmountFromNetPremium($(this));
             });
             updateBillingTotals();
+            recomputeTotalPremiums();
         }, 100);
     });
 
@@ -431,6 +500,8 @@
     // Handle form submission
     $('#formEdit').on('submit', function(e) {
         e.preventDefault();
+        // ensure totals are up-to-date before validation/submission
+        try { recomputeTotalPremiums(); } catch (err) {}
 
         let premiumInvalid = false;
         $('.billing-block').each(function() {

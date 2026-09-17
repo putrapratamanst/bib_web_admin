@@ -8,11 +8,11 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Detail Placing</span>
             @php
-                $badgeClass = match($contract->approval_status) {
-                    'approved' => 'bg-success',
-                    'rejected' => 'bg-danger',
-                    default => 'bg-warning'
-                };
+            $badgeClass = match($contract->approval_status) {
+            'approved' => 'bg-success',
+            'rejected' => 'bg-danger',
+            default => 'bg-warning'
+            };
             @endphp
             <span class="badge {{ $badgeClass }}">{{ ucfirst($contract->approval_status) }}</span>
         </div>
@@ -133,7 +133,7 @@
                             </div>
                         </div>
                     </div>
-                                        <div class="col-lg-3">
+                    <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="gross_premium" class="form-label">Gross Premium<sup class="text-danger">*</sup></label>
                             <div class="input-group">
@@ -146,24 +146,45 @@
                 </div>
 
                 <div class="row">
-                <div class="col-lg-3">
-                    <div class="mb-3">
-                        <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
-                        <div class="input-group">
-                            <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount_formatted }}" />
-                            <span class="input-group-text" style="font-size: 14px;">%</span>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount" class="form-label">Discount<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <input type="text" name="discount" id="discount" class="form-control autonumeric" value="{{ $contract->discount_formatted }}" />
+                                <span class="input-group-text" style="font-size: 14px;">%</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="mb-3">
-                        <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
-                        <div class="input-group">
-                            <span class="input-group-text curr-code" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                            <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount_formatted }}" readonly />
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_amount" class="form-label">Discount Amount<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input type="text" id="discount_amount" class="form-control autonumeric" value="{{ $contract->discount_amount_formatted }}" readonly />
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="policy_fee" class="form-label">Policy Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, '.', ',') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
+                                <input readonly type="text" value="{{ $contract->stamp_fee_formatted }}" class="form-control" name="stamp_fee" id="stamp_fee" />
+                            </div>
+                        </div>
+                    </div>
+
 
                     <div class="col-lg-3">
                         <div class="mb-3">
@@ -174,25 +195,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="policy_fee" class="form-label">Policy Fee</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                                <input readonly type="text" value="{{ $contract->policy_fee ? number_format($contract->policy_fee, 2, '.', ',') : '-' }}" class="form-control" name="policy_fee" id="policy_fee" />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="font-size: 14px;">{{$contract->currency->code}}</span>
-                                <input readonly type="text" value="{{ $contract->stamp_fee_formatted }}" class="form-control" name="stamp_fee" id="stamp_fee" />
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
 
@@ -261,9 +264,9 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>
                                         @if($endorsement->contractReference)
-                                            {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
+                                        {{ $endorsement->contractReference->number }} - {{ $endorsement->contractReference->contact->display_name }}
                                         @else
-                                            -
+                                        -
                                         @endif
                                     </td>
                                     <td>{{ $endorsement->endorsement_number ?? '-' }}</td>
@@ -288,7 +291,7 @@
                                 <i class="bi bi-hourglass"></i> Loading documents...
                             </div>
                         </div>
-                        
+
                         @if(auth()->user()->role === 'admin')
                         <div class="mt-3 mb-3">
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
@@ -335,26 +338,26 @@
             </div>
             <div class="card-footer d-flex justify-content-between">
                 <a href="{{ route('transaction.contracts.index') }}" class="btn btn-outline-secondary">Back</a>
-                
-                @auth
-                    @if(auth()->user()->role === 'admin')
-                    <div>
-                        <a href="{{ route('transaction.contracts.edit', $contract->id) }}" class="btn btn-primary">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                    </div>
-                    @endif
 
-                    @if(auth()->user()->role === 'approver' && $contract->approval_status !== 'approved')
-                    <div>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                            <i class="bi bi-x-circle"></i> Reject
-                        </button>
-                        <button type="button" class="btn btn-success" id="btnApprove">
-                            <i class="bi bi-check-circle"></i> Approve
-                        </button>
-                    </div>
-                    @endif
+                @auth
+                @if(auth()->user()->role === 'admin')
+                <div>
+                    <a href="{{ route('transaction.contracts.edit', $contract->id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                @endif
+
+                @if(auth()->user()->role === 'approver' && $contract->approval_status !== 'approved')
+                <div>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnApprove">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                </div>
+                @endif
                 @endauth
             </div>
         </form>
@@ -426,12 +429,12 @@
             if (files.length > 0) {
                 preview.append('<div class="mt-3"><strong>Selected files:</strong></div>');
                 preview.append('<ul class="list-group mt-2" id="fileList"></ul>');
-                
+
                 let fileList = $("#fileList");
                 for (let i = 0; i < files.length; i++) {
                     let file = files[i];
                     let fileSize = (file.size / (1024 * 1024)).toFixed(2);
-                    
+
                     if (fileSize > 10) {
                         fileList.append('<li class="list-group-item text-danger">' + file.name + ' (' + fileSize + 'MB) - <strong>Exceeds 10MB limit</strong></li>');
                     } else {
@@ -452,7 +455,7 @@
 
             let contractId = '{{ $contract->id }}';
             console.log('Contract ID:', contractId);
-            
+
             if (!contractId) {
                 alert('Contract ID not found');
                 return;
@@ -480,7 +483,7 @@
                     $('#uploadDocumentModal').modal('hide');
                     $('#documentFiles').val('');
                     $('#uploadFilePreview').empty();
-                    
+
                     Swal.fire({
                         text: response.message,
                         icon: "success",
@@ -492,7 +495,7 @@
                 },
                 error: function(xhr) {
                     $("#btnUploadDocument").attr("disabled", false).text('Upload');
-                    
+
                     let errorMessage = 'Failed to upload documents';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
@@ -560,7 +563,7 @@
         // Reject Contract
         $('#btnRejectConfirm').on('click', function() {
             const reason = $('#rejection_reason').val().trim();
-            
+
             if (!reason) {
                 alert('Please provide a rejection reason');
                 return;
@@ -600,23 +603,23 @@
                     container.html('<div class="alert alert-info">No documents uploaded yet</div>');
                 } else {
                     let html = '<div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead><tbody>';
-                    
+
                     documents.forEach(function(doc) {
                         html += '<tr>' +
-                                '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
-                                '<td>' + doc.file_size_formatted + '</td>' +
-                                '<td>' + doc.uploaded_at + '</td>' +
-                                '<td>' +
-                                '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ';
-                        
+                            '<td><i class="bi bi-file"></i> ' + doc.filename + '</td>' +
+                            '<td>' + doc.file_size_formatted + '</td>' +
+                            '<td>' + doc.uploaded_at + '</td>' +
+                            '<td>' +
+                            '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ';
+
                         @if(auth()->user()->role === 'admin')
                         html += '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>';
                         @endif
-                        
+
                         html += '</td>' +
-                                '</tr>';
+                            '</tr>';
                     });
-                    
+
                     html += '</tbody></table></div>';
                     container.html(html);
                 }

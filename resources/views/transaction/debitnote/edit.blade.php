@@ -181,7 +181,7 @@
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="amount" class="form-label">Amount<sup class="text-danger">*</sup></label>
+                            <label for="amount" class="form-label">Net Amount<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="amount-currency-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
                                 <input type="text" class="form-control text-end autonumeric @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', $debitNote->amount_formatted) }}" required readonly style="background-color: #e9ecef;">

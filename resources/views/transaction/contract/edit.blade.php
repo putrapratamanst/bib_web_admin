@@ -204,15 +204,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
-                            <div class="input-group">
-                                <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required {{ $lock }} readonly style="background-color: #e9ecef;" />
-                            </div>
-                        </div>
-                    </div>
+
                     <div class="col-lg-3">
                         <div class="mb-3">
                             <label for="policy_fee" class="form-label">Policy Fee</label>
@@ -222,13 +214,23 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="mb-3">
-                        <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
-                        <div class="input-group">
-                            <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
-                            <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required {{ $lock }} />
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="stamp_fee" class="form-label">Stamp Fee<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
+                                <input type="text" name="stamp_fee" id="stamp_fee" class="form-control autonumeric" value="{{ $contract->stamp_fee }}" required {{ $lock }} />
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Net Premium<sup class="text-danger">*</sup></label>
+                            <div class="input-group">
+                                <span class="input-group-text curr-code" style="font-size: 14px;">{{ $contract->currency_code }}</span>
+                                <input type="text" name="amount" id="amount" class="form-control autonumeric" value="{{ $contract->amount }}" required {{ $lock }} readonly style="background-color: #e9ecef;" />
+                            </div>
                         </div>
                     </div>
                 </div>

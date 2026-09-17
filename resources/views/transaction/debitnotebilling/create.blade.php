@@ -107,31 +107,26 @@
                 <div class="row mb-2">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_gross_premium" class="form-label">Gross Premium</label>
-                            <input type="text" class="form-control autonumeric total-premium-input" name="total_gross_premium" id="total_gross_premium" value="{{ old('total_gross_premium', $grossPremiumDefault) }}" readonly style="background-color: #e9ecef;">
+                            <label for="total_gross_premium" class="form-label">Total Gross Premium</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_gross_premium" id="total_gross_premium" value="{{ old('total_gross_premium') }}" readonly style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_discount_percent" class="form-label">Discount %</label>
+                            <label for="total_discount_percent" class="form-label">Total Discount %</label>
                             <div class="input-group">
-                                <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_percent" id="total_discount_percent" value="{{ old('total_discount_percent', $discountPercentDefault) }}" readonly style="background-color: #e9ecef;">
+                                <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_percent" id="total_discount_percent" value="{{ old('total_discount_percent') }}" readonly style="background-color: #e9ecef;">
                                 <span class="input-group-text" style="font-size: 14px;">%</span>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="total_discount_amount" class="form-label">Discount Amount</label>
-                            <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_amount" id="total_discount_amount" value="{{ old('total_discount_amount', $discountAmountDefault) }}" readonly style="background-color: #e9ecef;">
+                            <label for="total_discount_amount" class="form-label">Total Discount Amount</label>
+                            <input type="text" class="form-control autonumeric total-premium-input" name="total_discount_amount" id="total_discount_amount" value="{{ old('total_discount_amount') }}" readonly style="background-color: #e9ecef;">
                         </div>
                     </div>
-                    <!-- <div class="col-md-4 col-lg-3">
-                        <div class="mb-3">
-                            <label for="total_net_premium_amount" class="form-label">Net Premi</label>
-                            <input type="text" class="form-control autonumeric total-premium-input" name="total_net_premium_amount" id="total_net_premium_amount" value="{{ old('total_net_premium_amount', $netPremiumDefault) }}" readonly style="background-color: #e9ecef;">
-                        </div>
-                    </div> -->
+                    <input type="hidden" class="total-premium-input" name="total_net_premium_amount" id="total_net_premium_amount" value="{{ old('total_net_premium_amount') }}">
                 </div>
 
                 @if ($debitNote->installment > 0)
@@ -208,7 +203,7 @@
                                 <div class="col-md-4 col-lg-3">
                                     <div class="mb-3">
                                         <label for="discount_amount_{{ $i }}" class="form-label">Discount Amount</label>
-                                        <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_{{ $i }}" value="{{ old('discount_amount.' . ($i-1), $discountAmountDefault) }}">
+                                        <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_{{ $i }}" value="{{ old('discount_amount.' . ($i-1)) }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3">
@@ -283,7 +278,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="discount_amount_1" class="form-label">Discount Amount</label>
-                                    <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_1" value="{{ old('discount_amount.0', $discountAmountDefault) }}">
+                                    <input type="text" class="form-control autonumeric premium-input discount-amount" name="discount_amount[]" id="discount_amount_1" value="{{ old('discount_amount.0') }}">
                                 </div>
                             </div>
                                 <div class="col-md-4 col-lg-3">
@@ -357,6 +352,36 @@
         const netPremium = parseFloat(grossPremium) - parseFloat(discountAmount || 0);
         setAutoNumericValue($block.find('.net-premium'), netPremium);
     }
+    // Robust numeric extractor for elements (handles autoNumeric and formatted values)
+    function getNumericElement($el) {
+        if (!$el || $el.length === 0) return 0;
+        try {
+            if ($el.data && $el.data('autoNumeric')) {
+                const v = $el.autoNumeric('get');
+                return parseFloat(v) || 0;
+            }
+        } catch (e) {
+            // ignore and fallback
+        }
+
+        let raw = ($el.val() || '').toString().trim();
+        if (!raw) return 0;
+        raw = raw.replace(/\s/g, '');
+        // If both '.' and ',' present, try to decide decimal separator
+        if (raw.indexOf('.') !== -1 && raw.indexOf(',') !== -1) {
+            if (raw.lastIndexOf(',') > raw.lastIndexOf('.')) {
+                raw = raw.replace(/\./g, '').replace(/,/g, '.');
+            } else {
+                raw = raw.replace(/,/g, '').replace(/\./g, '');
+            }
+        } else {
+            // Remove thousand separators commonly used
+            raw = raw.replace(/,/g, '').replace(/\./g, '');
+        }
+
+        const num = parseFloat(raw);
+        return isNaN(num) ? 0 : num;
+    }
 
     function recomputeTotalPremiums() {
         let totalGrossPremium = 0;
@@ -364,8 +389,8 @@
 
         $('.billing-block').each(function() {
             const $block = $(this);
-            const grossPremium = parseFloat($block.find('.gross-premium').autoNumeric('get') || 0);
-            const discountAmount = parseFloat($block.find('.discount-amount').autoNumeric('get') || 0);
+            const grossPremium = getNumericElement($block.find('.gross-premium')) || 0;
+            const discountAmount = getNumericElement($block.find('.discount-amount')) || 0;
 
             if (!isNaN(grossPremium) && isFinite(grossPremium)) {
                 totalGrossPremium += grossPremium;
@@ -376,8 +401,48 @@
             }
         });
 
-        const totalDiscountPercent = totalGrossPremium > 0 ? (totalDiscountAmount / totalGrossPremium) * 100 : null;
-        const totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
+        // Prefer sum of per-installment discount-percent when any percent is provided;
+        // otherwise fallback to weighted percent (discount amount / gross premium).
+        let totalDiscountPercent = null;
+        let accumulatedPercent = 0;
+        let percentProvided = false;
+        $('.billing-block').each(function() {
+            const $raw = $(this).find('.discount-percent');
+            if ($raw.length) {
+                const percent = getNumericElement($raw) || 0;
+                if (!isNaN(percent) && isFinite(percent) && percent !== 0) {
+                    percentProvided = true;
+                    accumulatedPercent += percent;
+                }
+            }
+        });
+
+        if (percentProvided) {
+            totalDiscountPercent = accumulatedPercent / $('.billing-block').length;
+        } else {
+            totalDiscountPercent = totalGrossPremium > 0 ? (totalDiscountAmount / totalGrossPremium) * 100 : null;
+        }
+
+        // If multiple installments exist, sum net-premium from each block; otherwise compute from totals
+        let totalNetPremium = null;
+        const installmentCount = $('.billing-block').length;
+        if (installmentCount > 1) {
+            let sumNet = 0;
+            $('.billing-block').each(function() {
+                const $b = $(this);
+                const net = getNumericElement($b.find('.net-premium')) || 0;
+                if (!isNaN(net) && isFinite(net)) {
+                    sumNet += net;
+                }
+            });
+            totalNetPremium = sumNet;
+        } else {
+            totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
+        }
+
+        if (totalNetPremium !== null) {
+            totalNetPremium += totalFees;
+        }
 
         setAutoNumericValue('#total_gross_premium', totalGrossPremium > 0 ? totalGrossPremium : null);
         setAutoNumericValue('#total_discount_amount', totalDiscountAmount > 0 ? totalDiscountAmount : null);
@@ -409,7 +474,7 @@
             return;
         }
 
-        const amountValue = parseAmountInput($netPremium.get(0));
+        const amountValue = getNumericElement($netPremium) || 0;
         $amount.val(amountValue || 0);
     }
 
@@ -419,7 +484,8 @@
         let totalDebitNoteAmount = 0;
 
         amountInputs.forEach((input, index) => {
-            let amountValue = parseAmountInput(input);
+            // use getNumericElement via jQuery wrapper to parse formatted values reliably
+            let amountValue = getNumericElement($(input)) || 0;
 
             // For single installment form, fees are added on save, so include them in displayed total.
             const isFirstInstallment = index === 0;
@@ -442,6 +508,7 @@
     $(document).on('change keyup', '.net-premium', function() {
         syncBillingAmountFromNetPremium($(this).closest('.billing-block'));
         updateBillingTotals();
+        recomputeTotalPremiums();
     });
 
     // Initialize on page load
@@ -488,6 +555,7 @@
             syncBillingAmountFromNetPremium($(this));
         });
         updateBillingTotals();
+        recomputeTotalPremiums();
     });
 
     $(document).on('change keyup', '.gross-premium, .discount-percent, .discount-amount', function() {
@@ -499,6 +567,8 @@
 
     // Handle form submission to clean AutoNumeric values
     $('#formCreate').on('submit', function(e) {
+        // ensure totals are up-to-date before validation/submission
+        try { recomputeTotalPremiums(); } catch (err) {}
         let premiumInvalid = false;
         $('.billing-block').each(function() {
             const grossPremium = $(this).find('.gross-premium').autoNumeric('get');
