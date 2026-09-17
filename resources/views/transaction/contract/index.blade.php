@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Placing
             <div class="float-end">
-                <a href="{{ route('transaction.contracts.create') }}" class="btn btn-primary btn-sm">
-                    Add New Placing
-                </a>
+                @if(auth()->user()->role === 'admin')
+                    <a href="{{ route('transaction.contracts.create') }}" class="btn btn-primary btn-sm">
+                        Add New Placing
+                    </a>
+                @endif
             </div>
         </div>
         <div class="card-body" style="background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;">

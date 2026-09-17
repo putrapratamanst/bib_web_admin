@@ -95,8 +95,8 @@
                 <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="date" class="form-label">Date<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control datepicker @error('date') is-invalid @enderror" name="date" id="date" value="{{ old('date', date('d-m-Y')) }}" required>
+                            <label for="date" class="form-label">Debit Note Date<sup class="text-danger">*</sup></label>
+                            <input type="text" class="form-control datepicker @error('date') is-invalid @enderror" name="date" id="date" value="{{ old('date') }}" required>
                             @error('date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -354,6 +354,13 @@ $(document).ready(function() {
         }
     });
 
+    // Keep billing address read-only; it is populated from the selected contract.
+    $('#billing_address_id').data('locked', true);
+    $('#billing_address_id').next('.select2').find('.select2-selection').css({
+        'background-color': '#e9ecef',
+        'cursor': 'not-allowed'
+    });
+
     // Handle contract selection change
     $('#contract_id').on('select2:select', function(e) {
         const contractId = e.params.data.id;
@@ -577,7 +584,7 @@ $(document).ready(function() {
         console.log('Contract cleared');
         // Clear fields when no contract selected
         $('#contact_id').val(null).trigger('change');
-        $('#billing_address_id').val(null).trigger('change').data('locked', false);
+        $('#billing_address_id').val(null).trigger('change').data('locked', true);
         $('#billing_address_id').next('.select2').find('.select2-selection').css({
             'background-color': '',
             'cursor': ''
