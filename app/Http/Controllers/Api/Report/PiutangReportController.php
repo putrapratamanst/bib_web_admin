@@ -23,65 +23,48 @@ class PiutangReportController extends Controller
         $to_date = $request->input('to_date') ?
             Carbon::parse($request->input('to_date'))->format('Y-m-d') :
             null;
-        $sql = "SELECT 
-            a.id, 
-            a.number, 
-            a.DN, 
-            a.currency_code, 
-            a.billing_date,
-            a.due_date,
-            COALESCE(b.CN, 0) as CN, 
-            COALESCE(c.allocation, 0) as allocation 
-        FROM 
-            (
-                SELECT 
-                    id, 
-                    number, 
-                    SUM(amount) AS DN, 
-                    currency_code,
-                    date as billing_date,
-                    due_date
-                FROM 
-                    debit_notes 
-                WHERE 
-                     (
-                        (? IS NULL OR ? IS NULL)
-                        AND date <= ?
-                    )
-                    OR (
-                        ? IS NOT NULL 
-                        AND ? IS NOT NULL 
-                        AND date BETWEEN ? AND ?
-                    )
-                GROUP BY 
-                    id, 
-                    number, 
-                    currency_code,
-                    date,
-                    due_date
-            ) a 
-            LEFT JOIN (
-                SELECT 
-                    debit_note_id, 
-                    SUM(amount) AS CN 
-                FROM 
-                    credit_notes 
-                WHERE 
-                    date <= ?
-                GROUP BY 
-                    debit_note_id
-            ) b ON a.id = b.debit_note_id 
-            LEFT JOIN (
-                SELECT 
-                    debit_note_id, 
-                    SUM(allocation) AS allocation 
-                FROM 
-                    payment_allocations 
-                WHERE 
-                    created_at <= ?
-                GROUP BY 
-                    debit_note_id
-            ) c ON a.id = c.debit_note_id";
+        $sql = <<<'SQL'
+SELECT
+    a.id,
+    a.number,
+    a.DN,
+    a.currency_code,
+    a.billing_date,
+    a.due_date,
+    COALESCE(b.CN, 0) AS CN,
+    COALESCE(c.allocation, 0) AS allocation
+FROM (
+    SELECT
+        db.id,
+        db.billing_number AS number,
+        db.amount AS DN,
+        dn.currency_code,
+        db.date AS billing_date,
+        db.due_date
+    FROM debit_note_billings db
+    JOIN debit_notes dn ON dn.id = db.debit_note_id
+    WHERE (
+        (? IS NULL OR ? IS NULL) AND date(db.date) <= ?
+    ) OR (
+        ? IS NOT NULL AND ? IS NOT NULL AND date(db.date) BETWEEN ? AND ?
+    )
+) a
+LEFT JOIN (
+    SELECT billing_id, SUM(amount) AS CN
+    FROM credit_notes
+        WHERE date(date) <= ?
+            AND (status IS NULL OR status = 'active')
+        GROUP BY billing_id
+) b ON a.id = b.billing_id
+LEFT JOIN (
+    SELECT debit_note_billing_id, SUM(allocation) AS allocation
+    FROM payment_allocations
+        WHERE date(created_at) <= ?
+            AND (status = 'posted')
+            AND cashout_id IS NULL
+        GROUP BY debit_note_billing_id
+) c ON a.id = c.debit_note_billing_id
+SQL;
 
         // Menyiapkan binding parameters untuk query utama
         $mainQueryBindings = [
@@ -108,7 +91,7 @@ class PiutangReportController extends Controller
         // Transform hasil query ke format yang dibutuhkan
         $formattedResults = [];
         foreach ($result as $row) {
-           
+
             $amount = (float) $row->DN;
             $creditNote = (float) $row->CN;
             $allocation = (float) $row->allocation;
