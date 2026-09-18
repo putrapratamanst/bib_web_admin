@@ -268,10 +268,10 @@
         // Auto-set default contra account berdasarkan tipe transaksi
         $('#type').on('change', function() {
             const type = $(this).val();
-            let accountName = '';
+            let accountCode = '';
             
             if (type === 'receive') {
-                accountName = 'AR Premi';
+                accountCode = '1200';
                 
                 // Generate prefix with current year/month
                 var now = new Date();
@@ -310,7 +310,7 @@
                 });
                 
             } else if (type === 'pay') {
-                accountName = 'AP Premi';
+                accountCode = 'AP Premi';
                 
                 // Generate prefix with current year/month
                 var now = new Date();
@@ -349,13 +349,15 @@
                 });
             }
             
-            if (accountName) {
+            if (accountCode) {
                 $.ajax({
-                    url: "{{ route('api.chart-of-accounts.select2') }}?q=" + accountName,
+                    url: "{{ route('api.chart-of-accounts.select2') }}?q=" + accountCode,
                     dataType: 'json',
                     success: function(data) {
                         if (data.items && data.items.length > 0) {
-                            const account = data.items.find(item => item.text.includes(accountName));
+                            const account = data.items.find(item => type === 'receive'
+                                ? item.text.startsWith(accountCode + ' - ')
+                                : item.text.includes(accountCode));
                             if (account) {
                                 const option = new Option(account.text, account.id, true, true);
                                 $('#contra_account_id').append(option).trigger('change');

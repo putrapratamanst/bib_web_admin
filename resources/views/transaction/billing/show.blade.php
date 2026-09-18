@@ -11,14 +11,14 @@
                 <div class="row">
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
-                            <label for="type" class="form-label">Billing Type<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly name="type" id="type" value="{{ $billing->type }}" />
+                            <label for="status" class="form-label">Billing Status</label>
+                            <input type="text" class="form-control" readonly name="status" id="status" value="{{ ucfirst($billing->status ?? '-') }}" />
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="contact_id" class="form-label">Contact<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly name="contact_id" id="contact_id" value="{{ $billing->contact->display_name }}" />
+                            <input type="text" class="form-control" readonly name="contact_id" id="contact_id" value="{{ $billing->debitNote?->contract?->contact?->display_name ?? '-' }}" />
                         </div>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="number" class="form-label">Number<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly name="number" id="number" value="{{ $billing->number }}" />
+                            <input type="text" class="form-control" readonly name="billing_number" id="number" value="{{ $billing->billing_number ?? '-' }}" />
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -48,7 +48,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="currency_code" class="form-label">Currency<sup class="text-danger">*</sup></label>
-                            <input type="text" readonly name="currency_code" id="currency_code" class="form-control" value="{{ $billing->currency->code }}" />
+                            <input type="text" readonly name="currency_code" id="currency_code" class="form-control" value="{{ $billing->debitNote?->currency_code ?? '-' }}" />
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
@@ -56,7 +56,7 @@
                             <label for="exchange_rate" class="form-label">Exchange Rate<sup class="text-danger">*</sup></label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;">Rp</span>
-                                <input type="text" readonly name="exchange_rate" id="exchange_rate" class="form-control" value="{{ $billing->exchange_rate_formatted }}" />
+                                <input type="text" readonly name="exchange_rate" id="exchange_rate" class="form-control" value="{{ $billing->debitNote?->exchange_rate_formatted ?? '-' }}" />
                             </div>
                         </div>
                     </div>
@@ -75,7 +75,7 @@
                     <div class="col-md-8 col-lg-6">
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea name="description" id="description" class="form-control" rows="3">{{ $billing->description }}</textarea>
+                            <textarea name="description" id="description" class="form-control" rows="3" readonly>{{ $billing->debitNote?->number ? 'Billing for Debit Note ' . $billing->debitNote->number : '-' }}</textarea>
                         </div>
                     </div>
                 </div>

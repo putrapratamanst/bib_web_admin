@@ -1,47 +1,16 @@
 @php
 use App\Helpers\TerbilangHelper;
-$total = $cashBank->amount;
-
-// Calculate Loss/Gain on Forex Different Rate from allocations (yang sudah di-tick)
-$lossOnForex = 0;
-$gainOnForex = 0;
-
-// Calculate Kekurangan Bayar Premi (yang belum di-tick tapi ada selisih)
-$kekuranganBayarPremi = 0;
-
 // Total allocation amount
 $totalAllocation = $allocations->sum('allocation');
 
-foreach ($allocations as $allocation) {
-    if ($allocation->write_off_type === 'loss') {
-        $lossOnForex += floatval($allocation->write_off_amount);
-    } elseif ($allocation->write_off_type === 'gain') {
-        $gainOnForex += floatval($allocation->write_off_amount);
-    } else {
-        // write_off_type = 'none' - belum di-tick, hitung kekurangan
-        // Get billing amount for this allocation
-        $billing = $allocation->debitNoteBilling;
-        if ($billing) {
-            $billingAmount = floatval($billing->amount);
-            
-            // Calculate difference (billing - allocated)
-            $difference = $billingAmount - floatval($allocation->allocation);
-            if ($difference > 0) {
-                $kekuranganBayarPremi += $difference;
-            }
-        }
-    }
-}
+// The journal amount is the amount actually allocated, not the CashBank source amount.
+$total = $totalAllocation;
 
-// Jurnal Penerimaan - jumlahkan per kolom yang ditampilkan
-
-// Total AR to credit = total allocation saja
-$totalArCredit = $totalAllocation;
-
-// Total Debit = Bank + Loss on Forex + Kekurangan Bayar Premi
-$totalDebit = $total + $lossOnForex + $kekuranganBayarPremi;
-
-// Total Credit = AR + Gain on Forex (tanpa Kekurangan karena tidak ditampilkan di kolom kredit)
+// Loss increases the receivable; gain reduces it while remaining part of the cash received.
+$lossOnForex = $allocations->where('write_off_type', 'loss')->sum('write_off_amount');
+$gainOnForex = $allocations->where('write_off_type', 'gain')->sum('write_off_amount');
+$totalArCredit = $totalAllocation + $lossOnForex - $gainOnForex;
+$totalDebit = $totalAllocation + $lossOnForex;
 $totalCredit = $totalArCredit + $gainOnForex;
 @endphp
 <!doctype html>
@@ -192,13 +161,13 @@ $totalCredit = $totalArCredit + $gainOnForex;
         <th>✓</th>
         <th>Nilai</th>
       </tr>
-      {{-- Row 1: Bank (Debit) dan AR/Piutang (Kredit) --}}
+      {{-- Debit the bank account and credit Tagihan Premi. --}}
       <tr>
-        <td>{{ $cashBank->chartOfAccount->display_name ?? '-' }}</td>
+        <td>{{ $debitAccount->display_name ?? '-' }}</td>
         <td class="center">✓</td>
-        <td class="right">{{ number_format($total, 2, ',', '.') }}</td>
-        @if($cashBank->contraAccount)
-        <td>{{ $cashBank->contraAccount->display_name }}</td>
+        <td class="right">{{ number_format($totalAllocation, 2, ',', '.') }}</td>
+        @if($creditAccount)
+        <td>{{ $creditAccount->display_name }}</td>
         <td class="center">✓</td>
         <td class="right">{{ number_format($totalArCredit, 2, ',', '.') }}</td>
         @else
@@ -207,12 +176,17 @@ $totalCredit = $totalArCredit + $gainOnForex;
         <td>&nbsp;</td>
         @endif
       </tr>
-      {{-- Row 2: Loss on Forex (Debit) jika ada --}}
-      @if($lossOnForex > 0)
+      @if($lossOnForex > 0 || $gainOnForex > 0)
       <tr>
+        @if($lossOnForex > 0)
         <td>Loss on Forex Different Rate</td>
         <td class="center">✓</td>
         <td class="right">{{ number_format($lossOnForex, 2, ',', '.') }}</td>
+        @else
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        @endif
         @if($gainOnForex > 0)
         <td>Gain on Forex Different Rate</td>
         <td class="center">✓</td>
@@ -222,26 +196,6 @@ $totalCredit = $totalArCredit + $gainOnForex;
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         @endif
-      </tr>
-      @elseif($gainOnForex > 0)
-      <tr>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>Gain on Forex Different Rate</td>
-        <td class="center">✓</td>
-        <td class="right">{{ number_format($gainOnForex, 2, ',', '.') }}</td>
-      </tr>
-      @endif
-      {{-- Row 3: Kekurangan Bayar Premi (Debit) jika tidak di-tick dan ada selisih --}}
-      @if($kekuranganBayarPremi > 0)
-      <tr>
-        <td>Kekurangan Bayar Premi</td>
-        <td class="center">✓</td>
-        <td class="right">{{ number_format($kekuranganBayarPremi, 2, ',', '.') }}</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
       </tr>
       @endif
       <tr>

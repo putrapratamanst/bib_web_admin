@@ -2,9 +2,6 @@
 
 @section('title', 'Create Debit Note Billing')
 @php
-    // Calculate default dates from contract period_start
-    $defaultDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->format('d-m-Y') : date('d-m-Y');
-    $defaultDueDate = $debitNote->contract->period_start ? $debitNote->contract->period_start->addDays(7)->format('d-m-Y') : date('d-m-Y', strtotime('+7 days'));
     $existingBilledAmount = $existingBilledAmount ?? (float) $debitNote->debitNoteBillings()->sum('amount');
     $remainingAvailableAmount = $remainingAvailableAmount ?? max(0, (float) $debitNote->amount - $existingBilledAmount);
 
@@ -163,7 +160,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="date_{{ $i }}" class="form-label">Date <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control datepicker @error('date.' . ($i-1)) is-invalid @enderror" name="date[]" id="date_{{ $i }}" value="{{ old('date.' . ($i-1), $defaultDate) }}">
+                                    <input type="text" class="form-control datepicker @error('date.' . ($i-1)) is-invalid @enderror" name="date[]" id="date_{{ $i }}" value="{{ old('date.' . ($i-1)) }}">
                                     @error('date.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -173,7 +170,7 @@
                             <div class="col-md-4 col-lg-3">
                                 <div class="mb-3">
                                     <label for="due_date_{{ $i }}" class="form-label">Due Date <sup class="text-danger">*</sup></label>
-                                    <input type="text" class="form-control datepicker @error('due_date.' . ($i-1)) is-invalid @enderror" name="due_date[]" id="due_date_{{ $i }}" value="{{ old('due_date.' . ($i-1), $defaultDueDate) }}">
+                                    <input type="text" class="form-control datepicker @error('due_date.' . ($i-1)) is-invalid @enderror" name="due_date[]" id="due_date_{{ $i }}" value="{{ old('due_date.' . ($i-1)) }}">
                                     @error('due_date.' . ($i-1))
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -240,7 +237,7 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="date" class="form-label">Date <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control datepicker @error('date.0') is-invalid @enderror" name="date[]" id="date" value="{{ old('date.0', $defaultDate) }}">
+                                <input type="text" class="form-control datepicker @error('date.0') is-invalid @enderror" name="date[]" id="date" value="{{ old('date.0') }}">
                                 @error('date.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -249,7 +246,7 @@
                         <div class="col-md-4 col-lg-3">
                             <div class="mb-3">
                                 <label for="due_date" class="form-label">Due Date <sup class="text-danger">*</sup></label>
-                                <input type="text" class="form-control datepicker @error('due_date.0') is-invalid @enderror" name="due_date[]" id="due_date" value="{{ old('due_date.0', $defaultDueDate) }}">
+                                <input type="text" class="form-control datepicker @error('due_date.0') is-invalid @enderror" name="due_date[]" id="due_date" value="{{ old('due_date.0') }}">
                                 @error('due_date.0')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

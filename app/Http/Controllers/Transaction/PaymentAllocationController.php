@@ -9,6 +9,7 @@ use App\Models\Cashout;
 use App\Models\DebitNoteBilling;
 use App\Models\PaymentAllocation;
 use App\Models\CreditNote;
+use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 
 class PaymentAllocationController extends Controller
@@ -180,10 +181,13 @@ class PaymentAllocationController extends Controller
     public function print($id)
     {
         $cashBank = CashBank::with(['contact', 'chartOfAccount', 'contraAccount'])->findOrFail($id);
+        $debitAccount = $cashBank->chartOfAccount;
+        $creditAccount = ChartOfAccount::where('code', '1200')->first();
         
         // Get allocations for this cash bank with billing details
         $allocations = PaymentAllocation::where('cash_bank_id', $id)
             ->whereNotNull('debit_note_billing_id')
+            ->where('status', 'posted')
             ->with(['debitNoteBilling.debitNote'])
             ->get();
         
@@ -192,6 +196,8 @@ class PaymentAllocationController extends Controller
         
         return view('transaction.paymentallocation.print', [
             'cashBank' => $cashBank,
+            'debitAccount' => $debitAccount,
+            'creditAccount' => $creditAccount,
             'allocations' => $allocations,
             'allocationDescription' => $description
         ]);

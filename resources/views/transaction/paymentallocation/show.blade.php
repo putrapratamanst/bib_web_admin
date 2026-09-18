@@ -354,36 +354,54 @@
         $('.save-allocation').on('click', function() {
             const billingId = $(this).data('billing-id');
             const allocation = $(this).closest('.input-group').find('.allocation-input').val();
+            const billingNumber = $(this).closest('tr').find('td').eq(2).text().trim();
+            const formattedAllocation = Number(allocation).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
 
-            $.ajax({
-                url: "{{ route('api.payment-allocations.storeByCashBankID', ['cashbankID' => $cashBank->id]) }}",
-                method: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    debit_note_billing_id: billingId,
-                    allocation: allocation,
-                    cash_bank_id: "{{ $cashBank->id }}"
-                },
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Allocation saved successfully'
-                    }).then(() => {
-                        location.reload();
-                    });
-                },
-                error: function(xhr) {
-                    let errorMessage = 'An error occurred while saving the allocation';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: errorMessage
-                    });
+            Swal.fire({
+                title: 'Confirm Payment Allocation',
+                text: 'Billing ' + billingNumber + ' akan dialokasikan sebesar {{ $cashBank->currency_code }} ' + formattedAllocation + '. Data akan langsung disimpan.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
                 }
+
+                $.ajax({
+                    url: "{{ route('api.payment-allocations.storeByCashBankID', ['cashbankID' => $cashBank->id]) }}",
+                    method: 'POST',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        debit_note_billing_id: billingId,
+                        allocation: allocation,
+                        cash_bank_id: "{{ $cashBank->id }}"
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Allocation saved successfully'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while saving the allocation';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
             });
         });
 
@@ -391,36 +409,54 @@
         $('.save-allocation-cashout').on('click', function() {
             const cashoutId = $(this).data('cashout-id');
             const allocation = $(this).closest('.input-group').find('.allocation-input-cashout').val();
+            const cashoutNumber = $(this).closest('tr').find('td').eq(0).text().trim();
+            const formattedAllocation = Number(allocation).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
 
-            $.ajax({
-                url: "{{ route('api.payment-allocations.storeByCashBankIDForCashout', ['cashbankID' => $cashBank->id]) }}",
-                method: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    cashout_id: cashoutId,
-                    allocation: allocation,
-                    cash_bank_id: "{{ $cashBank->id }}"
-                },
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Allocation saved successfully'
-                    }).then(() => {
-                        location.reload();
-                    });
-                },
-                error: function(xhr) {
-                    let errorMessage = 'An error occurred while saving the allocation';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: errorMessage
-                    });
+            Swal.fire({
+                title: 'Confirm Payment Allocation',
+                text: 'Hutang ' + cashoutNumber + ' akan dialokasikan sebesar {{ $cashBank->currency_code }} ' + formattedAllocation + '. Data akan langsung disimpan.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
                 }
+
+                $.ajax({
+                    url: "{{ route('api.payment-allocations.storeByCashBankIDForCashout', ['cashbankID' => $cashBank->id]) }}",
+                    method: 'POST',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        cashout_id: cashoutId,
+                        allocation: allocation,
+                        cash_bank_id: "{{ $cashBank->id }}"
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Allocation saved successfully'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while saving the allocation';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
             });
         });
 
