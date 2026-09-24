@@ -204,16 +204,17 @@
                     </a>
                 @endif
                 
-                @if($debitNote->canBeApproved() && auth()->user()->canApproveCreditNotes())
+                <!-- @if($debitNote->canBeApproved() && $debitNote->debitNoteBillings->isNotEmpty() && auth()->user()->canApproveCreditNotes())
                     <button type="button" class="btn btn-success" onclick="approveDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-check"></i> Approve
                     </button>
                     <button type="button" class="btn btn-danger" onclick="rejectDebitNote('{{ $debitNote->id }}')">
                         <i class="fas fa-times"></i> Reject
                     </button>
-                @elseif($debitNote->canBeApproved() && !auth()->user()->canApproveCreditNotes())
+                @elseif($debitNote->canBeApproved() && $debitNote->debitNoteBillings->isNotEmpty() && !auth()->user()->canApproveCreditNotes())
                     <span class="text-muted"><i class="fas fa-info-circle"></i> Only users with approver role can approve this Debit Note</span>
                 @endif
+                 -->
                 
                 @if($debitNote->canBePrinted())
                     <button type="button" class="btn btn-primary" onclick="printDebitNote('{{ $debitNote->id }}')">
@@ -232,10 +233,10 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>List Billing</span>
             <div>
-                @if (auth()->user()->role === 'admin' && ($debitNote->installment == 0 || $debitNote->debitNoteBillings->count() < $debitNote->installment))
+                @if (auth()->user()->role === 'admin' && $debitNote->debitNoteBillings->isEmpty())
                     <a href="{{ route('transaction.debit-notes-billing.create', $debitNote->id) }}" class="btn btn-primary btn-sm">Create Billing</a>
                 @endif
-                @if (auth()->user()->role === 'admin' && $debitNote->debitNoteBillings->count() > 0 && $debitNote->debitNoteBillings->where('status', 'pending')->count() > 0)
+                @if (auth()->user()->role === 'admin' && $debitNote->debitNoteBillings->isNotEmpty())
                     <a href="{{ route('transaction.debit-notes.edit-billings', $debitNote->id) }}" class="btn btn-warning btn-sm ms-2">
                         <i class="fas fa-edit"></i> Edit All Billings
                     </a>

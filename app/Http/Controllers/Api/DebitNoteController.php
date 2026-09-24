@@ -26,7 +26,12 @@ class DebitNoteController extends Controller
 
     public function datatables(Request $request)
     {
-        $query = DebitNote::with(['contract.contractType', 'contract.billingAddress', 'contract.contact'])->orderBy('created_at', 'desc');
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->endOfMonth()->toDateString());
+
+        $query = DebitNote::with(['contract.contractType', 'contract.billingAddress', 'contract.contact'])
+            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -47,7 +52,7 @@ class DebitNoteController extends Controller
             $query->where('is_posted', $request->is_posted == '1');
         }
 
-        return DataTables::of($query)
+        return DataTables::of($query->get())
             ->addColumn('contract', function(DebitNote $b) {
                 return $b->contract->number;
             })
@@ -90,27 +95,6 @@ class DebitNoteController extends Controller
                 
                 $actions .= '</div>';
                 return $actions;
-            })
-            ->filterColumn('insured_name', function($query, $keyword) {
-                $query->whereHas('contract', function($q) use ($keyword) {
-                    $q->whereHas('billingAddress', function($subQ) use ($keyword) {
-                        $subQ->where('name', 'like', "%{$keyword}%");
-                    })
-                    ->orWhereHas('contact', function($subQ) use ($keyword) {
-                        $subQ->where('display_name', 'like', "%{$keyword}%")
-                            ->orWhere('name', 'like', "%{$keyword}%");
-                    });
-                });
-            })
-            ->filterColumn('policy_number', function($query, $keyword) {
-                $query->whereHas('contract', function($q) use ($keyword) {
-                    $q->where('policy_number', 'like', "%{$keyword}%");
-                });
-            })
-            ->filterColumn('contract', function($query, $keyword) {
-                $query->whereHas('contract', function($q) use ($keyword) {
-                    $q->where('number', 'like', "%{$keyword}%");
-                });
             })
             ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);

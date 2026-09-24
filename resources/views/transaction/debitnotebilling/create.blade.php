@@ -177,7 +177,7 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" class="billing-amount" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1), $installmentAmount) }}">
+                            <input type="hidden" class="billing-amount" name="amount[]" id="amount_{{ $i }}" value="{{ old('amount.' . ($i-1), $baseInstallmentAmount) }}">
                             <input type="hidden" name="is_first_installment[]" value="{{ $i == 1 ? '1' : '0' }}">
 
                             <div class="col-12">
@@ -206,7 +206,7 @@
                                 <div class="col-md-4 col-lg-3">
                                     <div class="mb-3">
                                         <label for="net_premium_amount_{{ $i }}" class="form-label">Net Premi</label>
-                                        <input type="text" class="form-control autonumeric premium-input net-premium" name="net_premium_amount[]" id="net_premium_amount_{{ $i }}" value="{{ old('net_premium_amount.' . ($i-1), old('amount.' . ($i-1), $installmentAmount)) }}">
+                                        <input type="text" class="form-control autonumeric premium-input net-premium" name="net_premium_amount[]" id="net_premium_amount_{{ $i }}" value="{{ old('net_premium_amount.' . ($i-1), old('amount.' . ($i-1), $baseInstallmentAmount)) }}">
                                         @error('amount.' . ($i-1))
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -437,10 +437,6 @@
             totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
         }
 
-        if (totalNetPremium !== null) {
-            totalNetPremium += totalFees;
-        }
-
         setAutoNumericValue('#total_gross_premium', totalGrossPremium > 0 ? totalGrossPremium : null);
         setAutoNumericValue('#total_discount_amount', totalDiscountAmount > 0 ? totalDiscountAmount : null);
         setAutoNumericValue('#total_discount_percent', totalDiscountPercent);
@@ -484,10 +480,9 @@
             // use getNumericElement via jQuery wrapper to parse formatted values reliably
             let amountValue = getNumericElement($(input)) || 0;
 
-            // For single installment form, fees are added on save, so include them in displayed total.
+            // Fees are added on save to the first installment, so include them in the displayed total.
             const isFirstInstallment = index === 0;
-            const hasInstallmentPattern = amountInputs.length > 1;
-            if (!hasInstallmentPattern && isFirstInstallment && totalFees > 0) {
+            if (isFirstInstallment && totalFees > 0) {
                 amountValue += totalFees;
             }
 

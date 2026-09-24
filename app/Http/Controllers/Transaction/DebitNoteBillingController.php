@@ -265,12 +265,6 @@ public function store(Request $request)
                 return redirect()->back()->with('error', 'Belum ada billing untuk debit note ini');
             }
             
-            // Check if all billings are pending
-            $nonPendingCount = $debitNote->billings->where('status', '!=', 'pending')->count();
-            if ($nonPendingCount > 0) {
-                return redirect()->back()->with('error', 'Hanya billing dengan status pending yang dapat di-edit');
-            }
-            
             return view('transaction.debitnotebilling.edit', [
                 'debitNote' => $debitNote,
                 'billings' => $debitNote->billings,
@@ -423,11 +417,6 @@ public function store(Request $request)
                 ]);
             }
             foreach ($request->billing_id as $i => $billingId) {                $billing = DebitNoteBilling::findOrFail($billingId);
-                
-                // Check if billing can be edited (only pending status)
-                if ($billing->status !== 'pending') {
-                    throw new \Exception("Billing {$billing->billing_number} tidak dapat di-edit karena statusnya bukan pending");
-                }
                 
                 $billing->date = $request->date[$i];
                 $billing->due_date = $request->due_date[$i];

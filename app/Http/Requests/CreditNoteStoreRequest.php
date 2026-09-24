@@ -24,6 +24,7 @@ class CreditNoteStoreRequest extends FormRequest
             'currency_code' => 'required|exists:currencies,code',
             'exchange_rate' => 'required|numeric',
             'amount' => 'required|numeric',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
             'status' => 'required|in:active,cancel',
         ];
     }

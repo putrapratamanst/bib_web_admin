@@ -234,6 +234,45 @@
             margin-top: 5px;
         }
 
+        .credit-note {
+            background-color: transparent;
+        }
+
+        .left-section,
+        .right-section,
+        .bottom-section,
+        .remarks-area,
+        .field-value,
+        .no-input {
+            border-color: transparent;
+        }
+
+        .premium-row,
+        .net-premium-row {
+            border-bottom-color: transparent;
+        }
+
+        .premium-label,
+        .spacer,
+        .signature-line {
+            border-color: transparent;
+        }
+
+        .field-label,
+        .field-colon,
+        .section-title,
+        .premium-title,
+        .premium-label,
+        .eoe-section,
+        .remarks-label,
+        .no-label,
+        .company-name,
+        .document-title,
+        .signature-label,
+        .logo {
+            visibility: hidden;
+        }
+
         @media print {
             body {
                 background-color: white;
@@ -331,6 +370,10 @@
                     <div class="premium-row">
                         <div class="premium-label">Stamp duty</div>
                         <div class="premium-value">{{ number_format($creditNote->contract->stamp_fee ?? 0, 2, ',', '.') }}</div>
+                    </div>
+                    <div class="premium-row">
+                        <div class="premium-label">Discount %</div>
+                        <div class="premium-value">{{ number_format($creditNote->discount_percent ?? 0, 2, ',', '.') }}%</div>
                     </div>
                     <div class="premium-row">
                         <div class="spacer"></div>

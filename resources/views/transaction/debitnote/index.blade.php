@@ -45,6 +45,14 @@
                         <!-- Options will be loaded via AJAX -->
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label for="date-from-filter" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="date-from-filter" value="{{ now()->startOfMonth()->format('Y-m-d') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date-to-filter" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="date-to-filter" value="{{ now()->endOfMonth()->format('Y-m-d') }}">
+                </div>
                 <!-- <div class="col-md-3">
                     <label for="posted-filter" class="form-label">Posted Status</label>
                     <select class="form-select" id="posted-filter">
@@ -94,7 +102,8 @@
 
         var table = $('#dn-table').DataTable({
             processing: true,
-            serverSide: true,
+            paging: false,
+            serverSide: false,
             responsive: true,
             scrollX: true,
             ajax: {
@@ -104,6 +113,8 @@
                     d.approval_status = $('#approval-status-filter').val();
                     d.insurance_type = $('#insurance-type-filter').val();
                     d.is_posted = $('#posted-filter').val();
+                    d.date_from = $('#date-from-filter').val();
+                    d.date_to = $('#date-to-filter').val();
                 }
             },
             columns: [
@@ -255,7 +266,7 @@
         }
 
         // Handle filter changes
-        $('#status-filter, #approval-status-filter, #insurance-type-filter, #posted-filter').on('change', function() {
+        $('#status-filter, #approval-status-filter, #insurance-type-filter, #posted-filter, #date-from-filter, #date-to-filter').on('change', function() {
             table.ajax.reload();
         });
 

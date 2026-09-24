@@ -27,6 +27,7 @@ class CreditNote extends Model
         'currency_code',
         'exchange_rate',
         'amount',
+        'discount_percent',
         'status',
         'approval_status',
         'approved_by',

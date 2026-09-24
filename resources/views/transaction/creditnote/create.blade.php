@@ -79,6 +79,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_percent" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="number" name="discount_percent" id="discount_percent" class="form-control" min="0" max="100" step="0.01" value="0">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -192,6 +201,7 @@
                 currency_code: $("#currency_code").val(),
                 exchange_rate: $("#exchange_rate").autoNumeric('get'),
                 amount: $("#amount").autoNumeric('get'),
+                discount_percent: $("#discount_percent").val(),
                 description: $("#description").val(),
                 status: "active",
             };

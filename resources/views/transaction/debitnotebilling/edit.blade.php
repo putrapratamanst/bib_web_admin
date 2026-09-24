@@ -371,9 +371,6 @@
             totalNetPremium = totalGrossPremium > 0 ? totalGrossPremium - totalDiscountAmount : null;
         }
 
-        if (totalNetPremium !== null) {
-            totalNetPremium += totalFees;
-        }
         setAutoNumericValue('#total_gross_premium', totalGrossPremium > 0 ? totalGrossPremium : null);
         setAutoNumericValue('#total_discount_amount', totalDiscountAmount > 0 ? totalDiscountAmount : null);
         setAutoNumericValue('#total_discount_percent', totalDiscountPercent);

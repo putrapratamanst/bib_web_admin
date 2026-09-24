@@ -68,6 +68,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="mb-3">
+                            <label for="discount_percent" class="form-label">Discount %</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" readonly name="discount_percent" id="discount_percent" value="{{ number_format($creditNote->discount_percent ?? 0, 2, '.', '') }}" style="background-color: #e9ecef;">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

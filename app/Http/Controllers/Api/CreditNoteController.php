@@ -24,13 +24,17 @@ class CreditNoteController extends Controller
 
     public function datatables(Request $request)
     {
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->endOfMonth()->toDateString());
+
         $query = CreditNote::with([
             'contract.contractType', 
             'contract.billingAddress', 
             'contract.contact',
             'debitNote',
             'billing'
-        ])->orderBy('created_at', 'desc');
+        ])->whereBetween('date', [$dateFrom, $dateTo])
+            ->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($request->filled('status')) {
@@ -51,7 +55,7 @@ class CreditNoteController extends Controller
             $query->where('currency_code', $request->currency_code);
         }
 
-        return DataTables::of($query)
+        return DataTables::of($query->get())
             ->addColumn('contract_number', function (CreditNote $b) {
                 return $b->contract->number;
             })
@@ -106,32 +110,6 @@ class CreditNoteController extends Controller
                 
                 $actions .= '</div>';
                 return $actions;
-            })
-            ->orderColumn('contact', function ($query, $order) {
-                $query
-                    ->join('contracts', 'contracts.id', '=', 'credit_notes.contract_id')
-                    ->join('contacts', 'contacts.id', '=', 'contracts.contact_id')
-                    ->orderBy('contacts.display_name', $order);
-            })
-            ->filterColumn('debit_note_number', function($query, $keyword) {
-                $query->whereHas('debitNote', function($q) use ($keyword) {
-                    $q->where('number', 'like', "%{$keyword}%");
-                });
-            })
-            ->filterColumn('billing_number', function($query, $keyword) {
-                $query->whereHas('billing', function($q) use ($keyword) {
-                    $q->where('billing_number', 'like', "%{$keyword}%");
-                });
-            })
-            ->filterColumn('policy_number', function($query, $keyword) {
-                $query->whereHas('contract', function($q) use ($keyword) {
-                    $q->where('policy_number', 'like', "%{$keyword}%");
-                });
-            })
-            ->filterColumn('placing_number', function($query, $keyword) {
-                $query->whereHas('contract', function($q) use ($keyword) {
-                    $q->where('number', 'like', "%{$keyword}%");
-                });
             })
             ->rawColumns(['approval_status_badge', 'actions'])
             ->make(true);
@@ -195,6 +173,7 @@ class CreditNoteController extends Controller
                 'currency_code' => $data['currency_code'],
                 'exchange_rate' => $data['exchange_rate'],
                 'amount' => $data['amount'],
+                'discount_percent' => $data['discount_percent'] ?? null,
                 'status' => $data['status'],
                 'approval_status' => 'pending', // Default approval status for new credit notes
                 'billing_id' => $data['billing_id'],
@@ -303,6 +282,7 @@ class CreditNoteController extends Controller
                 'currency_code' => 'required|exists:currencies,code',
                 'exchange_rate' => 'required|numeric',
                 'amount' => 'required|numeric',
+                'discount_percent' => 'nullable|numeric|min:0|max:100',
                 'status' => 'required|in:active,cancel',
             ]);
 
@@ -324,6 +304,7 @@ class CreditNoteController extends Controller
                 'currency_code' => $request->currency_code,
                 'exchange_rate' => $request->exchange_rate,
                 'amount' => $request->amount,
+                'discount_percent' => $request->discount_percent,
                 'status' => $request->status,
                 'updated_by' => Auth::id(),
             ]);
