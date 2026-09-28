@@ -142,6 +142,7 @@
                                 <tr>
                                     <th class="text-center" style="width: 40px;">✓</th>
                                     <th>Debit Note Number</th>
+                                    <th>No. Polis</th>
                                     <th>Number</th>
                                     <th>Date</th>
                                     <th>Due Date</th>
@@ -195,6 +196,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $debitNoteBilling->debitNote->number }}</td>
+                                    <td>{{ $debitNoteBilling->debitNote->contract->policy_number ?? '-' }}</td>
                                     <td>{{ $debitNoteBilling->billing_number }}</td>
                                     <td>{{ \Carbon\Carbon::parse($debitNoteBilling->date)->format('d M Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($debitNoteBilling->due_date)->format('d M Y') }}</td>

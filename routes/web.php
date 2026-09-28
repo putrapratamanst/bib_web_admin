@@ -16,6 +16,11 @@ Route::middleware(['auth'])->group(function () {
         return view('home');
     })->name('home');
 
+    Route::middleware('can:approve')->prefix('approval')->name('approval.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Transaction\ApprovalController::class, 'index'])->name('index');
+        Route::get('/{contract}', [\App\Http\Controllers\Transaction\ApprovalController::class, 'show'])->name('show');
+    });
+
     Route::prefix('master')->group(function () {
     // Chart of Account
     Route::get('/chart-of-accounts', [\App\Http\Controllers\Master\ChartOfAccountController::class, 'index'])->name('master.chart-of-accounts.index');

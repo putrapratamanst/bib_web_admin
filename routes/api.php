@@ -111,6 +111,7 @@ Route::put('/contract/{id}', [\App\Http\Controllers\Api\ContractController::clas
 Route::patch('/contract/{id}/policy-number', [\App\Http\Controllers\Api\ContractController::class, 'updatePolicyNumber'])->name('api.contracts.update-policy-number');
 Route::post('/contracts/{id}/approve', [\App\Http\Controllers\Api\ContractController::class, 'approve'])->name('api.contracts.approve');
 Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractController::class, 'reject'])->name('api.contracts.reject');
+Route::post('/approval/contracts/{contract}', [\App\Http\Controllers\Api\ApprovalController::class, 'submit'])->middleware('can:approve')->name('api.approval.submit');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
 Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
 Route::post('/contract/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'uploadDocument'])->name('api.contracts.upload-document');

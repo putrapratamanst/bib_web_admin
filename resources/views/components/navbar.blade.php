@@ -52,6 +52,13 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.contracts.index') }}">Placing</a>
                         </li>
+                        @if(auth()->user()->role === 'approver')
+                        <li>
+                            <a class="dropdown-item{{ request()->routeIs('approval.*') ? ' active' : '' }}" href="{{ route('approval.index') }}">
+                                <i class="fas fa-check-double me-1"></i> Approval
+                            </a>
+                        </li>
+                        @endif
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.debit-notes.index') }}">Debit Note</a>
                         </li>

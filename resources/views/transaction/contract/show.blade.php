@@ -286,7 +286,7 @@
                 <div class="row mt-4">
                     <div class="col-md-12">
                         <h6 class="mb-3">Documents</h6>
-                        <div id="documentsContainer">
+                        <div id="documentsContainer" data-can-delete="{{ auth()->user()->role === 'admin' ? 'true' : 'false' }}">
                             <div class="alert alert-info">
                                 <i class="bi bi-hourglass"></i> Loading documents...
                             </div>
@@ -348,6 +348,7 @@
                 </div>
                 @endif
 
+                {{-- Approval actions moved to the Approval menu.
                 @if(auth()->user()->role === 'approver' && $contract->approval_status !== 'approved')
                 <div>
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
@@ -358,12 +359,14 @@
                     </button>
                 </div>
                 @endif
+                --}}
                 @endauth
             </div>
         </form>
     </div>
 </div>
 
+{{-- Approval actions moved to the Approval menu.
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -387,6 +390,7 @@
         </div>
     </div>
 </div>
+--}}
 
 <!-- Upload Document Modal -->
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
@@ -540,54 +544,7 @@
             }
         });
 
-        // Approve Contract
-        $('#btnApprove').on('click', function() {
-            if (confirm('Are you sure you want to approve this contract?')) {
-                $.ajax({
-                    url: '/api/contracts/{{ $contract->id }}/approve',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        alert(response.message);
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON?.message || 'Failed to approve contract');
-                    }
-                });
-            }
-        });
-
-        // Reject Contract
-        $('#btnRejectConfirm').on('click', function() {
-            const reason = $('#rejection_reason').val().trim();
-
-            if (!reason) {
-                alert('Please provide a rejection reason');
-                return;
-            }
-
-            $.ajax({
-                url: '/api/contracts/{{ $contract->id }}/reject',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    rejection_reason: reason
-                },
-                success: function(response) {
-                    alert(response.message);
-                    $('#rejectModal').modal('hide');
-                    location.reload();
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || 'Failed to reject contract');
-                }
-            });
-        });
+        // Legacy approval handlers are disabled; use the Approval menu.
     });
 
     function loadDocuments() {
@@ -612,9 +569,9 @@
                             '<td>' +
                             '<a href="/api/contract/{{ $contract->id }}/documents/' + doc.id + '/download" class="btn btn-sm btn-info" title="Download"><i class="bi bi-download"></i></a> ';
 
-                        @if(auth()->user()->role === 'admin')
-                        html += '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>';
-                        @endif
+                        if ($('#documentsContainer').data('can-delete') === true || $('#documentsContainer').data('can-delete') === 'true') {
+                            html += '<button class="btn btn-sm btn-danger btnDeleteDocument" data-id="' + doc.id + '" data-name="' + doc.filename + '" title="Delete"><i class="bi bi-trash"></i></button>';
+                        }
 
                         html += '</td>' +
                             '</tr>';

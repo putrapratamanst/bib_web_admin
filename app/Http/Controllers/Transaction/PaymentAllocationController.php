@@ -188,18 +188,33 @@ class PaymentAllocationController extends Controller
         $allocations = PaymentAllocation::where('cash_bank_id', $id)
             ->whereNotNull('debit_note_billing_id')
             ->where('status', 'posted')
-            ->with(['debitNoteBilling.debitNote'])
+            ->with(['debitNoteBilling.debitNote.contract'])
             ->get();
         
         // Build description based on allocations
         $description = $this->buildAllocationDescription($cashBank, $allocations);
+        $allocationDetails = $allocations->map(function ($allocation) {
+            $billing = $allocation->debitNoteBilling;
+            $debitNote = $billing?->debitNote;
+
+            return [
+                'policy_number' => $debitNote?->contract?->policy_number ?? '-',
+                'debit_note_number' => $debitNote?->number ?? '-',
+                'billing_number' => $billing?->billing_number ?? '-',
+                'installment' => preg_match('/-INST(\d+)/i', $billing?->billing_number ?? '', $matches)
+                    ? $matches[1]
+                    : '-',
+                'allocation' => number_format((float) $allocation->allocation, 2, ',', '.'),
+            ];
+        });
         
         return view('transaction.paymentallocation.print', [
             'cashBank' => $cashBank,
             'debitAccount' => $debitAccount,
             'creditAccount' => $creditAccount,
             'allocations' => $allocations,
-            'allocationDescription' => $description
+            'allocationDescription' => $description,
+            'allocationDetails' => $allocationDetails,
         ]);
     }
 
@@ -213,16 +228,31 @@ class PaymentAllocationController extends Controller
         // Get allocations for this cash bank with billing details
         $allocations = PaymentAllocation::where('cash_bank_id', $id)
             ->whereNotNull('debit_note_billing_id')
-            ->with(['debitNoteBilling.debitNote'])
+            ->with(['debitNoteBilling.debitNote.contract'])
             ->get();
         
         // Build description based on allocations
         $description = $this->buildPaymentDescription($cashBank, $allocations);
+        $allocationDetails = $allocations->map(function ($allocation) {
+            $billing = $allocation->debitNoteBilling;
+            $debitNote = $billing?->debitNote;
+
+            return [
+                'policy_number' => $debitNote?->contract?->policy_number ?? '-',
+                'debit_note_number' => $debitNote?->number ?? '-',
+                'billing_number' => $billing?->billing_number ?? '-',
+                'installment' => preg_match('/-INST(\d+)/i', $billing?->billing_number ?? '', $matches)
+                    ? $matches[1]
+                    : '-',
+                'allocation' => number_format((float) $allocation->allocation, 2, ',', '.'),
+            ];
+        });
         
         return view('transaction.paymentallocation.print-payment', [
             'cashBank' => $cashBank,
             'allocations' => $allocations,
-            'allocationDescription' => $description
+            'allocationDescription' => $description,
+            'allocationDetails' => $allocationDetails,
         ]);
     }
 

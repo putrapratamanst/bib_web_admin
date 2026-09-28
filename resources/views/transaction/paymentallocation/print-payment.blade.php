@@ -116,6 +116,7 @@ $totalCredit = $total + $gainOnForex + $kekuranganBayarPremi;
       border: 1px solid #000;
       padding: 6px;
       font-size: 13px;
+      overflow-wrap: anywhere;
     }
 
     th {
@@ -126,6 +127,27 @@ $totalCredit = $total + $gainOnForex + $kekuranganBayarPremi;
     .right { text-align: right; }
     .center { text-align: center; }
     .bold { font-weight: 700; }
+
+    .keterangan-box {
+      page-break-inside: avoid;
+    }
+
+    .keterangan-text {
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .keterangan-table th,
+    .keterangan-table td {
+      padding: 4px;
+      font-size: 10px;
+      line-height: 1.2;
+      vertical-align: top;
+    }
+
+    .keterangan-table th {
+      white-space: nowrap;
+    }
 
     /* ===== FOOTER ===== */
     .footer {
@@ -259,9 +281,33 @@ $totalCredit = $total + $gainOnForex + $kekuranganBayarPremi;
       {{ TerbilangHelper::terbilang($total, 'Rupiah') }}
     </div>
 
-    <div class="box">
+    <div class="box keterangan-box">
       <div class="bold">Keterangan :</div>
-      {{ $allocationDescription }}
+      <div class="keterangan-text">{{ $allocationDescription }}</div>
+      @if($allocationDetails->isNotEmpty())
+      <table class="keterangan-table">
+        <thead>
+          <tr>
+            <th>No. Polis</th>
+            <th>No. DN</th>
+            <th>No. Billing</th>
+            <th>Installment</th>
+            <th>Nilai</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($allocationDetails as $detail)
+          <tr>
+            <td>{{ $detail['policy_number'] }}</td>
+            <td>{{ $detail['debit_note_number'] }}</td>
+            <td>{{ $detail['billing_number'] }}</td>
+            <td class="center">{{ $detail['installment'] }}</td>
+            <td class="right">{{ $detail['allocation'] }}</td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+      @endif
     </div>
 
   </div>
