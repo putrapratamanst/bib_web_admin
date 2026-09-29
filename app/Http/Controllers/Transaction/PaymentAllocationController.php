@@ -190,10 +190,18 @@ class PaymentAllocationController extends Controller
             ->where('status', 'posted')
             ->with(['debitNoteBilling.debitNote.contract'])
             ->get();
+
+        // A billing can have multiple allocation records; show it once in the journal detail.
+        $displayAllocations = $allocations->groupBy('debit_note_billing_id')->map(function ($billingAllocations) {
+            $allocation = $billingAllocations->first();
+            $allocation->allocation = $billingAllocations->sum('allocation');
+
+            return $allocation;
+        })->values();
         
         // Build description based on allocations
-        $description = $this->buildAllocationDescription($cashBank, $allocations);
-        $allocationDetails = $allocations->map(function ($allocation) {
+        $description = $this->buildAllocationDescription($cashBank, $displayAllocations);
+        $allocationDetails = $displayAllocations->map(function ($allocation) {
             $billing = $allocation->debitNoteBilling;
             $debitNote = $billing?->debitNote;
 

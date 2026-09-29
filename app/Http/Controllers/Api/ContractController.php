@@ -71,7 +71,7 @@ class ContractController extends Controller
 
         $query = Contract::with(['contact', 'billingAddress'])
             ->where('status', 'active')
-            ->where('approval_status', 'approved')
+            ->whereIn('approval_status', ['approved', 'pending'])
             ->whereDoesntHave('debitNotes') // Exclude contracts yang sudah pernah dipakai untuk debit note (apapun statusnya)
             ->where(function ($q) use ($search) {
                 if ($search) {

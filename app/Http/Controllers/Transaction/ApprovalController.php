@@ -37,6 +37,10 @@ class ApprovalController extends Controller
             'debitNotes.debitNoteBillings',
         ]);
 
-        return view('approval.show', compact('contract'));
+        $hasDebitNoteBilling = $contract->debitNotes->contains(
+            fn ($debitNote) => $debitNote->debitNoteBillings->isNotEmpty()
+        );
+
+        return view('approval.show', compact('contract', 'hasDebitNoteBilling'));
     }
 }

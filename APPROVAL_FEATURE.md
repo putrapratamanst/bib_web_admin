@@ -115,6 +115,22 @@ Untuk testing fitur ini:
 3. Login sebagai approver → approve/reject contract
 4. Verifikasi admin bisa edit jika rejected, tidak bisa edit jika approved
 
+## Reminder Email Approval
+
+Command `approval:remind` mengirim satu email ringkasan kepada semua user dengan `role = approver` jika masih ada Contract, Debit Note, atau Credit Note dengan `approval_status = pending`. Email dikirim langsung oleh command, sehingga tidak membutuhkan queue worker.
+
+Untuk shared hosting, buat satu cron job yang berjalan setiap jam:
+
+```text
+0 * * * * cd /path-ke-aplikasi && php artisan approval:remind >> storage/logs/approval-reminder.log 2>&1
+```
+
+Sesuaikan path PHP jika shared hosting memerlukan path absolut, misalnya `/usr/local/bin/php`. Pengiriman berhenti otomatis ketika jumlah pending menjadi 0. Untuk mengecek jumlah pending tanpa mengirim email, jalankan:
+
+```text
+php artisan approval:remind --dry-run
+```
+
 ## Migration Files
 - `2025_12_15_161957_add_approval_status_to_contracts_table.php`
 - `2025_12_15_162002_add_role_to_users_table.php`

@@ -19,6 +19,12 @@ class ContractApprovalService
                 ]);
             }
 
+            if ($decision === 'approve' && !$contract->debitNotes()->whereHas('debitNoteBillings')->exists()) {
+                throw ValidationException::withMessages([
+                    'contract' => 'Contract belum dapat di-approve sebelum Debit Note Billing dibuat.',
+                ]);
+            }
+
             $status = $decision === 'approve' ? 'approved' : 'rejected';
             $notes = $decision === 'reject' ? $reason : null;
             $contract->update([
