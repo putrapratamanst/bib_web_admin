@@ -3,17 +3,24 @@
 @section('content')
 <div class="container">
     <div class="card">
+        @php
+        $hasPostedAllocation = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
+            ->where('status', 'posted')
+            ->exists();
+        @endphp
         <div class="card-header">
             Cash & Bank Detail
             <div class="float-end">
-                @if($cashBank->type == 'receive')
-                <a href="{{ route('transaction.payment-allocations.print', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
-                    <i class="bi bi-printer"></i> Print Jurnal Penerimaan
-                </a>
-                @else
-                <a href="{{ route('transaction.payment-allocations.print-payment', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
-                    <i class="bi bi-printer"></i> Print Jurnal Pembayaran
-                </a>
+                @if($hasPostedAllocation)
+                    @if($cashBank->type == 'receive')
+                    <a href="{{ route('transaction.payment-allocations.print', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
+                        <i class="bi bi-printer"></i> Print Jurnal Penerimaan
+                    </a>
+                    @else
+                    <a href="{{ route('transaction.payment-allocations.print-payment', $cashBank->id) }}" class="btn btn-primary btn-sm me-1" target="_blank">
+                        <i class="bi bi-printer"></i> Print Jurnal Pembayaran
+                    </a>
+                    @endif
                 @endif
                 <a href="{{ route('transaction.payment-allocations.index') }}" class="btn btn-secondary btn-sm">
                     Back

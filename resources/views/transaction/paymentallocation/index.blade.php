@@ -40,7 +40,7 @@
                         if (row.has_advance) {
                             return '<span class="text-muted">' + data + '</span>';
                         }
-                        return '<a href="{{ route('transaction.payment-allocations.index') }}/' + row.id + '">' + data + '</a>';
+                        return '<a href="{{ route("transaction.payment-allocations.index") }}/' + row.id + '">' + data + '</a>';
                  },
                 },
                 { 
@@ -87,6 +87,9 @@
                     orderable: false,
                     searchable: false,
                     render: function(data, type, row) {
+                        if (!row.has_posted_allocation) {
+                            return '';
+                        }
                         var printUrl = row.type === 'receive' 
                             ? '{{ route("transaction.payment-allocations.print", ":id") }}'.replace(':id', row.id)
                             : '{{ route("transaction.payment-allocations.print-payment", ":id") }}'.replace(':id', row.id);

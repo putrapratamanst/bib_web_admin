@@ -57,6 +57,11 @@ class PaymentAllocationController extends Controller
                     ->where('status', 'posted')
                     ->exists();
             })
+            ->addColumn('has_posted_allocation', function (CashBank $cashBank) {
+                return $cashBank->paymentAllocations()
+                    ->where('status', 'posted')
+                    ->exists();
+            })
             ->filterColumn('contact_name', function ($query, $keyword) {
                 $query->whereHas('contact', function ($query) use ($keyword) {
                     $query->where('display_name', 'like', "%$keyword%");
