@@ -59,13 +59,14 @@ class PaymentAllocationController extends Controller
             ->orderBy('date', 'desc')
             ->get()
             ->map(function($billing) use ($cashBank){
-                // Calculate allocated amount for this billing across ALL cash banks
-                $total_allocated = PaymentAllocation::where('debit_note_billing_id', $billing->id)
-                    ->sum('allocation');
-                // Calculate allocated amount from this cash bank specifically
-                $allocated_on_this_cashbank = PaymentAllocation::where('debit_note_billing_id', $billing->id)
-                    ->where('cash_bank_id', $cashBank->id)
-                    ->sum('allocation');
+                $billingAllocations = PaymentAllocation::where('debit_note_billing_id', $billing->id)
+                    ->get()
+                    ->groupBy('cash_bank_id')
+                    ->map(fn ($allocations) => $allocations->sortByDesc('created_at')->first());
+
+                // A billing is allocated once per cash bank; ignore legacy duplicate rows.
+                $total_allocated = $billingAllocations->sum('allocation');
+                $allocated_on_this_cashbank = $billingAllocations->get($cashBank->id)?->allocation ?? 0;
 
                 // Calculate total credit note amount applied to this billing (reduce outstanding)
                 $credit_note = CreditNote::where('billing_id', $billing->id);
@@ -191,13 +192,13 @@ class PaymentAllocationController extends Controller
             ->with(['debitNoteBilling.debitNote.contract'])
             ->get();
 
-        // A billing can have multiple allocation records; show it once in the journal detail.
-        $displayAllocations = $allocations->groupBy('debit_note_billing_id')->map(function ($billingAllocations) {
-            $allocation = $billingAllocations->first();
-            $allocation->allocation = $billingAllocations->sum('allocation');
+        // A billing should have one allocation per cash bank; use the latest record if duplicates exist.
+        $displayAllocations = $allocations->groupBy('debit_note_billing_id')->map(
+            fn ($billingAllocations) => $billingAllocations->sortByDesc('created_at')->first()
+        )->values();
 
-            return $allocation;
-        })->values();
+        // Keep journal totals consistent with the de-duplicated billing details.
+        $allocations = $displayAllocations;
         
         // Build description based on allocations
         $description = $this->buildAllocationDescription($cashBank, $displayAllocations);

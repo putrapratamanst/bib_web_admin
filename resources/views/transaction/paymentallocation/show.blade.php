@@ -82,7 +82,13 @@
                 <div class="card-body">
                     @php
                     // Total allocated from THIS cash bank (only posted allocations)
-                    $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)->where('status', 'posted')->sum('allocation');
+                    $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
+                        ->where('status', 'posted')
+                        ->whereNotNull('debit_note_billing_id')
+                        ->get()
+                        ->groupBy('debit_note_billing_id')
+                        ->map(fn ($allocations) => $allocations->sortByDesc('created_at')->first())
+                        ->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
                     $isFullyAllocated = $totalAvailable <= 0;
                     $hasAdvance = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)

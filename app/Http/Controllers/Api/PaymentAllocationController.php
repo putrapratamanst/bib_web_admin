@@ -240,14 +240,18 @@ class PaymentAllocationController extends Controller
                 }
             }
 
-            $allocation = PaymentAllocation::create([
-                'cash_bank_id' => $request->cash_bank_id,
-                'debit_note_id' => $debitNoteId,
-                'allocation' => $allocationAmount,
-                'status' => 'posted',
-                'debit_note_billing_id' => $request->debit_note_billing_id,
-                // 'created_by' => auth()->id(),
-            ]);
+            $allocation = PaymentAllocation::updateOrCreate(
+                [
+                    'cash_bank_id' => $request->cash_bank_id,
+                    'debit_note_billing_id' => $request->debit_note_billing_id,
+                ],
+                [
+                    'debit_note_id' => $debitNoteId,
+                    'allocation' => $allocationAmount,
+                    'status' => 'posted',
+                    // 'created_by' => auth()->id(),
+                ]
+            );
 
             // lakukan cashout disini
             $detailContract = $billing->debitNote->contract;
