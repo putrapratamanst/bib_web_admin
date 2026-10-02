@@ -169,6 +169,7 @@ Route::prefix('transaction')->group(function () {
 
     // Cashouts
     Route::get('/cashouts', [\App\Http\Controllers\Transaction\CashoutController::class, 'index'])->name('transaction.cashouts.index');
+    Route::get('/cashouts/print-selected', [\App\Http\Controllers\Transaction\CashoutController::class, 'printSelected'])->name('transaction.cashouts.print-selected');
     Route::get('/cashouts/{id}', [\App\Http\Controllers\Transaction\CashoutController::class, 'show'])->name('transaction.cashouts.show');
     Route::post('/cashouts/{id}/mark-paid', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsPaid'])->name('transaction.cashouts.mark-paid');
     Route::post('/cashouts/{id}/mark-cancelled', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsCancelled'])->name('transaction.cashouts.mark-cancelled');

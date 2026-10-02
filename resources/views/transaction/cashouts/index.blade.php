@@ -9,11 +9,19 @@
                 List of Hutang Asuransi
             </h5>
             <small class="text-muted">Manage payments to insurance companies</small>
+            <div class="float-end">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-print-selected" disabled>
+                    <i class="fas fa-print me-1"></i> Print Selected
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <table class="table table-new table-hover table-striped table-bordered" id="cashout-table">
                 <thead class="table-header">
                     <tr>
+                        <th class="text-center" style="width: 40px;">
+                            <input type="checkbox" id="select-all" />
+                        </th>
                         <th>Nomor Hutang</th>
                         <th>Date</th>
                         <th>Debit Note</th>
@@ -32,6 +40,8 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        var selectedCashoutIds = new Set();
+
         var table = $('#cashout-table').DataTable({
             processing: true,
             serverSide: true,
@@ -39,6 +49,16 @@
                 url: "{{ route('api.cashouts.datatables') }}",
             },
             columns: [
+                {
+                    data: 'id',
+                    name: 'id',
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data) {
+                        return '<input type="checkbox" class="cashout-select" value="' + data + '">';
+                    }
+                },
                 { 
                     data: 'number', 
                     name: 'number',
@@ -78,6 +98,50 @@
             ],
             order: [[1, 'desc']], // Order by date desc
             pageLength: 25
+        });
+
+        function updatePrintSelectedState() {
+            $('#btn-print-selected').prop('disabled', selectedCashoutIds.size === 0);
+        }
+
+        function syncSelectedFromPage() {
+            $('.cashout-select').each(function() {
+                const id = $(this).val();
+                if ($(this).is(':checked')) {
+                    selectedCashoutIds.add(id);
+                } else {
+                    selectedCashoutIds.delete(id);
+                }
+            });
+        }
+
+        $('#select-all').on('change', function() {
+            $('.cashout-select').prop('checked', $(this).is(':checked'));
+            syncSelectedFromPage();
+            updatePrintSelectedState();
+        });
+
+        $(document).on('change', '.cashout-select', function() {
+            const total = $('.cashout-select').length;
+            $('#select-all').prop('checked', total > 0 && total === $('.cashout-select:checked').length);
+            syncSelectedFromPage();
+            updatePrintSelectedState();
+        });
+
+        $('#btn-print-selected').on('click', function() {
+            const ids = Array.from(selectedCashoutIds);
+            if (ids.length > 0) {
+                window.open("{{ route('transaction.cashouts.print-selected') }}?ids=" + ids.join(','), '_blank');
+            }
+        });
+
+        table.on('draw', function() {
+            $('.cashout-select').each(function() {
+                $(this).prop('checked', selectedCashoutIds.has($(this).val()));
+            });
+            const total = $('.cashout-select').length;
+            $('#select-all').prop('checked', total > 0 && total === $('.cashout-select:checked').length);
+            updatePrintSelectedState();
         });
     });
 

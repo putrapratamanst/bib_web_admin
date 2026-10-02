@@ -13,6 +13,31 @@ class CashoutController extends Controller
         return view('transaction.cashouts.index');
     }
 
+    public function printSelected(Request $request)
+    {
+        $idsParam = $request->query('ids', '');
+        $ids = collect(is_array($idsParam) ? $idsParam : explode(',', (string) $idsParam))
+            ->map(fn ($id) => trim($id))
+            ->filter()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            abort(404, 'Cashouts not found.');
+        }
+
+        $placeholders = $ids->map(fn () => '?')->implode(',');
+        $cashouts = Cashout::with(['debitNote', 'insurance'])
+            ->whereIn('id', $ids->all())
+            ->orderByRaw("FIELD(id, {$placeholders})", $ids->all())
+            ->get();
+
+        if ($cashouts->count() !== $ids->count()) {
+            abort(404, 'Cashouts not found.');
+        }
+
+        return view('transaction.cashouts.print-selected', compact('cashouts'));
+    }
+
     public function show($id)
     {
         $cashout = Cashout::with([
