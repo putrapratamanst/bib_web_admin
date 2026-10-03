@@ -243,6 +243,13 @@
                                                 Save
                                             </button>
                                         </div>
+                                        @if($debitNoteBilling->allocated_amount > 0)
+                                        <button type="button"
+                                            class="btn btn-outline-danger btn-sm px-2 mt-1 cancel-allocation"
+                                            data-billing-id="{{ $debitNoteBilling->id }}">
+                                            Batalkan
+                                        </button>
+                                        @endif
                                         @if($totalAvailable <= 0)
                                             <small class="text-muted d-block mt-1">Fully allocated</small>
                                         @endif
@@ -304,6 +311,13 @@
                                                 Save
                                             </button>
                                         </div>
+                                        @if($cashout->allocated_amount > 0)
+                                        <button type="button"
+                                            class="btn btn-outline-danger btn-sm px-2 mt-1 cancel-allocation"
+                                            data-cashout-id="{{ $cashout->id }}">
+                                            Batalkan
+                                        </button>
+                                        @endif
                                         @if($totalAvailable <= 0)
                                             <small class="text-muted d-block mt-1">Fully allocated</small>
                                         @endif
@@ -462,6 +476,53 @@
                     },
                     error: function(xhr) {
                         let errorMessage = 'An error occurred while saving the allocation';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            });
+        });
+
+        $('.cancel-allocation').on('click', function() {
+            const button = $(this);
+            const billingId = button.data('billing-id');
+            const cashoutId = button.data('cashout-id');
+
+            Swal.fire({
+                title: 'Cancel Payment Allocation?',
+                text: 'Allocated amount akan dikembalikan menjadi 0.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Cancel',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('api.payment-allocations.cancel', ['cashbankID' => $cashBank->id]) }}",
+                    method: 'POST',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        debit_note_billing_id: billingId,
+                        cashout_id: cashoutId
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message
+                        }).then(() => location.reload());
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Gagal membatalkan allocation';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }

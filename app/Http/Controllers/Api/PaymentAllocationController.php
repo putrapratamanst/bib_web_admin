@@ -379,6 +379,47 @@ class PaymentAllocationController extends Controller
         }
     }
 
+    public function cancel(Request $request, $cashbankID)
+    {
+        $request->validate([
+            'debit_note_billing_id' => 'nullable|exists:debit_note_billings,id',
+            'cashout_id' => 'nullable|exists:cashouts,id',
+        ]);
+
+        if (!$request->filled('debit_note_billing_id') && !$request->filled('cashout_id')) {
+            return response()->json([
+                'message' => 'Billing atau cashout wajib dipilih.'
+            ], 422);
+        }
+
+        $query = PaymentAllocation::where('cash_bank_id', $cashbankID)
+            ->where('status', 'posted')
+            ->where('allocation', '>', 0);
+
+        if ($request->filled('debit_note_billing_id')) {
+            $query->where('debit_note_billing_id', $request->debit_note_billing_id);
+        } else {
+            $query->where('cashout_id', $request->cashout_id);
+        }
+
+        $updated = $query->update([
+            'allocation' => 0,
+            'status' => 'cancelled',
+            // 'updated_by' => auth()->id(),
+            'updated_at' => now(),
+        ]);
+
+        if ($updated === 0) {
+            return response()->json([
+                'message' => 'Allocation aktif tidak ditemukan.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Payment allocation berhasil dibatalkan.'
+        ]);
+    }
+
     private function generateCashoutNumber(): string
     {
         $prefix = 'CSH';
