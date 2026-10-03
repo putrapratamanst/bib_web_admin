@@ -258,6 +258,49 @@
                 margin: 0;
             }
         }
+
+        .top-row {
+            flex-direction: row-reverse;
+        }
+
+        .title-section {
+            text-align: left;
+            margin: 24px 0 14px;
+        }
+
+        .document-title {
+            text-align: left;
+            font-size: 20px;
+        }
+
+        .row {
+            font-size: 14px;
+            margin-bottom: 9px;
+        }
+
+        .label {
+            width: 205px;
+        }
+
+        .separator {
+            width: 15px;
+        }
+
+        .value {
+            padding-left: 0;
+        }
+
+        .table-header div {
+            font-size: 14px;
+        }
+
+        .notes-column {
+            font-size: 13px;
+        }
+
+        .premium-row {
+            font-size: 12px;
+        }
     </style>
 </head>
 

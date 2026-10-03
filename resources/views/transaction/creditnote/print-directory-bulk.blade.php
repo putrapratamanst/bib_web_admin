@@ -301,6 +301,44 @@
                 margin: 0;
             }
         }
+
+        .top-bar {
+            flex-direction: row-reverse;
+        }
+
+        .title {
+            text-align: left;
+            font-size: 20px;
+        }
+
+        .row {
+            font-size: 14px;
+            margin-bottom: 9px;
+        }
+
+        .label {
+            width: 205px;
+        }
+
+        .separator {
+            width: 15px;
+        }
+
+        .table-header div {
+            font-size: 14px;
+        }
+
+        .notes-column {
+            font-size: 13px;
+        }
+
+        .premium-section {
+            font-size: 12px;
+        }
+
+        .premium-row {
+            font-size: 12px;
+        }
     </style>
 </head>
 
