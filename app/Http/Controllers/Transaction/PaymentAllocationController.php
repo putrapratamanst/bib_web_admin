@@ -117,7 +117,7 @@ class PaymentAllocationController extends Controller
                     $cashout->total_allocated = $total_allocated;
                     $cashout->allocated_amount = $allocated_on_this_cashbank;
                     $cashout->remaining_amount = max(0, round($cashout->amount - $total_allocated, 2));
-                    
+
                     return $cashout;
                 })
                 // Only include cashouts that still have remaining amount

@@ -383,7 +383,7 @@
         $('.save-allocation').on('click', function() {
             const billingId = $(this).data('billing-id');
             const allocation = $(this).closest('.input-group').find('.allocation-input').val();
-            const billingNumber = $(this).closest('tr').find('td').eq(2).text().trim();
+            const billingNumber = $(this).closest('tr').find('td').eq(3).text().trim();
             const formattedAllocation = Number(allocation).toLocaleString('id-ID', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2

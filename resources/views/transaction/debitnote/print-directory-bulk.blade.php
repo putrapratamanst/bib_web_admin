@@ -293,12 +293,12 @@
         }
 
         .title-section {
-            text-align: left;
+            text-align: center;
             margin: 24px 0 14px;
         }
 
         .document-title {
-            text-align: left;
+            text-align: center;
             font-size: 20px;
         }
 

@@ -26,7 +26,13 @@ class CashoutController extends Controller
         }
 
         $placeholders = $ids->map(fn () => '?')->implode(',');
-        $cashouts = Cashout::with(['debitNote', 'insurance'])
+        $cashouts = Cashout::with([
+            'debitNote.billingAddress',
+            'debitNote.contract.contact',
+            'debitNote.contract.contractType',
+            'debitNote.contract.details',
+            'insurance',
+        ])
             ->whereIn('id', $ids->all())
             ->orderByRaw("FIELD(id, {$placeholders})", $ids->all())
             ->get();
