@@ -52,7 +52,7 @@
         }
 
         .logo img {
-            width: 200px;
+            width: 250px;
             height: auto;
             display: block;
         }
@@ -120,7 +120,7 @@
 
         .table-header {
             display: grid;
-            grid-template-columns: 1fr 220px;
+            grid-template-columns: 1fr 250px;
             border-bottom: 1px solid #000;
         }
 
@@ -137,7 +137,7 @@
 
         .table-body {
             display: grid;
-            grid-template-columns: 1fr 220px;
+            grid-template-columns: 1fr 250px;
             flex: 1;
         }
 

@@ -131,7 +131,7 @@
         }
 
         .table-header div:last-child {
-            width: 200px;
+            width: 250px;
             flex-shrink: 0;
         }
 
@@ -151,7 +151,7 @@
         }
 
         .details-column {
-            width: 200px;
+            width: 250px;
             padding: 12px;
             display: flex;
             flex-direction: column;

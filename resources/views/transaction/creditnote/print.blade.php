@@ -95,7 +95,7 @@
 
         .content {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1.15fr;
             gap: 15px;
             margin-top: 15px;
         }
