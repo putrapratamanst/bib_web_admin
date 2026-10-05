@@ -392,6 +392,7 @@ public function store(Request $request)
                 'discount_percent' => $debitNoteDiscountPercent,
                 'discount_amount' => $debitNoteDiscountAmount,
                 'net_premium_amount' => $debitNoteNetPremium,
+                'amount' => $debitNoteNetPremium,
                 'updated_by' => auth()->id(),
             ]);
             

@@ -197,6 +197,11 @@
             flex-shrink: 0;
         }
 
+        .net-premium-value {
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
         .signature-section {
             flex: 1;
             display: flex;
@@ -457,6 +462,7 @@
                                     $stampFee = $contract ? $contract->stamp_fee : 0;
                                     $policyCost = $contract ? ($contract->policy_fee ?? 0) : 0;
                                     $discountAmount = $contract ? $contract->discount_amount : 0;
+                                    $netPremium = $grossPremium - $discountAmount + $policyCost + $stampFee;
                                     $currency = $debitNote->currency_code ?? 'IDR';
                                     @endphp
 
@@ -489,7 +495,7 @@
                                     <div class="premium-row" style="border-top: 1px solid #000; margin-top: 10px; padding-top: 10px;">
                                         <span class="premium-label"><strong>Premi Neto<br><i>Nett Premium</i></strong></span>
                                         <span class="premium-currency"><strong>{{ $currency }}</strong></span>
-                                        <span class="premium-value"><strong>{{ number_format($debitNote->amount, 2, ',', '.') }}</strong></span>
+                                        <span class="premium-value net-premium-value"><strong>{{ number_format($netPremium, 2, ',', '.') }}</strong></span>
                                     </div>
                                 </div>
 
