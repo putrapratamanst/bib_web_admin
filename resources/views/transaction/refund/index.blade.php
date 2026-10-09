@@ -5,9 +5,11 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Refund List</span>
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('transaction.refunds.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-circle"></i> Add New Refund
             </a>
+            @endif
         </div>
         <div class="card-body">
             <table id="refundTable" class="table table-bordered table-hover">

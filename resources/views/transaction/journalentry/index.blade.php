@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Journal Entries
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('transaction.journal-entries.create') }}" class="btn btn-primary btn-sm">
                     Add New Journal Entry
                 </a>
+                @endif
             </div>
         </div>
         <?php /*<div class="card-body" style="background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;">

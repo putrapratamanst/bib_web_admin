@@ -5,9 +5,11 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Advance Payment List</span>
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('transaction.advances.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-circle"></i> Add New Advance
             </a>
+            @endif
         </div>
         <div class="card-body">
             <table id="advanceTable" class="table table-bordered table-hover">

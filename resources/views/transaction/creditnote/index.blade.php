@@ -9,9 +9,11 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="btn-print-selected" disabled>
                     <i class="fas fa-print me-1"></i> Print Selected
                 </button>
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('transaction.credit-notes.create') }}" class="btn btn-primary btn-sm">
                     Add New Credit Note
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

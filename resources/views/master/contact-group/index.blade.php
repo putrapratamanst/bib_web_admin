@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Contact Groups
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('master.contact-groups.create') }}" class="btn btn-primary btn-sm">
                     Add New Contact Group
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

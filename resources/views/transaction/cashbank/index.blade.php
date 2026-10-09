@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Cash &amp; Bank
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('transaction.cash-banks.create') }}" class="btn btn-primary btn-sm">
                     Add New
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

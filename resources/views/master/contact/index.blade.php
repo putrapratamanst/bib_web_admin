@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Contacts
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('master.contacts.create') }}" class="btn btn-primary btn-sm">
                     Add New Contact
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

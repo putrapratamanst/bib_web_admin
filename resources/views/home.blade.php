@@ -130,6 +130,7 @@
 
     <!-- Quick Actions & Recent Activity -->
     <div class="row mb-4">
+        @if(auth()->user()->role === 'admin')
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -144,6 +145,7 @@
                                 <i class="fas fa-plus-circle me-2"></i>New Contract
                             </a>
                         </div>
+                        @endif
                         <div class="col-md-6">
                             <a href="{{ route('transaction.debit-notes.create') }}" class="btn btn-outline-success w-100">
                                 <i class="fas fa-file-invoice me-2"></i>New Debit Note

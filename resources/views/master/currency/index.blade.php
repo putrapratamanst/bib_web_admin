@@ -7,7 +7,9 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>Currencies</span>
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('master.currencies.create') }}" class="btn btn-primary">Add Currency</a>
+            @endif
         </div>
         <div class="card-body">
             <table id="currenciesTable" class="table table-striped table-bordered">

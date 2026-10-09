@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Chart of Accounts
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('master.chart-of-accounts.create') }}" class="btn btn-primary btn-sm">
                     Add New Account
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

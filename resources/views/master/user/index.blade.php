@@ -8,9 +8,11 @@
         <div class="card-header">
             User Management
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('master.users.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Add New User
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">

@@ -74,9 +74,11 @@
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Billing Addresses</h5>
+            @if(auth()->user()->role === 'admin')
             <button type="button" class="btn btn-sm btn-primary" id="btnAddBilling">
                 <i class="fas fa-plus"></i> Add New
             </button>
+            @endif
         </div>
         <div class="card-body">
             <div class="table-responsive">

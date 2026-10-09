@@ -6,9 +6,11 @@
         <div class="card-header">
             List of Contract Types
             <div class="float-end">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('master.contract-types.create') }}" class="btn btn-primary btn-sm">
                     Add New Contract Type
                 </a>
+                @endif
             </div>
         </div>
         <div class="card-body">
