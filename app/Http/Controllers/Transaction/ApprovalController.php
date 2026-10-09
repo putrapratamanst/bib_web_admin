@@ -12,7 +12,7 @@ class ApprovalController extends Controller
     public function index(Request $request)
     {
         $contractTypes = ContractType::orderBy('name')->get();
-        $contracts = Contract::with(['contractType', 'contact', 'debitNotes'])
+        $contracts = Contract::with(['contractType', 'contact', 'debitNotes', 'creditNotes'])
             ->where('approval_status', 'pending')
             ->when($request->filled('contract_type_id'), function ($query) use ($request) {
                 $query->where('contract_type_id', $request->input('contract_type_id'));
@@ -35,6 +35,8 @@ class ApprovalController extends Controller
             'details.insurance',
             'endorsements.contractReference.contact',
             'debitNotes.debitNoteBillings',
+            'creditNotes.debitNote',
+            'creditNotes.billing',
         ]);
 
         $hasDebitNoteBilling = $contract->debitNotes->contains(

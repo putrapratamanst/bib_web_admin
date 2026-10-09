@@ -60,6 +60,36 @@
                 </div>
             </div>
         </div>
+
+        <div class="accordion-item shadow-sm">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#creditNoteSection">Credit Note</button></h2>
+            <div id="creditNoteSection" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    @if($contract->creditNotes->isEmpty())
+                        <div class="alert alert-info mb-0">Belum ada Credit Note untuk Placing ini.</div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead><tr><th>Credit Note</th><th>Debit Note</th><th>Billing</th><th>Date</th><th>Amount</th><th>Status</th><th>Description</th></tr></thead>
+                                <tbody>
+                                @foreach($contract->creditNotes as $creditNote)
+                                    <tr>
+                                        <td>{{ $creditNote->number }}</td>
+                                        <td>{{ $creditNote->debitNote?->number ?? '-' }}</td>
+                                        <td>{{ $creditNote->billing?->billing_number ?? '-' }}</td>
+                                        <td>{{ $creditNote->date_formatted }}</td>
+                                        <td class="text-end">{{ $creditNote->currency_code }} {{ $creditNote->amount_formatted }}</td>
+                                        <td><span class="badge {{ $creditNote->approval_status === 'approved' ? 'bg-success' : ($creditNote->approval_status === 'rejected' ? 'bg-danger' : 'bg-warning') }}">{{ ucfirst($creditNote->approval_status) }}</span></td>
+                                        <td>{{ $creditNote->description ?: '-' }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="approvalFeedback" class="mt-3"></div>

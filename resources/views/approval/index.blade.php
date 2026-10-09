@@ -38,6 +38,7 @@
                                 <th>Contact</th>
                                 <th>Placing Type</th>
                                 <th>Debit Note</th>
+                                <th>Credit Note</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -49,6 +50,7 @@
                                 <td>{{ $contract->contact?->display_name ?? '-' }}</td>
                                 <td>{{ $contract->contractType?->name ?? '-' }}</td>
                                 <td class="text-center">{{ $contract->debitNotes->count() }}</td>
+                                <td class="text-center">{{ $contract->creditNotes->count() }}</td>
                                 <td class="text-center"><span class="badge bg-warning">Pending</span></td>
                                 <td class="text-center"><a href="{{ route('approval.show', $contract) }}" class="btn btn-primary btn-sm">Review</a></td>
                             </tr>

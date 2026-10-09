@@ -49,7 +49,16 @@ class ContractApprovalService
                 }
             }
 
-            return $contract->fresh(['debitNotes.debitNoteBillings']);
+            foreach ($contract->creditNotes()->lockForUpdate()->get() as $creditNote) {
+                $creditNote->update([
+                    'approval_status' => $status,
+                    'approved_by' => $userId,
+                    'approved_at' => now(),
+                    'approval_notes' => $notes,
+                ]);
+            }
+
+            return $contract->fresh(['debitNotes.debitNoteBillings', 'creditNotes']);
         });
     }
 }
