@@ -109,7 +109,9 @@
                 </div>
             </div>
             <div class="card-footer">
-                <button type="submit" id="btnSubmit" class="btn btn-primary">Update</button>
+                @if(auth()->user()->role !== 'approver')
+                    <button type="submit" id="btnSubmit" class="btn btn-primary">Update</button>
+                @endif
                 <a href="{{ route('transaction.cash-banks.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

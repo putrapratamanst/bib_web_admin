@@ -235,13 +235,15 @@
                                                 data-cashbank-amount="{{ $totalAvailable }}"
                                                 data-billing-amount="{{ $displayRemainingAmount }}"
                                                 step="0.01"
-                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                            <button type="button"
-                                                class="btn btn-primary btn-sm save-allocation"
-                                                data-billing-id="{{ $debitNoteBilling->id }}"
-                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                                Save
-                                            </button>
+                                                {{ $maxAllocation <= 0 || auth()->user()->role === 'approver' ? 'disabled' : '' }}>
+                                            @if(auth()->user()->role !== 'approver')
+                                                <button type="button"
+                                                    class="btn btn-primary btn-sm save-allocation"
+                                                    data-billing-id="{{ $debitNoteBilling->id }}"
+                                                    {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                                    Save
+                                                </button>
+                                            @endif
                                         </div>
                                         @if($debitNoteBilling->allocated_amount > 0)
                                         <button type="button"
@@ -303,13 +305,15 @@
                                                 data-cashbank-amount="{{ $totalAvailable }}"
                                                 data-cashout-amount="{{ $cashout->remaining_amount }}"
                                                 step="0.01"
-                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                            <button type="button"
-                                                class="btn btn-primary btn-sm save-allocation-cashout"
-                                                data-cashout-id="{{ $cashout->id }}"
-                                                {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
-                                                Save
-                                            </button>
+                                                {{ $maxAllocation <= 0 || auth()->user()->role === 'approver' ? 'disabled' : '' }}>
+                                            @if(auth()->user()->role !== 'approver')
+                                                <button type="button"
+                                                    class="btn btn-primary btn-sm save-allocation-cashout"
+                                                    data-cashout-id="{{ $cashout->id }}"
+                                                    {{ $maxAllocation <= 0 ? 'disabled' : '' }}>
+                                                    Save
+                                                </button>
+                                            @endif
                                         </div>
                                         @if($cashout->allocated_amount > 0)
                                         <button type="button"
