@@ -35,6 +35,8 @@ class CreditNoteController extends Controller
 
     public function edit($id)
     {
+        abort_unless(!auth()->user()->canApproveCreditNotes(), 403);
+
         $creditNote = \App\Models\CreditNote::with(['billing.debitNote.contract'])->findOrFail($id);
 
         if (!$creditNote->canBeEdited()) {

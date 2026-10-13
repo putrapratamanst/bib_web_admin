@@ -94,7 +94,7 @@ class CreditNoteController extends Controller
                 $actions = '<div class="btn-group" role="group">';
                 $actions .= '<a href="' . route('transaction.credit-notes.show', $b->id) . '" class="btn btn-sm btn-outline-primary">View</a>';
 
-                if ($b->canBeEdited()) {
+                if ($b->canBeEdited() && !$canApprove) {
                     $actions .= '<a href="' . route('transaction.credit-notes.edit', $b->id) . '" class="btn btn-sm btn-outline-secondary">Edit</a>';
                 }
                 
@@ -270,6 +270,14 @@ class CreditNoteController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+            if ($user && $user->canApproveCreditNotes()) {
+                return response()->json([
+                    'message' => 'You are not authorized to edit Credit Notes.'
+                ], 403);
+            }
+
             $creditNote = CreditNote::findOrFail($id);
 
             // All forms can be edited regardless of approval status

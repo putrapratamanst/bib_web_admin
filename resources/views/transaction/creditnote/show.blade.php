@@ -136,7 +136,7 @@
             <div class="card-footer">
                 <a href="{{ route('transaction.credit-notes.index') }}" class="btn btn-secondary me-2">Back</a>
 
-                @if($creditNote->canBeEdited())
+                @if($creditNote->canBeEdited() && !auth()->user()->canApproveCreditNotes())
                 <a href="{{ route('transaction.credit-notes.edit', $creditNote->id) }}" class="btn btn-warning">
                     <i class="fas fa-edit"></i> Edit
                 </a>
