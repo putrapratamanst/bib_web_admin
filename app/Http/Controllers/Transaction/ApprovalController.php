@@ -12,8 +12,13 @@ class ApprovalController extends Controller
     public function index(Request $request)
     {
         $contractTypes = ContractType::orderBy('name')->get();
-        $contracts = Contract::with(['contractType', 'contact', 'debitNotes', 'creditNotes'])
-            ->where('approval_status', 'pending')
+        $contracts = Contract::with([
+            'contractType',
+            'contact',
+            'debitNotes.debitNoteBillings',
+            'creditNotes',
+        ])
+            ->whereIn('approval_status', ['pending', 'approved'])
             ->when($request->filled('contract_type_id'), function ($query) use ($request) {
                 $query->where('contract_type_id', $request->input('contract_type_id'));
             })
@@ -26,8 +31,6 @@ class ApprovalController extends Controller
 
     public function show(Contract $contract)
     {
-        abort_unless($contract->approval_status === 'pending', 404);
-
         $contract->load([
             'contractType',
             'contact',
@@ -39,10 +42,6 @@ class ApprovalController extends Controller
             'creditNotes.billing',
         ]);
 
-        $hasDebitNoteBilling = $contract->debitNotes->contains(
-            fn ($debitNote) => $debitNote->debitNoteBillings->isNotEmpty()
-        );
-
-        return view('approval.show', compact('contract', 'hasDebitNoteBilling'));
+        return view('approval.show', compact('contract'));
     }
 }

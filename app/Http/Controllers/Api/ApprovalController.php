@@ -12,22 +12,42 @@ class ApprovalController extends Controller
 {
     public function submit(Request $request, Contract $contract, ContractApprovalService $service)
     {
+        return $this->process($request, fn ($decision, $userId, $reason) => $service->submit(
+            $contract,
+            $decision,
+            $userId,
+            $reason,
+        ));
+    }
+
+    public function submitDebitNote(Request $request, string $id, ContractApprovalService $service)
+    {
+        return $this->process($request, fn ($decision, $userId, $reason) => $service->submitDebitNote($id, $decision, $userId, $reason));
+    }
+
+    public function submitBilling(Request $request, string $id, ContractApprovalService $service)
+    {
+        return $this->process($request, fn ($decision, $userId, $reason) => $service->submitBilling($id, $decision, $userId, $reason));
+    }
+
+    public function submitCreditNote(Request $request, string $id, ContractApprovalService $service)
+    {
+        return $this->process($request, fn ($decision, $userId, $reason) => $service->submitCreditNote($id, $decision, $userId, $reason));
+    }
+
+    private function process(Request $request, \Closure $callback)
+    {
         $data = $request->validate([
             'decision' => ['required', Rule::in(['approve', 'reject'])],
             'reason' => ['required_if:decision,reject', 'nullable', 'string', 'max:1000'],
         ]);
 
         try {
-            $contract = $service->submit(
-                $contract,
-                $data['decision'],
-                (int) $request->user()->id,
-                $data['reason'] ?? null,
-            );
+            $model = $callback($data['decision'], (int) $request->user()->id, $data['reason'] ?? null);
 
             return response()->json([
                 'message' => 'Approval berhasil diproses.',
-                'data' => ['id' => $contract->id, 'approval_status' => $contract->approval_status],
+                'data' => ['id' => $model->id, 'approval_status' => $model->approval_status],
             ]);
         } catch (\Throwable $exception) {
             report($exception);

@@ -113,6 +113,9 @@ Route::patch('/contract/{id}/policy-number', [\App\Http\Controllers\Api\Contract
 Route::post('/contracts/{id}/approve', [\App\Http\Controllers\Api\ContractController::class, 'approve'])->name('api.contracts.approve');
 Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractController::class, 'reject'])->name('api.contracts.reject');
 Route::post('/approval/contracts/{contract}', [\App\Http\Controllers\Api\ApprovalController::class, 'submit'])->middleware('can:approve')->name('api.approval.submit');
+Route::post('/approval/debit-notes/{id}', [\App\Http\Controllers\Api\ApprovalController::class, 'submitDebitNote'])->middleware('can:approve')->name('api.approval.debit-notes');
+Route::post('/approval/debit-note-billings/{id}', [\App\Http\Controllers\Api\ApprovalController::class, 'submitBilling'])->middleware('can:approve')->name('api.approval.debit-note-billings');
+Route::post('/approval/credit-notes/{id}', [\App\Http\Controllers\Api\ApprovalController::class, 'submitCreditNote'])->middleware('can:approve')->name('api.approval.credit-notes');
 Route::post('/contracts/add-unit/automobile/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storeAutomobileUnit'])->name('transaction.contracts.store-automobile-units');
 Route::post('/contracts/add-unit/property/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'storePropertyUnit'])->name('transaction.contracts.store-property-units');
 Route::post('/contract/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'uploadDocument'])->name('api.contracts.upload-document');

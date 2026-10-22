@@ -4,9 +4,12 @@
 
 @section('content')
 <div class="container py-4" data-approval-index-url="{{ route('approval.index') }}">
+    @php
+        $approvalBadgeClasses = ['pending' => 'warning', 'approved' => 'success', 'rejected' => 'danger'];
+    @endphp
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div><a href="{{ route('approval.index') }}" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Approval</a><h1 class="h3 mt-2 mb-0">Review {{ $contract->number }}</h1></div>
-        <span class="badge text-bg-warning">Pending</span>
+        <span class="badge text-bg-{{ $approvalBadgeClasses[$contract->approval_status] ?? 'secondary' }}">{{ ucfirst($contract->approval_status) }}</span>
     </div>
 
     <div class="accordion" id="approvalSections">
@@ -32,6 +35,10 @@
                         ] as $label => $value)
                             <div class="col-md-3"><small class="text-muted d-block">{{ $label }}</small><strong>{{ $value ?: '-' }}</strong></div>
                         @endforeach
+                        <div class="col-12 text-end">
+                            <span class="badge text-bg-{{ $approvalBadgeClasses[$contract->approval_status] ?? 'secondary' }} me-2">{{ ucfirst($contract->approval_status) }}</span>
+                            <button type="button" class="btn btn-primary btn-sm approval-trigger" data-title="Contract {{ $contract->number }}" data-url="{{ url('/api/approval/contracts/' . $contract->id) }}" @disabled($contract->approval_status !== 'pending')><i class="fas fa-check me-1"></i> Approve Contract</button>
+                        </div>
                         <div class="col-12"><small class="text-muted d-block">Memo</small><div class="border rounded p-2 bg-light">{{ $contract->memo ?: '-' }}</div></div>
                     </div>
                     <hr>
@@ -48,10 +55,10 @@
             <div id="billingSection" class="accordion-collapse collapse">
                 <div class="accordion-body">
                     @forelse($contract->debitNotes as $debitNote)
-                        <div class="border rounded p-3 mb-3"><div class="d-flex justify-content-between"><h5 class="mb-3">Debit Note: {{ $debitNote->number }}</h5><span class="badge text-bg-warning">{{ ucfirst($debitNote->approval_status) }}</span></div>
+                        <div class="border rounded p-3 mb-3"><div class="d-flex justify-content-between"><h5 class="mb-3">Debit Note: {{ $debitNote->number }}</h5><div><span class="badge text-bg-{{ $approvalBadgeClasses[$debitNote->approval_status] ?? 'secondary' }} me-2">{{ ucfirst($debitNote->approval_status) }}</span><button type="button" class="btn btn-primary btn-sm approval-trigger" data-title="Debit Note {{ $debitNote->number }}" data-url="{{ url('/api/approval/debit-notes/' . $debitNote->id) }}" @disabled($debitNote->approval_status !== 'pending' || $contract->approval_status !== 'approved')>Approve</button></div></div>
                             <div class="row g-3 mb-3"><div class="col-md-3"><small class="text-muted d-block">Date</small>{{ $debitNote->date_formatted }}</div><div class="col-md-3"><small class="text-muted d-block">Due Date</small>{{ $debitNote->due_date_formatted ?: '-' }}</div><div class="col-md-3"><small class="text-muted d-block">Amount</small>{{ $debitNote->amount_formatted }}</div><div class="col-md-3"><small class="text-muted d-block">Operational Status</small>{{ ucfirst($debitNote->status) }}</div></div>
                             <div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Billing Number</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Operational Status</th><th>Approval</th></tr></thead><tbody>
-                                @forelse($debitNote->debitNoteBillings as $billing)<tr><td>{{ $billing->billing_number }}</td><td>{{ $billing->date_formatted }}</td><td>{{ $billing->due_date_formatted ?: '-' }}</td><td>{{ $billing->amount_formatted }}</td><td colspan="2" class="text-center"><span class="badge {{ $billing->status === 'posted' ? 'bg-success' : 'bg-secondary' }}">{{ ucfirst($billing->status) }}</span></td></tr>@empty<tr><td colspan="6" class="text-center text-muted">No billing.</td></tr>@endforelse
+                                @forelse($debitNote->debitNoteBillings as $billing)<tr><td>{{ $billing->billing_number }}</td><td>{{ $billing->date_formatted }}</td><td>{{ $billing->due_date_formatted ?: '-' }}</td><td>{{ $billing->amount_formatted }}</td><td colspan="2" class="text-center"><span class="badge text-bg-{{ $approvalBadgeClasses[$billing->status] ?? 'secondary' }} me-2">{{ ucfirst($billing->status) }}</span><button type="button" class="btn btn-primary btn-sm approval-trigger" data-title="Billing {{ $billing->billing_number }}" data-url="{{ url('/api/approval/debit-note-billings/' . $billing->id) }}" @disabled($billing->status !== 'pending')>Approve</button></td></tr>@empty<tr><td colspan="6" class="text-center text-muted">No billing.</td></tr>@endforelse
                             </tbody></table></div>
                         </div>
                     @empty
@@ -70,14 +77,16 @@
                     @else
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered mb-0">
-                                <thead><tr><th>Nomor Billing DN</th><th>Kurs</th><th>Amount</th><th>Persentase CN</th></tr></thead>
+                                <thead><tr><th>Credit Note</th><th>Nomor Billing DN</th><th>Kurs</th><th>Amount</th><th>Persentase CN</th><th>Approval</th></tr></thead>
                                 <tbody>
                                 @foreach($contract->creditNotes as $creditNote)
                                     <tr>
+                                        <td>{{ $creditNote->number }}</td>
                                         <td>{{ $creditNote->billing?->billing_number ?? '-' }}</td>
                                         <td>{{ $creditNote->exchange_rate_formatted }}</td>
                                         <td class="text-end">{{ $creditNote->currency_code }} {{ $creditNote->amount_formatted }}</td>
                                         <td class="text-end">{{ number_format($creditNote->discount_percent ?? 0, 2, '.', '') }}%</td>
+                                        <td><span class="badge text-bg-{{ $approvalBadgeClasses[$creditNote->approval_status] ?? 'secondary' }} me-2">{{ ucfirst($creditNote->approval_status) }}</span><button type="button" class="btn btn-primary btn-sm approval-trigger" data-title="Credit Note {{ $creditNote->number }}" data-url="{{ url('/api/approval/credit-notes/' . $creditNote->id) }}" @disabled($creditNote->approval_status !== 'pending' || $contract->approval_status !== 'approved')>Approve</button></td>
                                     </tr>
                                 @endforeach
                                 </tbody>
@@ -90,10 +99,9 @@
     </div>
 
     <div id="approvalFeedback" class="mt-3"></div>
-    @if(!$hasDebitNoteBilling)
-        <div class="alert alert-warning mt-3 mb-0">Approval tidak dapat diproses sebelum Debit Note Billing dibuat.</div>
+    @if($contract->approval_status !== 'approved' && ($contract->debitNotes->isNotEmpty() || $contract->creditNotes->isNotEmpty()))
+        <div class="alert alert-warning mt-3 mb-0">Debit Note dan Credit Note baru dapat di-approve setelah Contract berstatus Approved.</div>
     @endif
-    <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-primary px-4" id="submitApproval" @disabled(!$hasDebitNoteBilling)><i class="fas fa-paper-plane me-1"></i> Submit</button></div>
 </div>
 
 <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="approvalModalLabel">Submit Approval</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><label class="form-label" for="decision">Decision</label><select class="form-select" id="decision"><option value="approve">Approve</option><option value="reject">Reject</option></select><div class="mt-3 d-none" id="reasonWrap"><label class="form-label" for="reason">Reason</label><textarea class="form-control" id="reason" rows="3"></textarea></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="confirmApproval">Confirm</button></div></div></div></div>
@@ -102,30 +110,35 @@
 @push('scripts')
 <script>
 $(function () {
-    const approvalIndexUrl = $('.container[data-approval-index-url]').data('approval-index-url');
     const modal = new bootstrap.Modal('#approvalModal');
     const decision = $('#decision');
     const reasonWrap = $('#reasonWrap');
-    const submitButton = $('#submitApproval');
     const confirmButton = $('#confirmApproval');
     const feedback = $('#approvalFeedback');
+    let approvalUrl = '';
 
     decision.on('change', function () { reasonWrap.toggleClass('d-none', this.value !== 'reject'); });
-    submitButton.on('click', () => modal.show());
+    $('.approval-trigger').on('click', function () {
+        approvalUrl = $(this).data('url');
+        $('#approvalModalLabel').text($(this).data('title'));
+        $('#reason').val('').removeClass('is-invalid');
+        decision.val('approve').trigger('change');
+        modal.show();
+    });
     confirmButton.on('click', async function () {
         const selectedDecision = decision.val();
         const reason = $('#reason').val().trim();
         if (selectedDecision === 'reject' && !reason) { $('#reason').addClass('is-invalid').trigger('focus'); return; }
-        submitButton.prop('disabled', true); confirmButton.prop('disabled', true).text('Processing...');
+        confirmButton.prop('disabled', true).text('Processing...');
         try {
-            const response = await fetch('{{ url('/api/approval/contracts/' . $contract->id) }}', { method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')}, body: JSON.stringify({decision: selectedDecision, reason}) });
+            const response = await fetch(approvalUrl, { method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')}, body: JSON.stringify({decision: selectedDecision, reason}) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Approval gagal diproses.');
-            modal.hide(); feedback.html('<div class="alert alert-success">Approval berhasil diproses. Mengalihkan...</div>');
-            window.setTimeout(() => window.location.href = approvalIndexUrl, 800);
+            modal.hide(); feedback.html('<div class="alert alert-success">Approval berhasil diproses. Memuat ulang detail...</div>');
+            window.setTimeout(() => window.location.reload(), 800);
         } catch (error) {
             feedback.html('<div class="alert alert-danger">' + error.message + '</div>');
-            submitButton.prop('disabled', false); confirmButton.prop('disabled', false).text('Confirm');
+            confirmButton.prop('disabled', false).text('Confirm');
         }
     });
 });

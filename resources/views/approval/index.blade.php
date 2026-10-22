@@ -8,7 +8,7 @@
         <div class="card-header">
             List of Approval
             <div class="float-end">
-                <span class="badge bg-warning">{{ $contracts->total() }} Pending</span>
+                <span class="badge bg-primary">{{ $contracts->total() }} Contracts</span>
             </div>
         </div>
         <div class="card-body" style="background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;">
@@ -37,9 +37,9 @@
                                 <th>Contract Number</th>
                                 <th>Contact</th>
                                 <th>Placing Type</th>
-                                <th>Debit Note</th>
-                                <th>Credit Note</th>
-                                <th>Status</th>
+                                <th>Debit Note Status</th>
+                                <th>Credit Note Status</th>
+                                <th>Contract Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -49,9 +49,51 @@
                                 <td><a href="{{ route('approval.show', $contract) }}">{{ $contract->number }}</a></td>
                                 <td>{{ $contract->contact?->display_name ?? '-' }}</td>
                                 <td>{{ $contract->contractType?->name ?? '-' }}</td>
-                                <td class="text-center">{{ $contract->debitNotes->count() }}</td>
-                                <td class="text-center">{{ $contract->creditNotes->count() }}</td>
-                                <td class="text-center"><span class="badge bg-warning">Pending</span></td>
+                                <td>
+                                    @forelse($contract->debitNotes as $debitNote)
+                                        @php
+                                            $debitNoteBadge = match($debitNote->approval_status) {
+                                                'pending' => 'warning',
+                                                'approved' => 'success',
+                                                'rejected' => 'danger',
+                                                default => 'secondary',
+                                            };
+                                        @endphp
+                                        <div class="mb-1">
+                                            <span>{{ $debitNote->number }}</span>
+                                            <span class="badge bg-{{ $debitNoteBadge }}">{{ ucfirst($debitNote->approval_status ?? 'unknown') }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">-</span>
+                                    @endforelse
+                                </td>
+                                <td>
+                                    @forelse($contract->creditNotes as $creditNote)
+                                        @php
+                                            $creditNoteBadge = match($creditNote->approval_status) {
+                                                'pending' => 'warning',
+                                                'approved' => 'success',
+                                                'rejected' => 'danger',
+                                                default => 'secondary',
+                                            };
+                                        @endphp
+                                        <div class="mb-1">
+                                            <span>{{ $creditNote->number }}</span>
+                                            <span class="badge bg-{{ $creditNoteBadge }}">{{ ucfirst($creditNote->approval_status ?? 'unknown') }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">-</span>
+                                    @endforelse
+                                </td>
+                                @php
+                                    $contractBadge = match($contract->approval_status) {
+                                        'pending' => 'warning',
+                                        'approved' => 'success',
+                                        'rejected' => 'danger',
+                                        default => 'secondary',
+                                    };
+                                @endphp
+                                <td class="text-center"><span class="badge bg-{{ $contractBadge }}">{{ ucfirst($contract->approval_status ?? 'unknown') }}</span></td>
                                 <td class="text-center"><a href="{{ route('approval.show', $contract) }}" class="btn btn-primary btn-sm">Review</a></td>
                             </tr>
                         @endforeach
