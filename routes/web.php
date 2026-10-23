@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login']);
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+Route::get('/luminous/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLuminousLoginForm'])->name('luminous.login');
+Route::post('/luminous/login', [\App\Http\Controllers\Auth\LoginController::class, 'luminousLogin'])->name('luminous.login.store');
 
 // Protected Routes
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\RestrictLuminous::class])->group(function () {
     Route::get('/', function () {
         return view('home');
     })->name('home');
@@ -173,6 +175,16 @@ Route::prefix('transaction')->group(function () {
     Route::get('/cashouts/{id}', [\App\Http\Controllers\Transaction\CashoutController::class, 'show'])->name('transaction.cashouts.show');
     Route::post('/cashouts/{id}/mark-paid', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsPaid'])->name('transaction.cashouts.mark-paid');
     Route::post('/cashouts/{id}/mark-cancelled', [\App\Http\Controllers\Transaction\CashoutController::class, 'markAsCancelled'])->name('transaction.cashouts.mark-cancelled');
+});
+
+Route::middleware(['auth', 'can:luminous'])->prefix('luminous')->name('luminous.')->group(function () {
+    Route::get('/invoices', [\App\Http\Controllers\LuminousController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/create', [\App\Http\Controllers\LuminousController::class, 'create'])->name('invoices.create');
+    Route::post('/invoices', [\App\Http\Controllers\LuminousController::class, 'store'])->name('invoices.store');
+    Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\LuminousController::class, 'print'])->name('invoices.print');
+    Route::post('/invoices/{invoice}/pay', [\App\Http\Controllers\LuminousController::class, 'pay'])->name('invoices.pay');
+    Route::get('/aging', [\App\Http\Controllers\LuminousController::class, 'aging'])->name('aging');
+    Route::get('/report', [\App\Http\Controllers\LuminousController::class, 'report'])->name('report');
 });
 
 

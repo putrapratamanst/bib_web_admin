@@ -35,6 +35,24 @@ class ApprovalController extends Controller
         return $this->process($request, fn ($decision, $userId, $reason) => $service->submitCreditNote($id, $decision, $userId, $reason));
     }
 
+    public function approveAllCreditNotes(Request $request, Contract $contract, ContractApprovalService $service)
+    {
+        try {
+            $count = $service->approveAllCreditNotes($contract->id, (int) $request->user()->id);
+
+            return response()->json([
+                'message' => "{$count} Credit Note berhasil di-approve.",
+                'data' => ['count' => $count],
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => $exception->getMessage() ?: 'Approval gagal diproses.',
+            ], 422);
+        }
+    }
+
     private function process(Request $request, \Closure $callback)
     {
         $data = $request->validate([

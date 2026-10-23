@@ -60,7 +60,6 @@
                                             };
                                         @endphp
                                         <div class="mb-1">
-                                            <span>{{ $debitNote->number }}</span>
                                             <span class="badge bg-{{ $debitNoteBadge }}">{{ ucfirst($debitNote->approval_status ?? 'unknown') }}</span>
                                         </div>
                                     @empty
@@ -68,22 +67,24 @@
                                     @endforelse
                                 </td>
                                 <td>
-                                    @forelse($contract->creditNotes as $creditNote)
-                                        @php
-                                            $creditNoteBadge = match($creditNote->approval_status) {
-                                                'pending' => 'warning',
-                                                'approved' => 'success',
-                                                'rejected' => 'danger',
-                                                default => 'secondary',
-                                            };
-                                        @endphp
-                                        <div class="mb-1">
-                                            <span>{{ $creditNote->number }}</span>
-                                            <span class="badge bg-{{ $creditNoteBadge }}">{{ ucfirst($creditNote->approval_status ?? 'unknown') }}</span>
-                                        </div>
-                                    @empty
+                                    @php
+                                        $creditNoteStatus = $contract->creditNotes->contains('approval_status', 'rejected')
+                                            ? 'rejected'
+                                            : ($contract->creditNotes->contains('approval_status', 'pending')
+                                                ? 'pending'
+                                                : ($contract->creditNotes->contains('approval_status', 'approved') ? 'approved' : null));
+                                        $creditNoteBadge = match($creditNoteStatus) {
+                                            'pending' => 'warning',
+                                            'approved' => 'success',
+                                            'rejected' => 'danger',
+                                            default => 'secondary',
+                                        };
+                                    @endphp
+                                    @if($creditNoteStatus)
+                                        <span class="badge bg-{{ $creditNoteBadge }}">{{ ucfirst($creditNoteStatus) }}</span>
+                                    @else
                                         <span class="text-muted">-</span>
-                                    @endforelse
+                                    @endif
                                 </td>
                                 @php
                                     $contractBadge = match($contract->approval_status) {

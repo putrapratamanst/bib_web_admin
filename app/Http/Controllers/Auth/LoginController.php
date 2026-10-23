@@ -47,6 +47,34 @@ class LoginController extends Controller
         ]);
     }
 
+    public function showLuminousLoginForm()
+    {
+        if (Auth::check()) {
+            return Auth::user()->role === 'luminous'
+                ? redirect()->route('luminous.invoices.index')
+                : redirect()->route('login');
+        }
+
+        return view('auth.luminous-login');
+    }
+
+    public function luminousLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        if (Auth::attempt(array_merge($credentials, ['role' => 'luminous']), $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('luminous.invoices.index'));
+        }
+
+        throw ValidationException::withMessages([
+            'email' => 'Akun tidak memiliki akses Luminous atau kredensial tidak sesuai.',
+        ]);
+    }
+
     /**
      * Log the user out of the application.
      */

@@ -314,6 +314,10 @@ class CreditNoteController extends Controller
                 'amount' => $request->amount,
                 'discount_percent' => $request->discount_percent,
                 'status' => $request->status,
+                'approval_status' => 'pending',
+                'approved_by' => null,
+                'approved_at' => null,
+                'approval_notes' => null,
                 'updated_by' => Auth::id(),
             ]);
 

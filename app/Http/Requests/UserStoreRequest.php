@@ -26,7 +26,7 @@ class UserStoreRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId)
             ],
-            'role' => 'required|string|in:admin,approver,user',
+            'role' => 'required|string|in:admin,approver,user,luminous',
         ];
 
         // Password is required only on create, optional on update
@@ -50,7 +50,7 @@ class UserStoreRequest extends FormRequest
             'email.max' => 'Email cannot exceed 255 characters',
             'email.unique' => 'Email already exists',
             'role.required' => 'Role is required',
-            'role.in' => 'Role must be admin, approver, or user',
+            'role.in' => 'Role must be admin, approver, user, or luminous',
             'password.required' => 'Password is required',
             'password.string' => 'Password must be a string',
             'password.min' => 'Password must be at least 6 characters',

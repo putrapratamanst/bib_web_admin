@@ -8,7 +8,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Protected API Routes
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', \App\Http\Middleware\RestrictLuminous::class])->group(function () {
     Route::get('/account-category', [\App\Http\Controllers\Api\AccountCategoryController::class, 'index'])->name('api.account-categories.index');
     Route::get('/account-category/select2', [\App\Http\Controllers\Api\AccountCategoryController::class, 'select2'])->name('api.account-categories.select2');
 
@@ -112,6 +112,7 @@ Route::put('/contract/{id}', [\App\Http\Controllers\Api\ContractController::clas
 Route::patch('/contract/{id}/policy-number', [\App\Http\Controllers\Api\ContractController::class, 'updatePolicyNumber'])->name('api.contracts.update-policy-number');
 Route::post('/contracts/{id}/approve', [\App\Http\Controllers\Api\ContractController::class, 'approve'])->name('api.contracts.approve');
 Route::post('/contracts/{id}/reject', [\App\Http\Controllers\Api\ContractController::class, 'reject'])->name('api.contracts.reject');
+Route::post('/approval/contracts/{contract}/credit-notes/approve-all', [\App\Http\Controllers\Api\ApprovalController::class, 'approveAllCreditNotes'])->middleware('can:approve')->name('api.approval.credit-notes.approve-all');
 Route::post('/approval/contracts/{contract}', [\App\Http\Controllers\Api\ApprovalController::class, 'submit'])->middleware('can:approve')->name('api.approval.submit');
 Route::post('/approval/debit-notes/{id}', [\App\Http\Controllers\Api\ApprovalController::class, 'submitDebitNote'])->middleware('can:approve')->name('api.approval.debit-notes');
 Route::post('/approval/debit-note-billings/{id}', [\App\Http\Controllers\Api\ApprovalController::class, 'submitBilling'])->middleware('can:approve')->name('api.approval.debit-note-billings');

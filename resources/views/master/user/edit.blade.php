@@ -32,6 +32,7 @@
                                 <option value=""></option>
                                 <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="approver" {{ $user->role === 'approver' ? 'selected' : '' }}>Approver</option>
+                                <option value="luminous" {{ $user->role === 'luminous' ? 'selected' : '' }}>Luminous</option>
                                 <!-- <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option> -->
                             </select>
                         </div>

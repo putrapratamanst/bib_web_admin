@@ -75,6 +75,12 @@
                     @if($contract->creditNotes->isEmpty())
                         <div class="alert alert-info mb-0">Belum ada Credit Note untuk Placing ini.</div>
                     @else
+                        @php($hasPendingCreditNotes = $contract->creditNotes->contains('approval_status', 'pending'))
+                        <div class="text-end mb-2">
+                            <button type="button" class="btn btn-success btn-sm" id="approveAllCreditNotes" data-url="{{ url('/api/approval/contracts/' . $contract->id . '/credit-notes/approve-all') }}" @disabled($contract->approval_status !== 'approved' || !$hasPendingCreditNotes)>
+                                <i class="fas fa-check-double me-1"></i> Approve Semua Credit Note
+                            </button>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered mb-0">
                                 <thead><tr><th>Credit Note</th><th>Nomor Billing DN</th><th>Kurs</th><th>Amount</th><th>Persentase CN</th><th>Approval</th></tr></thead>
@@ -115,6 +121,7 @@ $(function () {
     const reasonWrap = $('#reasonWrap');
     const confirmButton = $('#confirmApproval');
     const feedback = $('#approvalFeedback');
+    const approveAllCreditNotesButton = $('#approveAllCreditNotes');
     let approvalUrl = '';
 
     decision.on('change', function () { reasonWrap.toggleClass('d-none', this.value !== 'reject'); });
@@ -139,6 +146,25 @@ $(function () {
         } catch (error) {
             feedback.html('<div class="alert alert-danger">' + error.message + '</div>');
             confirmButton.prop('disabled', false).text('Confirm');
+        }
+    });
+
+    approveAllCreditNotesButton.on('click', async function () {
+        if (!window.confirm('Approve semua Credit Note yang masih pending?')) return;
+
+        approveAllCreditNotesButton.prop('disabled', true).text('Processing...');
+        try {
+            const response = await fetch(approveAllCreditNotesButton.data('url'), {
+                method: 'POST',
+                headers: {'Accept': 'application/json', 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')}
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Approval gagal diproses.');
+            feedback.html('<div class="alert alert-success">' + result.message + '</div>');
+            window.setTimeout(() => window.location.reload(), 800);
+        } catch (error) {
+            feedback.html('<div class="alert alert-danger">' + error.message + '</div>');
+            approveAllCreditNotesButton.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Approve Semua Credit Note');
         }
     });
 });

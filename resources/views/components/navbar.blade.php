@@ -8,10 +8,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                @if(auth()->user()->role !== 'luminous')
                 <li class="nav-item">
                     <a class="nav-link{{ request()->routeIs('home') ? ' active' : '' }}" href="{{ route('home') }}">Home</a>
                 </li>
+                @endif
 
+                @if(auth()->user()->role !== 'luminous')
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Master Data
@@ -20,6 +23,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('master.chart-of-accounts.index') }}">Chart of Account</a>
                         </li>
+
                         <li>
                             <a class="dropdown-item" href="{{ route('master.contact-groups.index') }}">Contact Group</a>
                         </li>
@@ -159,6 +163,18 @@
                         </li>
                     </ul>
                 </li>
+                @endif
+
+                @if(auth()->user()->role === 'luminous')
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Luminous</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('luminous.invoices.index') }}">Tagihan Luminous</a></li>
+                        <li><a class="dropdown-item" href="{{ route('luminous.aging') }}">A/R Aging Luminous</a></li>
+                        <li><a class="dropdown-item" href="{{ route('luminous.report') }}">Laporan Keuangan Luminous</a></li>
+                    </ul>
+                </li>
+                @endif
 
                 @auth
                 <li class="nav-item dropdown">

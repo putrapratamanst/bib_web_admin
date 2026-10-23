@@ -83,12 +83,6 @@ class DebitNoteController extends Controller
                     $actions .= '<a href="' . route('transaction.debit-notes.edit', $b->id) . '" class="btn btn-sm btn-outline-secondary">Edit</a>';
                 }
                 
-                // Only show approve/reject buttons for approvers
-                if ($b->canBeApproved() && Auth::user()->canApproveCreditNotes()) {
-                    $actions .= '<button class="btn btn-sm btn-success approve-btn" data-id="' . $b->id . '">Approve</button>';
-                    $actions .= '<button class="btn btn-sm btn-danger reject-btn" data-id="' . $b->id . '">Reject</button>';
-                }
-                
                 // if ($b->canBePrinted()) {
                 //     $actions .= '<button class="btn btn-sm btn-secondary print-btn" data-id="' . $b->id . '">Print</button>';
                 // }

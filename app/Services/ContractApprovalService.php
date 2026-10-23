@@ -68,6 +68,25 @@ class ContractApprovalService
         });
     }
 
+    public function approveAllCreditNotes(string $contractId, int $userId): int
+    {
+        return DB::transaction(function () use ($contractId, $userId) {
+            $contract = Contract::query()->lockForUpdate()->findOrFail($contractId);
+            $this->ensureContractApproved($contract->approval_status);
+
+            $creditNotes = $contract->creditNotes()
+                ->where('approval_status', 'pending')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($creditNotes as $creditNote) {
+                $this->updateApproval($creditNote, 'approve', $userId, null, 'approval_notes');
+            }
+
+            return $creditNotes->count();
+        });
+    }
+
     private function submitModel(string $modelClass, string $id, string $decision, int $userId, ?string $reason): object
     {
         return DB::transaction(function () use ($modelClass, $id, $decision, $userId, $reason) {
