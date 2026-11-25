@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cashout;
 use App\Models\Contact;
+use App\Models\Currency;
+use App\Models\DebitNoteBilling;
 use App\Models\LuminousInvoice;
-use App\Models\LuminousInvoiceItem;
 use App\Models\LuminousPayment;
+use App\Services\LuminousReceivableService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class LuminousController extends Controller
@@ -22,81 +23,56 @@ class LuminousController extends Controller
         ]);
     }
 
-    public function create()
+    public function receivables()
     {
-        $cashouts = Cashout::where('status', '!=', 'cancelled')
-            ->whereNotIn('id', LuminousInvoiceItem::select('cashout_id'))
-            ->with(['insurance', 'debitNote.contract.details', 'debitNote.contract.contact', 'debitNote.billingAddress'])
-            ->orderBy('date')->get()
-            ->each(fn ($c) => $c->setAttribute('basos', $this->basos($c)))
-            ->filter(fn ($c) => $c->basos > 0)
-            ->sortBy(fn ($c) => strtolower($c->insurance?->display_name ?? ''))->values();
+        $billings = DebitNoteBilling::with(['debitNote.contact', 'debitNote.contract'])
+            ->latest('date')
+            ->paginate(25);
 
-        return view('luminous.create', compact('cashouts'));
+        return view('luminous.receivables.index', compact('billings'));
     }
 
-    public function store(Request $request)
+    public function createReceivable()
+    {
+        $contacts = Contact::whereHas('contactTypes', fn ($query) => $query->where('type', 'client'))
+            ->orderBy('display_name')
+            ->get();
+        $currencies = Currency::orderBy('code')->get();
+
+        return view('luminous.receivables.create', compact('contacts', 'currencies'));
+    }
+
+    public function storeReceivable(Request $request, LuminousReceivableService $service)
     {
         $data = $request->validate([
-            'cashout_ids' => ['required', 'array', 'min:1'],
-            'cashout_ids.*' => ['required', 'distinct', 'exists:cashouts,id'],
-            'number' => ['required', 'string', 'max:100', 'unique:luminous_invoices,number'],
-            'description' => ['required', 'string', 'max:255'],
+            'contact_id' => ['required', 'uuid', Rule::exists('contacts', 'id')],
+            'currency_code' => ['required', 'string', 'size:3', Rule::exists('currencies', 'code')],
+            'exchange_rate' => ['required', 'numeric', 'gt:0'],
             'date' => ['required', 'date'],
-            'city' => ['required', 'string', 'max:100'],
-            'subject' => ['required', 'string', 'max:255'],
             'due_date' => ['required', 'date', 'after_or_equal:date'],
-            'bank_name' => ['required', 'string', 'max:255'],
-            'bank_account' => ['required', 'string', 'max:100'],
-            'account_name' => ['required', 'string', 'max:255'],
-            'signatory_name' => ['required', 'string', 'max:255'],
-            'signatory_title' => ['required', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'description' => ['required', 'string', 'max:500'],
         ]);
 
-        DB::transaction(function () use ($data) {
-            $cashouts = Cashout::with('debitNote.contract.details')
-                ->whereIn('id', $data['cashout_ids'])
-                ->where('status', '!=', 'cancelled')
-                ->lockForUpdate()->get();
+        $isClient = Contact::whereKey($data['contact_id'])
+            ->whereHas('contactTypes', fn ($query) => $query->where('type', 'client'))
+            ->exists();
 
-            if ($cashouts->count() !== count($data['cashout_ids'])
-                || LuminousInvoiceItem::whereIn('cashout_id', $data['cashout_ids'])->exists()) {
-                throw ValidationException::withMessages([
-                    'cashout_ids' => 'Hutang Asuransi tidak valid atau sudah pernah ditagihkan.',
-                ]);
-            }
-
-            // Satu surat hanya untuk satu asuransi.
-            $insuranceIds = $cashouts->pluck('insurance_id')->unique();
-            if ($insuranceIds->count() !== 1) {
-                throw ValidationException::withMessages([
-                    'cashout_ids' => 'Pilih Hutang Asuransi dari satu asuransi saja per tagihan.',
-                ]);
-            }
-            $insuranceId = $insuranceIds->first();
-
-            $items = $cashouts->map(fn ($c) => ['cashout_id' => $c->id, 'basos_amount' => $this->basos($c)]);
-            $total = round($items->sum('basos_amount'), 2);
-
-            if ($total <= 0) {
-                throw ValidationException::withMessages(['cashout_ids' => 'Total Basos harus lebih dari 0.']);
-            }
-
-            $invoice = LuminousInvoice::create(Arr::except($data, 'cashout_ids') + [
-                'insurance_id' => $insuranceId,
-                'recipient' => Contact::findOrFail($insuranceId)->display_name,
-                'amount' => $total,
-                'created_by' => auth()->id(),
+        if (! $isClient) {
+            throw ValidationException::withMessages([
+                'contact_id' => 'Pilih kontak dengan tipe client.',
             ]);
-            $invoice->items()->createMany($items->all());
-        });
+        }
 
-        return redirect()->route('luminous.invoices.index')->with('success', 'Tagihan Luminous berhasil disimpan.');
+        $service->createManual($data, (int) auth()->id());
+
+        return redirect()->route('luminous.receivables.index')
+            ->with('success', 'Debit Note dan Billing Luminous berhasil dibuat.');
     }
 
     public function print(LuminousInvoice $invoice)
     {
-        $invoice->load('items.cashout.debitNote.contract.contact', 'items.cashout.debitNote.billingAddress');
+        $invoice->load('items');
 
         return view('luminous.print', compact('invoice'));
     }
@@ -129,14 +105,18 @@ class LuminousController extends Controller
             'as_of_date' => ['nullable', 'date'],
             'from_date' => ['nullable', 'date'],
             'to_date' => ['nullable', 'date'],
-            'insurance_id' => ['nullable', 'exists:contacts,id'],
+            'insurance_id' => ['nullable', Rule::exists('luminous_invoices', 'insurance_id')->where('company_id', auth()->user()->company_id)],
         ]);
         $asOf = Carbon::parse($request->input('as_of_date') ?: now())->startOfDay();
         $from = $request->filled('from_date') ? Carbon::parse($request->input('from_date'))->startOfDay() : null;
         $to = $request->filled('to_date') ? Carbon::parse($request->input('to_date'))->startOfDay() : null;
         $insuranceId = $request->input('insurance_id');
 
-        $insurances = Contact::whereIn('id', LuminousInvoice::select('insurance_id'))->orderBy('display_name')->get(['id', 'display_name']);
+        $insurances = LuminousInvoice::selectRaw('insurance_id as id, MAX(recipient) as display_name')
+            ->whereNotNull('insurance_id')
+            ->groupBy('insurance_id')
+            ->orderBy('display_name')
+            ->get();
 
         // Sama dengan A/R Aging existing: From & To terisi = filter rentang tanggal tagihan, selain itu s/d As Of Date.
         $rows = LuminousInvoice::with('payments')
@@ -180,22 +160,6 @@ class LuminousController extends Controller
             ->sum(fn ($invoice) => max(0, (float) $invoice->amount - $this->paidAsOf($invoice, $to)));
 
         return view('luminous.report', compact('invoices', 'payments', 'receivable', 'from', 'to'));
-    }
-
-    // Basos = premi * share% * eng_fee% (angka yang tampil di detail Hutang Asuransi).
-    // ponytail: dibagi rata per cicilan agar tidak tertagih berulang; sesuaikan bila billing cicilan tidak rata.
-    private function basos(Cashout $cashout): float
-    {
-        $contract = $cashout->debitNote?->contract;
-        $detail = $contract?->details->firstWhere('insurance_id', $cashout->insurance_id);
-
-        if (! $detail) {
-            return 0.0;
-        }
-
-        $installments = max(1, (int) $cashout->debitNote->installment);
-
-        return round((float) $contract->gross_premium * $detail->percentage / 100 * $detail->eng_fee / 100 / $installments, 2);
     }
 
     private function paidAsOf(LuminousInvoice $invoice, Carbon $date): float

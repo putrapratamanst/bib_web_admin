@@ -10,9 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contract extends Model
 {
-    use HasFactory;
-
-    use HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     protected $fillable = [
         'contract_status',

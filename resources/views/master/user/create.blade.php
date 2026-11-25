@@ -32,7 +32,6 @@
                                 <option value=""></option>
                                 <option value="admin">Admin</option>
                                 <option value="approver">Approver</option>
-                                <option value="luminous">Luminous</option>
                                 <!-- <option value="user">User</option> -->
                             </select>
                         </div>

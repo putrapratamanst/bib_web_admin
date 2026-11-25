@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContractEndorsement extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     public $incrementing = false;
     protected $keyType = 'string';

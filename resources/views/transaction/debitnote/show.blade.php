@@ -4,6 +4,13 @@
 
 @section('content')
 <div class="container">
+    @php
+        $sourceDebitNote = $debitNote->sourceCashout?->debitNote;
+        $sourceContract = $sourceDebitNote?->contract;
+        $billingAddress = $sourceDebitNote?->billingAddress
+            ?? $sourceContract?->billingAddress
+            ?? $debitNote->billingAddress;
+    @endphp
     <div class="card">
         <div class="card-header">
             Detail Debit Note
@@ -25,13 +32,13 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="contract_id" class="form-label">Placing Number<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly name="contract_id" id="contract_id" value="{{ $debitNote->contract->number }}">
+                            <input type="text" class="form-control" readonly name="contract_id" id="contract_id" value="{{ $sourceContract?->number ?? $debitNote->contract?->number ?? '-' }}">
                         </div>
                     </div>
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="policy_number" class="form-label">Policy Number</label>
-                            <input type="text" class="form-control" readonly name="policy_number" id="policy_number" value="{{ $debitNote->contract->policy_number ?? '-' }}" style="background-color: #e9ecef;">
+                            <input type="text" class="form-control" readonly name="policy_number" id="policy_number" value="{{ $sourceContract?->policy_number ?: ($sourceContract?->cover_note_number ?: ($debitNote->contract?->policy_number ?? '-')) }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
                 </div>
@@ -46,7 +53,7 @@
                     <div class="col-md-4 col-lg-3">
                         <div class="mb-3">
                             <label for="billing_address" class="form-label">Billing Address<sup class="text-danger">*</sup></label>
-                            <input type="text" class="form-control" readonly id="billing_address" value="{{ $debitNote->billingAddress?->address ?? '-' }}">
+                            <input type="text" class="form-control" readonly id="billing_address" value="{{ $billingAddress?->address ?? '-' }}">
                         </div>
                     </div>
                 </div>
@@ -54,14 +61,14 @@
                 <div class="row">
                     <div class="col-lg-4">
                         <div class="mb-3">
-                            <label for="insured_name" class="form-label">Insured Name</label>
-                            <input type="text" class="form-control" readonly id="insured_name" value="{{ $debitNote->billingAddress?->name ?? '-' }}" style="background-color: #e9ecef;">
+                            <label for="insurance_name" class="form-label">{{ $debitNote->sourceCashout ? 'Insurance Name' : 'Insured Name' }}</label>
+                            <input type="text" class="form-control" readonly id="insurance_name" value="{{ $debitNote->sourceCashout ? ($debitNote->sourceCashout->insurance?->display_name ?? '-') : ($billingAddress?->name ?? '-') }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
                     <div class="col-lg-8">
                         <div class="mb-3">
                             <label for="correspondence_address" class="form-label">Correspondence Address</label>
-                            <input type="text" class="form-control" readonly id="correspondence_address" value="{{ $debitNote->billingAddress?->address ?? '-' }}" style="background-color: #e9ecef;">
+                            <input type="text" class="form-control" readonly id="correspondence_address" value="{{ $billingAddress?->address ?? '-' }}" style="background-color: #e9ecef;">
                         </div>
                     </div>
                 </div>
@@ -126,7 +133,7 @@
                             <label for="gross_premium" class="form-label">Gross Premium</label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
-                                <input type="text" class="form-control text-end autonumeric" readonly id="gross_premium" value="{{ $debitNote->contract->gross_premium_formatted ?? '0' }}">
+                                <input type="text" class="form-control text-end autonumeric" readonly id="gross_premium" value="{{ $sourceContract?->gross_premium_formatted ?? $debitNote->contract?->gross_premium_formatted ?? '0' }}">
                             </div>
                         </div>
                     </div>
@@ -134,7 +141,7 @@
                         <div class="mb-3">
                             <label for="discount" class="form-label">Discount %</label>
                             <div class="input-group">
-                                <input type="text" class="form-control text-end autonumeric" readonly id="discount" value="{{ $debitNote->contract->discount ?? '0' }}">
+                                <input type="text" class="form-control text-end autonumeric" readonly id="discount" value="{{ $sourceContract?->discount ?? $debitNote->contract?->discount ?? '0' }}">
                                 <span class="input-group-text" style="font-size: 14px;">%</span>
                             </div>
                         </div>
@@ -144,7 +151,7 @@
                             <label for="discount_amount" class="form-label">Discount Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text" style="font-size: 14px;">{{ $debitNote->currency_code }}</span>
-                                <input type="text" class="form-control text-end autonumeric" readonly id="discount_amount" value="{{ $debitNote->contract->discount_amount_formatted ?? '0' }}">
+                                <input type="text" class="form-control text-end autonumeric" readonly id="discount_amount" value="{{ $sourceContract?->discount_amount_formatted ?? $debitNote->contract?->discount_amount_formatted ?? '0' }}">
                             </div>
                         </div>
                     </div>

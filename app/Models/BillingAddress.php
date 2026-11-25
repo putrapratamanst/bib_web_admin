@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BillingAddress extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'contact_id',

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ContractType extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'code',

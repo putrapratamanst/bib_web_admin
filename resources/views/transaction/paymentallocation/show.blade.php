@@ -88,13 +88,9 @@
                 </div>
                 <div class="card-body">
                     @php
-                    // Total allocated from THIS cash bank (only posted allocations)
+                    // Match the API validation: include posted allocations to billings and cashouts.
                     $totalAllocated = \App\Models\PaymentAllocation::where('cash_bank_id', $cashBank->id)
                         ->where('status', 'posted')
-                        ->whereNotNull('debit_note_billing_id')
-                        ->get()
-                        ->groupBy('debit_note_billing_id')
-                        ->map(fn ($allocations) => $allocations->sortByDesc('created_at')->first())
                         ->sum('allocation');
                     $totalAvailable = $cashBank->amount - $totalAllocated;
                     $isFullyAllocated = $totalAvailable <= 0;
@@ -440,6 +436,7 @@
 
         // Save allocation for cashout (type pay)
         $('.save-allocation-cashout').on('click', function() {
+            const saveButton = $(this);
             const cashoutId = $(this).data('cashout-id');
             const allocation = $(this).closest('.input-group').find('.allocation-input-cashout').val();
             const cashoutNumber = $(this).closest('tr').find('td').eq(0).text().trim();
@@ -460,6 +457,7 @@
                     return;
                 }
 
+                saveButton.prop('disabled', true);
                 $.ajax({
                     url: "{{ route('api.payment-allocations.storeByCashBankIDForCashout', ['cashbankID' => $cashBank->id]) }}",
                     method: 'POST',
@@ -479,6 +477,7 @@
                         });
                     },
                     error: function(xhr) {
+                        saveButton.prop('disabled', false);
                         let errorMessage = 'An error occurred while saving the allocation';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;

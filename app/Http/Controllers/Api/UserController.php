@@ -14,13 +14,13 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::orderBy('name', 'asc')->get();
+        $users = User::where('company_id', auth()->user()->company_id)->orderBy('name', 'asc')->get();
         return response()->json(['data' => $users]);
     }
 
     public function datatables()
     {
-        $users = User::orderBy('name', 'asc')->get();
+        $users = User::where('company_id', auth()->user()->company_id)->orderBy('name', 'asc')->get();
 
         return DataTables::of($users)
             ->addColumn('role_badge', function($user) {
@@ -66,7 +66,7 @@ class UserController extends Controller
     public function update(UserStoreRequest $request, $id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
             $data = $request->validated();
 
             // Only update password if provided
@@ -92,7 +92,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
             
             // Prevent deleting own account
             if ($user->id === Auth::id()) {

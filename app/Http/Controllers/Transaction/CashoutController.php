@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cashout;
+use App\Services\CashoutPaymentService;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 
 class CashoutController extends Controller
@@ -59,12 +61,7 @@ class CashoutController extends Controller
 
     public function markAsPaid($id)
     {
-        $cashout = Cashout::findOrFail($id);
-        
-        $cashout->update([
-            'status' => 'paid',
-            'updated_by' => 1 // Todo: Replace with auth()->user()->id
-        ]);
+        app(CashoutPaymentService::class)->markAsPaid((string) $id, auth()->id());
 
         return redirect()->back()->with('success', 'Cashout marked as paid successfully');
     }
@@ -72,6 +69,12 @@ class CashoutController extends Controller
     public function markAsCancelled($id)
     {
         $cashout = Cashout::findOrFail($id);
+
+        if ($cashout->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya cashout pending yang dapat dibatalkan.',
+            ]);
+        }
         
         $cashout->update([
             'status' => 'cancelled',

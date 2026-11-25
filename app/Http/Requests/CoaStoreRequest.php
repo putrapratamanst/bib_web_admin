@@ -23,11 +23,16 @@ class CoaStoreRequest extends FormRequest
                 'required',
                 'max:10',
                 Rule::unique('chart_of_accounts')->where(function ($query) {
-                    return $query->where('prefix', request('prefix'));
+                    return $query->where('company_id', auth()->user()->company_id)
+                        ->where('prefix', request('prefix'));
                 }),
             ],
             'prefix' => 'required|max:10',
-            'name' => 'required|unique:chart_of_accounts,name|max:50',
+            'name' => [
+                'required',
+                'max:50',
+                Rule::unique('chart_of_accounts', 'name')->where('company_id', auth()->user()->company_id),
+            ],
             'balance_type' => 'required|in:DEBIT,CREDIT',
             'prefix' => 'required|max:10',
 

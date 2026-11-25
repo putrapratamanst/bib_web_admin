@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContactGroup extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = ['name', 'description', 'created_by', 'updated_by'];
 

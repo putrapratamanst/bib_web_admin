@@ -5,11 +5,10 @@
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0"><i class="fas fa-file-invoice me-2"></i>List of Tagihan Luminous</h5>
-            <small class="text-muted">Manage Luminous socialization fee invoices</small>
+            <small class="text-muted">Tagihan engineering fee dibuat otomatis saat cashout BIB dibayar.</small>
             <div class="float-end">
                 <a class="btn btn-outline-secondary btn-sm me-1" href="{{ route('luminous.aging') }}">A/R Aging</a>
                 <a class="btn btn-outline-secondary btn-sm me-1" href="{{ route('luminous.report') }}">Laporan Keuangan</a>
-                <a class="btn btn-primary btn-sm" href="{{ route('luminous.invoices.create') }}"><i class="fas fa-plus me-1"></i>Tambah Tagihan</a>
             </div>
         </div>
         <div class="card-body">

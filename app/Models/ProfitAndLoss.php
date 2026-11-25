@@ -25,10 +25,14 @@ class ProfitAndLoss extends Model
         $data = ReportFinance::from('report_finance as rf')
             ->leftJoin('chart_of_accounts as coa', function ($join) {
                 $join->on('coa.code', '>=', DB::raw('rf.from_account_code'))
-                    ->where('coa.code', '<=', DB::raw('rf.to_account_code'));
+                    ->where('coa.code', '<=', DB::raw('rf.to_account_code'))
+                    ->where('coa.company_id', auth()->user()?->company_id);
                 //  ->whereIn('coa.prefix', [1, 2, 3]);
             })
-            ->leftJoin('journal_entry_details as jed', 'jed.chart_of_account_id', '=', 'coa.id')
+            ->leftJoin('journal_entry_details as jed', function ($join) {
+                $join->on('jed.chart_of_account_id', '=', 'coa.id')
+                    ->where('jed.company_id', auth()->user()?->company_id);
+            })
 
             ->select(
                 'rf.id',

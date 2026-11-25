@@ -10,6 +10,7 @@ use App\Models\DebitNoteBilling;
 use App\Models\PaymentAllocation;
 use App\Models\CreditNote;
 use App\Models\ChartOfAccount;
+use App\Models\Scopes\CompanyScope;
 use Illuminate\Http\Request;
 
 class PaymentAllocationController extends Controller
@@ -39,9 +40,14 @@ class PaymentAllocationController extends Controller
         
         // Check if type is 'receive' or 'pay'
         if ($cashBank->type === 'receive') {
-            // Get approved debit note billings for the contact
-            $debitNoteBillings = DebitNoteBilling::whereHas('debitNote', function($query) use ($cashBank) {
-                $query->where('contact_id', $cashBank->contact_id);
+            // Luminous receivables belong to BIB as the billed contact, but are linked to an insurer through their source cashout.
+            $debitNoteBillings = DebitNoteBilling::where(function ($query) use ($cashBank) {
+                $query->whereHas('debitNote', function ($query) use ($cashBank) {
+                    $query->where('contact_id', $cashBank->contact_id);
+                })->orWhereHas('debitNote.sourceCashout', function ($query) use ($cashBank) {
+                    $query->withoutGlobalScope(CompanyScope::class)
+                        ->where('insurance_id', $cashBank->contact_id);
+                });
             })
             ->where('status', '!=', 'pending')
             ->with(['debitNote.contract', 'debitNote' => function($query) {
@@ -102,7 +108,17 @@ class PaymentAllocationController extends Controller
         } else {
             // Type is 'pay' - get cashouts
             $cashouts = Cashout::with(['insurance', 'debitNote', 'debitNoteBilling'])
-                ->where('status', 'pending')
+                ->where(function ($query) use ($cashBank) {
+                    $query->where('status', 'pending')
+                        ->orWhere(function ($query) use ($cashBank) {
+                        $query->whereIn('status', ['paid', 'cancelled'])
+                                ->whereIn('id', PaymentAllocation::query()
+                                    ->select('cashout_id')
+                                    ->where('cash_bank_id', $cashBank->id)
+                                    ->whereIn('status', ['posted', 'cancelled'])
+                                    ->whereNotNull('cashout_id'));
+                        });
+                })
                 ->orderBy('date', 'desc')
                 ->get()
                 ->map(function($cashout) use ($cashBank) {

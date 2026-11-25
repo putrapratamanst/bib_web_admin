@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentAllocation extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     public $timestamps = true;
 

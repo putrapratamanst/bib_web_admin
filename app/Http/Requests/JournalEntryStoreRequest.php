@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -16,7 +17,11 @@ class JournalEntryStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'number' => 'required|max:100|unique:journal_entries,number',
+            'number' => [
+                'required',
+                'max:100',
+                Rule::unique('journal_entries', 'number')->where('company_id', auth()->user()->company_id),
+            ],
             'entry_date' => 'required|date',
             'reference' => 'nullable|max:100',
             'description' => 'nullable',

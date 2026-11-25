@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Scopes\CompanyScope;
 
 class CashBank extends Model
 {
-    use HasFactory;
-
-    use HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
 
@@ -66,12 +65,21 @@ class CashBank extends Model
 
     public function chartOfAccount(): BelongsTo
     {
-        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id');
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id', 'id')
+            ->withoutGlobalScope(CompanyScope::class);
     }
 
     public function contraAccount(): BelongsTo
     {
-        return $this->belongsTo(ChartOfAccount::class, 'contra_account_id', 'id');
+        return $this->belongsTo(ChartOfAccount::class, 'contra_account_id', 'id')
+            ->withoutGlobalScope(CompanyScope::class);
+    }
+
+    protected static function crossCompanyRelationTables(): array
+    {
+        return auth()->user()?->company?->code === 'LUMINOUS'
+            ? ['chart_of_accounts']
+            : [];
     }
 
     public function createdBy(): BelongsTo

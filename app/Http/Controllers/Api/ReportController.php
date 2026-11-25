@@ -29,7 +29,10 @@ class ReportController extends Controller
                 'details.insurance',
                 'debitNotes.creditNotes',
             ])
-            ->leftJoin('billing_addresses as ba', 'ba.id', '=', 'contracts.billing_address_id')
+            ->leftJoin('billing_addresses as ba', function ($join) {
+                $join->on('ba.id', '=', 'contracts.billing_address_id')
+                    ->on('ba.company_id', '=', 'contracts.company_id');
+            })
             ->select('contracts.*')
             ->whereNotNull('contracts.period_end')
             ->whereMonth('contracts.period_end', $month)

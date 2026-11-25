@@ -24,14 +24,17 @@ class CoaUpdateRequest extends FormRequest
                 'required',
                 'max:10',
                 Rule::unique('chart_of_accounts')->where(function ($query) {
-                    return $query->where('prefix', request('prefix'));
+                    return $query->where('company_id', auth()->user()->company_id)
+                        ->where('prefix', request('prefix'));
                 })->ignore($chartOfAccountId),
             ],
             'prefix' => 'required|max:10',
             'name' => [
                 'required',
                 'max:50',
-                Rule::unique('chart_of_accounts')->ignore($chartOfAccountId),
+                Rule::unique('chart_of_accounts', 'name')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($chartOfAccountId),
             ],
             'balance_type' => 'required|in:DEBIT,CREDIT',
         ];

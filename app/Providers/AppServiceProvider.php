@@ -21,6 +21,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('approve', fn ($user) => $user->role === 'approver');
-        Gate::define('luminous', fn ($user) => $user->role === 'luminous');
+        Gate::define('luminous', fn ($user) => $user->company?->code === 'LUMINOUS');
     }
 }

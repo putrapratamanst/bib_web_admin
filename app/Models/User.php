@@ -6,10 +6,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
+use RuntimeException;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $user): void {
+            if ($user->company_id) {
+                return;
+            }
+
+            $currentUser = Auth::user();
+            $companyId = $currentUser ? $currentUser->company_id : Company::idFor('BIB');
+
+            if (! $companyId) {
+                throw new RuntimeException('Cannot create a user before the BIB company exists.');
+            }
+
+            $user->company_id = $companyId;
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -44,6 +65,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LuminousInvoice extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
     protected $keyType = 'string';

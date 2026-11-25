@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\LuminousReceivableService;
 
 class Cashout extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -27,12 +28,14 @@ class Cashout extends Model
         'installment_number', // Tracking installment ke berapa
         'description',
         'status',
+        'paid_at',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'paid_at' => 'datetime',
         'due_date' => 'date',
         'exchange_rate' => 'decimal:2',
         'amount' => 'decimal:2',
@@ -175,6 +178,11 @@ class Cashout extends Model
     // Create journal entry when cashout is paid
     public function createPaidJournalEntry()
     {
+        $reference = "Cashout Payment: {$this->number}";
+        if (JournalEntry::where('reference', $reference)->exists()) {
+            return false;
+        }
+
         $payableAccount = ChartOfAccount::where('code', 'LIKE', '2%')->where('name', 'LIKE', '%payable%')->first();
         $cashAccount = ChartOfAccount::where('code', 'LIKE', '1%')->where('name', 'LIKE', '%cash%')->first();
         
@@ -185,7 +193,7 @@ class Cashout extends Model
         $journalEntry = JournalEntry::create([
             'number' => $this->generateJournalNumber(),
             'entry_date' => now()->toDateString(),
-            'reference' => "Cashout Payment: {$this->number}",
+            'reference' => $reference,
             'description' => "Payment to {$this->insurance->display_name}",
             'status' => 'active',
             'created_by' => $this->updated_by,
@@ -236,9 +244,9 @@ class Cashout extends Model
         });
 
         static::updated(function ($cashout) {
-            // Create paid journal entry when status changes to paid
-            if ($cashout->isDirty('status') && $cashout->status === 'paid') {
+            if ($cashout->wasChanged('status') && $cashout->status === 'paid') {
                 $cashout->createPaidJournalEntry();
+                app(LuminousReceivableService::class)->createFromPaidCashout($cashout);
             }
         });
     }

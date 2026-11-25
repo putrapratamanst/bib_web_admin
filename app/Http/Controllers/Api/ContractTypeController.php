@@ -37,7 +37,12 @@ class ContractTypeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:contract_types,code',
+            'code' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('contract_types', 'code')->where('company_id', auth()->user()->company_id),
+            ],
             'name' => 'required|string|max:50',
         ]);
 
@@ -58,7 +63,9 @@ class ContractTypeController extends Controller
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('contract_types', 'code')->ignore($contractType->id),
+                Rule::unique('contract_types', 'code')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($contractType->id),
             ],
             'name' => 'required|string|max:50',
         ]);

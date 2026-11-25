@@ -18,9 +18,11 @@ class CashBankController extends Controller
     {
         $q = request('q');
 
-        $cashBanks = CashBank::where('number', 'like', "%$q%")
-            ->orWhereHas('contact', function ($query) use ($q) {
-                $query->where('display_name', 'like', "%$q%");
+        $cashBanks = CashBank::where(function ($query) use ($q) {
+            $query->where('number', 'like', "%$q%")
+                ->orWhereHas('contact', function ($query) use ($q) {
+                    $query->where('display_name', 'like', "%$q%");
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);

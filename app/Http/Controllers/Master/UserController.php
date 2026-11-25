@@ -20,7 +20,7 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
         return view('master.user.edit', compact('user'));
     }
 }

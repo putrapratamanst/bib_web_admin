@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contact extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     use HasUuids;
 

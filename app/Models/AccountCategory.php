@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccountCategory extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = ['name', 'description'];
 }

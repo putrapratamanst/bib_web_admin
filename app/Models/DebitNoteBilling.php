@@ -10,9 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DebitNoteBilling extends Model
 {
-    use HasFactory;
-
-    use HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
 

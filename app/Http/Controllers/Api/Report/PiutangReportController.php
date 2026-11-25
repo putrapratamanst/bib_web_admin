@@ -15,7 +15,8 @@ class PiutangReportController extends Controller
 {
     public function index(Request $request)
     {
-        $as_of_date = $request->input('as_of_date') ?? now()->toDateString();
+        $asOfDate = Carbon::parse($request->input('as_of_date') ?? now())->startOfDay();
+        $as_of_date = $asOfDate->toDateString();
         $from_date = $request->input('from_date') ?
             Carbon::parse($request->input('from_date'))->format('Y-m-d') :
             null;
@@ -23,6 +24,7 @@ class PiutangReportController extends Controller
         $to_date = $request->input('to_date') ?
             Carbon::parse($request->input('to_date'))->format('Y-m-d') :
             null;
+        $companyId = auth()->user()->company_id;
         $sql = <<<'SQL'
 SELECT
     a.id,
@@ -43,23 +45,25 @@ FROM (
         db.due_date
     FROM debit_note_billings db
     JOIN debit_notes dn ON dn.id = db.debit_note_id
-    WHERE (
+    WHERE db.company_id = ? AND dn.company_id = ?
+        AND db.status IN ('approved', 'posted', 'paid')
+        AND ((
         (? IS NULL OR ? IS NULL) AND date(db.date) <= ?
     ) OR (
         ? IS NOT NULL AND ? IS NOT NULL AND date(db.date) BETWEEN ? AND ?
-    )
+    ))
 ) a
 LEFT JOIN (
     SELECT billing_id, SUM(amount) AS CN
     FROM credit_notes
-        WHERE date(date) <= ?
+        WHERE company_id = ? AND date(date) <= ?
             AND (status IS NULL OR status = 'active')
         GROUP BY billing_id
 ) b ON a.id = b.billing_id
 LEFT JOIN (
     SELECT debit_note_billing_id, SUM(allocation) AS allocation
     FROM payment_allocations
-        WHERE date(created_at) <= ?
+        WHERE company_id = ? AND date(created_at) <= ?
             AND (status = 'posted')
             AND cashout_id IS NULL
         GROUP BY debit_note_billing_id
@@ -68,6 +72,8 @@ SQL;
 
         // Menyiapkan binding parameters untuk query utama
         $mainQueryBindings = [
+            $companyId,
+            $companyId,
             $from_date,              // ? IS NULL
             $to_date,               // ? IS NULL
             $as_of_date,           // date <= ?
@@ -80,8 +86,8 @@ SQL;
         // Binding parameters untuk subquery credit notes dan payment allocations
         $allBindings = array_merge(
             $mainQueryBindings,
-            [$as_of_date],  // untuk credit notes where clause
-            [$as_of_date]   // untuk payment allocations where clause
+            [$companyId, $as_of_date],
+            [$companyId, $as_of_date]
         );
         Log::info("SQL Query:", [
             'query' => vsprintf(str_replace('?', "'%s'", $sql), $allBindings)
@@ -99,7 +105,7 @@ SQL;
             // Parse dates
             $dueDate = $row->due_date ? Carbon::parse($row->due_date) : null;
             $billingDate = $row->billing_date ? Carbon::parse($row->billing_date) : null;
-            $daysUntilDue = $dueDate ? $dueDate->diffInDays(Carbon::now(), false) : null;
+            $daysUntilDue = $dueDate ? $asOfDate->diffInDays($dueDate, false) : null;
 
             $formattedResults[] = [
                 'billing_no' => $row->number,

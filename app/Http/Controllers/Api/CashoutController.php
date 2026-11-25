@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cashout;
 use App\Models\DebitNote;
+use App\Services\CashoutPaymentService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -117,7 +118,19 @@ class CashoutController extends Controller
             'description' => 'nullable|string'
         ]);
 
-        $cashout->update($request->only(['status', 'description']));
+        if ($request->status === 'paid') {
+            $cashout = app(CashoutPaymentService::class)->markAsPaid(
+                (string) $id,
+                auth()->id(),
+                $request->input('description')
+            );
+        } else {
+            if ($cashout->status === 'paid') {
+                return response()->json(['message' => 'Cashout paid tidak dapat dibuka kembali atau dibatalkan.'], 422);
+            }
+
+            $cashout->update($request->only(['status', 'description']));
+        }
 
         return response()->json([
             'message' => 'Cashout updated successfully',
@@ -127,12 +140,7 @@ class CashoutController extends Controller
 
     public function markAsPaid($id)
     {
-        $cashout = Cashout::findOrFail($id);
-        
-        $cashout->update([
-            'status' => 'paid',
-            'updated_by' => 1 // Default user ID
-        ]);
+        $cashout = app(CashoutPaymentService::class)->markAsPaid((string) $id, auth()->id());
 
         return response()->json([
             'message' => 'Cashout marked as paid',
@@ -143,6 +151,10 @@ class CashoutController extends Controller
     public function markAsCancelled($id)
     {
         $cashout = Cashout::findOrFail($id);
+
+        if ($cashout->status !== 'pending') {
+            return response()->json(['message' => 'Hanya cashout pending yang dapat dibatalkan.'], 422);
+        }
         
         $cashout->update([
             'status' => 'cancelled',

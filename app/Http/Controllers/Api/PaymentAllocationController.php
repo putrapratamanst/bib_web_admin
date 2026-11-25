@@ -14,6 +14,7 @@ use App\Models\DebitNoteBilling;
 use App\Models\PaymentAllocation;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class PaymentAllocationController extends Controller
@@ -22,9 +23,11 @@ class PaymentAllocationController extends Controller
     {
         $q = request('q');
 
-        $cashBanks = CashBank::where('number', 'like', "%$q%")
-            ->orWhereHas('contact', function ($query) use ($q) {
-                $query->where('display_name', 'like', "%$q%");
+        $cashBanks = CashBank::where(function ($query) use ($q) {
+            $query->where('number', 'like', "%$q%")
+                ->orWhereHas('contact', function ($query) use ($q) {
+                    $query->where('display_name', 'like', "%$q%");
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -326,51 +329,57 @@ class PaymentAllocationController extends Controller
                 'allocation' => 'required|numeric|min:0',
             ]);
 
-            $cashBank = CashBank::findOrFail($request->cash_bank_id);
+            return DB::transaction(function () use ($request) {
+                $cashBank = CashBank::whereKey($request->cash_bank_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            // Get total allocated amount for this cash bank (only posted allocations)
-            $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
-                ->where('status', 'posted')
-                ->sum('allocation');
+                // Get total allocated amount for this cash bank (only posted allocations)
+                $totalAllocated = PaymentAllocation::where('cash_bank_id', $request->cash_bank_id)
+                    ->where('status', 'posted')
+                    ->sum('allocation');
 
-            // Check if allocation exceeds cash bank amount
-            if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
-                if ($totalAllocated + $request->allocation > $cashBank->amount) {
-                    return response()->json([
-                        'message' => sprintf(
-                            'Total allocation amount cannot exceed cash bank amount. Already allocated: %s, Available: %s',
-                            number_format($totalAllocated, 2, ',', '.'),
-                            number_format($cashBank->amount - $totalAllocated, 2, ',', '.')
-                        )
-                    ], 422);
+                // Check if allocation exceeds cash bank amount
+                if ($request->allocation >= ($cashBank->amount - $totalAllocated)) {
+                    if ($totalAllocated + $request->allocation > $cashBank->amount) {
+                        return response()->json([
+                            'message' => sprintf(
+                                'Total allocation amount cannot exceed cash bank amount. Already allocated: %s, Available: %s',
+                                number_format($totalAllocated, 2, ',', '.'),
+                                number_format($cashBank->amount - $totalAllocated, 2, ',', '.')
+                            )
+                        ], 422);
+                    }
                 }
-            }
 
-            // Type pay - handle cashout
-            $cashout = Cashout::with('insurance')
-                ->findOrFail($request->cashout_id);
+                // Type pay - handle cashout
+                $cashout = Cashout::with('insurance')
+                    ->whereKey($request->cashout_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            $allocation = PaymentAllocation::create([
-                'cash_bank_id' => $request->cash_bank_id,
-                'debit_note_id' => $cashout->debit_note_id,
-                'allocation' => $request->allocation,
-                'status' => 'posted',
-                'cashout_id' => $request->cashout_id,
-            ]);
+                $allocation = PaymentAllocation::create([
+                    'cash_bank_id' => $request->cash_bank_id,
+                    'debit_note_id' => $cashout->debit_note_id,
+                    'allocation' => $request->allocation,
+                    'status' => 'posted',
+                    'cashout_id' => $request->cashout_id,
+                ]);
 
-            // Update cashout status to paid if fully allocated
-            $totalCashoutAllocated = PaymentAllocation::where('cashout_id', $cashout->id)
-                ->sum('allocation');
-            
-            if ($totalCashoutAllocated >= $cashout->amount) {
-                $cashout->status = 'paid';
-                $cashout->save();
-            }
+                // Update cashout status to paid if fully allocated
+                $totalCashoutAllocated = PaymentAllocation::where('cashout_id', $cashout->id)
+                    ->sum('allocation');
 
-            return response()->json([
-                'message' => 'Cashout allocation has been saved successfully',
-                'data' => $allocation
-            ], 200);
+                if ($totalCashoutAllocated >= $cashout->amount) {
+                    $cashout->status = 'paid';
+                    $cashout->save();
+                }
+
+                return response()->json([
+                    'message' => 'Cashout allocation has been saved successfully',
+                    'data' => $allocation
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while saving the cashout allocation',
@@ -392,32 +401,49 @@ class PaymentAllocationController extends Controller
             ], 422);
         }
 
-        $query = PaymentAllocation::where('cash_bank_id', $cashbankID)
-            ->where('status', 'posted')
-            ->where('allocation', '>', 0);
+        return DB::transaction(function () use ($request, $cashbankID) {
+            $cashout = $request->filled('cashout_id')
+                ? Cashout::whereKey($request->cashout_id)->lockForUpdate()->firstOrFail()
+                : null;
 
-        if ($request->filled('debit_note_billing_id')) {
-            $query->where('debit_note_billing_id', $request->debit_note_billing_id);
-        } else {
-            $query->where('cashout_id', $request->cashout_id);
-        }
+            $query = PaymentAllocation::where('cash_bank_id', $cashbankID)
+                ->where('status', 'posted')
+                ->where('allocation', '>', 0);
 
-        $updated = $query->update([
-            'allocation' => 0,
-            'status' => 'cancelled',
-            // 'updated_by' => auth()->id(),
-            'updated_at' => now(),
-        ]);
+            if ($request->filled('debit_note_billing_id')) {
+                $query->where('debit_note_billing_id', $request->debit_note_billing_id);
+            } else {
+                $query->where('cashout_id', $request->cashout_id);
+            }
 
-        if ($updated === 0) {
+            $updated = $query->update([
+                'allocation' => 0,
+                'status' => 'cancelled',
+                // 'updated_by' => auth()->id(),
+                'updated_at' => now(),
+            ]);
+
+            if ($updated === 0) {
+                return response()->json([
+                    'message' => 'Allocation aktif tidak ditemukan.'
+                ], 404);
+            }
+
+            if ($cashout && $cashout->status === 'paid' && ! $cashout->paid_at) {
+                $totalAllocated = PaymentAllocation::where('cashout_id', $cashout->id)
+                    ->where('status', 'posted')
+                    ->sum('allocation');
+
+                if ($totalAllocated < $cashout->amount) {
+                    $cashout->status = 'cancelled';
+                    $cashout->save();
+                }
+            }
+
             return response()->json([
-                'message' => 'Allocation aktif tidak ditemukan.'
-            ], 404);
-        }
-
-        return response()->json([
-            'message' => 'Payment allocation berhasil dibatalkan.'
-        ]);
+                'message' => 'Payment allocation berhasil dibatalkan.'
+            ]);
+        });
     }
 
     private function generateCashoutNumber(): string

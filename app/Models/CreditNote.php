@@ -9,9 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CreditNote extends Model
 {
-    use HasFactory;
-
-    use HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
 

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CoaStoreRequest;
 use App\Http\Requests\CoaUpdateRequest;
 use App\Http\Resources\ChartOfAccountResource;
+use App\Models\Company;
 use App\Models\ChartOfAccount;
+use App\Models\Scopes\CompanyScope;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -39,8 +41,19 @@ class ChartOfAccountController extends Controller
         $q = $request->q;
         $c = $request->c;
 
-        $chartOfAccounts = ChartOfAccount::where('name', 'like', "%$q%")
-            ->orWhere('code', 'like', "%$q%")
+        $query = ChartOfAccount::query()
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%$q%")
+                    ->orWhere('code', 'like', "%$q%");
+            });
+
+        if (auth()->user()?->company?->code === 'LUMINOUS') {
+            // Luminous cash-bank entries reuse the BIB chart of accounts.
+            $query->withoutGlobalScope(CompanyScope::class)
+                ->where('company_id', Company::idFor('BIB'));
+        }
+
+        $chartOfAccounts = $query
             ->orderBy('prefix', 'asc')
             ->get();
 

@@ -18,7 +18,12 @@ class CashBankStoreRequest extends FormRequest
         return [
             'type' => 'required|in:receive,pay',
             'transaction_type' => 'required|in:bank_transaction,bank_to_account',
-            'number' => 'required|max:50|unique:cash_banks,number',
+            'number' => [
+                'required',
+                'max:50',
+                \Illuminate\Validation\Rule::unique('cash_banks', 'number')
+                    ->where('company_id', auth()->user()->company_id),
+            ],
             'contact_id' => 'required|exists:contacts,id',
             'date' => 'required|date',
             //required|exists:chart_of_accounts,id add must string

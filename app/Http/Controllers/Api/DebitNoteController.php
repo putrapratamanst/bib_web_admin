@@ -142,6 +142,7 @@ class DebitNoteController extends Controller
 
         try {
             DB::beginTransaction();
+            $autoApprove = auth()->user()->company?->code === 'LUMINOUS';
             
             // Use manual number when provided, otherwise generate automatically
             $manualNumber = trim((string) $request->input('number', ''));
@@ -163,7 +164,9 @@ class DebitNoteController extends Controller
                 'amount' => $contract->amount ?? 0,
                 'description' => $request->description,
                 'status' => 'active',
-                'approval_status' => 'pending', // Default pending status
+                'approval_status' => $autoApprove ? 'approved' : 'pending',
+                'approved_by' => $autoApprove ? Auth::id() : null,
+                'approved_at' => $autoApprove ? now() : null,
                 'installment' => $contract->installment_count ?? 0,
                 'created_at' => $request->created_at ? \Carbon\Carbon::parse($request->created_at) : now(),
                 'updated_at' => now(),

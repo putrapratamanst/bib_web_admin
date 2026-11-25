@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CashBankDetail extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'cash_bank_id',

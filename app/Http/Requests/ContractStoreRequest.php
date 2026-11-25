@@ -25,9 +25,9 @@ class ContractStoreRequest extends FormRequest
             'number' => [
                 'nullable',
                 'max:100',
-                $contractId 
-                    ? 'unique:contracts,number,' . $contractId . ',id'
-                    : 'unique:contracts,number'
+                Rule::unique('contracts', 'number')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($contractId),
             ],
             'cover_note_number' => 'nullable|max:150',
             'policy_number' => 'nullable|max:150',

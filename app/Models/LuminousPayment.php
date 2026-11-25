@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LuminousPayment extends Model
 {
-    use HasUuids;
+    use HasUuids, BelongsToCompany;
 
     public $incrementing = false;
     protected $keyType = 'string';

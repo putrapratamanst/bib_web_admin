@@ -71,6 +71,7 @@
                 url: '{{ route("api.report.piutang.index") }}',
                 method: 'GET',
                 data: {
+                    as_of_date: $('#as_of_date').val(),
                     from_date: from_date,
                     to_date: to_date,
                 },

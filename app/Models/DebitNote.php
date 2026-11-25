@@ -10,9 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DebitNote extends Model
 {
-    use HasFactory;
-
-    use HasUuids;
+    use HasFactory, HasUuids, BelongsToCompany;
 
     public $incrementing = false;
 
@@ -192,7 +190,10 @@ class DebitNote extends Model
     public function getReceiveAmountAttribute(): float
     {
         return $this->cashBankDetails()
-            ->join('cash_banks', 'cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+            ->join('cash_banks', function ($join) {
+                $join->on('cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+                    ->on('cash_bank_details.company_id', '=', 'cash_banks.company_id');
+            })
             ->where('cash_banks.type', 'receive')
             ->sum('cash_bank_details.amount');
     }
@@ -200,7 +201,10 @@ class DebitNote extends Model
     public function getReceiveDateAttribute()
     {
         return $this->cashBankDetails()
-            ->join('cash_banks', 'cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+            ->join('cash_banks', function ($join) {
+                $join->on('cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+                    ->on('cash_bank_details.company_id', '=', 'cash_banks.company_id');
+            })
             ->where('cash_banks.type', 'receive')
             ->max('cash_banks.date');
     }
@@ -209,7 +213,10 @@ class DebitNote extends Model
     public function getPayAmountAttribute(): float
     {
         return $this->cashBankDetails()
-            ->join('cash_banks', 'cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+            ->join('cash_banks', function ($join) {
+                $join->on('cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+                    ->on('cash_bank_details.company_id', '=', 'cash_banks.company_id');
+            })
             ->where('cash_banks.type', 'pay')
             ->sum('cash_bank_details.amount');
     }
@@ -217,7 +224,10 @@ class DebitNote extends Model
     public function getPayDateAttribute()
     {
         return $this->cashBankDetails()
-            ->join('cash_banks', 'cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+            ->join('cash_banks', function ($join) {
+                $join->on('cash_bank_details.cash_bank_id', '=', 'cash_banks.id')
+                    ->on('cash_bank_details.company_id', '=', 'cash_banks.company_id');
+            })
             ->where('cash_banks.type', 'pay')
             ->max('cash_banks.date');
     }
@@ -235,6 +245,11 @@ class DebitNote extends Model
     public function cashouts(): HasMany
     {
         return $this->hasMany(Cashout::class, 'debit_note_id', 'id');
+    }
+
+    public function sourceCashout(): BelongsTo
+    {
+        return $this->belongsTo(Cashout::class, 'source_cashout_id', 'id');
     }
 
     // Method untuk posting debit note dan auto create cashouts

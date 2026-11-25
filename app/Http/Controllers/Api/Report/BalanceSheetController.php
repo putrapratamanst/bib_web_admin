@@ -23,12 +23,12 @@ class BalanceSheetController extends Controller
                     END
                 ) AS nominal
             FROM chart_of_accounts AS coa
-            LEFT JOIN account_categories AS ac ON ac.id = coa.account_category_id
-            LEFT JOIN journal_entry_details je ON je.chart_of_account_id = coa.id
-            WHERE coa.financial_statement = 'balance_sheet'
+            LEFT JOIN account_categories AS ac ON ac.id = coa.account_category_id AND ac.company_id = coa.company_id
+            LEFT JOIN journal_entry_details je ON je.chart_of_account_id = coa.id AND je.company_id = coa.company_id
+            WHERE coa.financial_statement = 'balance_sheet' AND coa.company_id = ?
             GROUP BY ac.name, ac.number_order, coa.code, coa.name
             ORDER BY ac.number_order asc
-        ");
+        ", [auth()->user()->company_id]);
 
         $table = '<table class="table table-bordered table-hover table-striped">
         <thead>

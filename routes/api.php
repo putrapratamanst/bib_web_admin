@@ -8,7 +8,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Protected API Routes
-Route::middleware(['web', 'auth', \App\Http\Middleware\RestrictLuminous::class])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/account-category', [\App\Http\Controllers\Api\AccountCategoryController::class, 'index'])->name('api.account-categories.index');
     Route::get('/account-category/select2', [\App\Http\Controllers\Api\AccountCategoryController::class, 'select2'])->name('api.account-categories.select2');
 

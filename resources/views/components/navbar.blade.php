@@ -8,13 +8,19 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                @if(auth()->user()->role !== 'luminous')
+                @php($isLuminous = auth()->user()->company?->code === 'LUMINOUS')
                 <li class="nav-item">
                     <a class="nav-link{{ request()->routeIs('home') ? ' active' : '' }}" href="{{ route('home') }}">Home</a>
                 </li>
-                @endif
 
-                @if(auth()->user()->role !== 'luminous')
+                @if($isLuminous)
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master Data</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('master.contacts.index') }}">Contact</a></li>
+                    </ul>
+                </li>
+                @else
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Master Data
@@ -30,9 +36,11 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('master.contacts.index') }}">Contact</a>
                         </li>
+                        @if(auth()->user()->company?->code !== 'LUMINOUS')
                         <li>
                             <a class="dropdown-item" href="{{ route('master.contract-types.index') }}">Contract Type</a>
                         </li>
+                        @endif
                         <li>
                             <a class="dropdown-item" href="{{ route('master.currencies.index') }}">Currency</a>
                         </li>
@@ -47,15 +55,30 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
+                @if($isLuminous)
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Transaction</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('transaction.debit-notes.index') }}">Debit Note</a></li>
+                        <li><a class="dropdown-item" href="{{ route('transaction.credit-notes.index') }}">Credit Note</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ route('transaction.cash-banks.index') }}">Cash In / Cash Out</a></li>
+                        <li><a class="dropdown-item" href="{{ route('transaction.payment-allocations.index') }}">Payment Allocation</a></li>
+                    </ul>
+                </li>
+                @else
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Transaction
                     </a>
                     <ul class="dropdown-menu">
+                        @if(auth()->user()->company?->code !== 'LUMINOUS')
                         <li>
                             <a class="dropdown-item" href="{{ route('transaction.contracts.index') }}">Placing</a>
                         </li>
+                        @endif
                         @if(auth()->user()->role === 'approver')
                         <li>
                             <a class="dropdown-item{{ request()->routeIs('approval.*') ? ' active' : '' }}" href="{{ route('approval.index') }}">
@@ -110,7 +133,27 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
+                @if($isLuminous)
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Report</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('report.balance-sheet.index') }}">Balance Sheet</a></li>
+                        <li><a class="dropdown-item" href="{{ route('report.balance.index') }}">Balance</a></li>
+                        <li><a class="dropdown-item" href="{{ route('report.profitandloss.index') }}">Profit &amp; Loss</a></li>
+                        <li><a class="dropdown-item" href="{{ route('report.cashflow.index') }}">Cash Flow</a></li>
+                        <li><a class="dropdown-item" href="{{ route('report.piutang.index') }}">A/R Aging</a></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('report.account-statement.index') }}">
+                                <i class="fas fa-book me-1"></i>
+                                Account Statement <span class="badge bg-info">new</span>
+                            </a>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ route('report.debit-notes.index') }}">Debit Note Report</a></li>
+                    </ul>
+                </li>
+                @else
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Report
@@ -165,12 +208,11 @@
                 </li>
                 @endif
 
-                @if(auth()->user()->role === 'luminous')
+                @if($isLuminous)
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Luminous</a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ route('luminous.invoices.index') }}">Tagihan Luminous</a></li>
-                        <li><a class="dropdown-item" href="{{ route('luminous.aging') }}">A/R Aging Luminous</a></li>
+                        <li><a class="dropdown-item" href="{{ route('luminous.receivables.index') }}">Tagihan Luminous</a></li>
                         <li><a class="dropdown-item" href="{{ route('luminous.report') }}">Laporan Keuangan Luminous</a></li>
                     </ul>
                 </li>
@@ -190,6 +232,11 @@
                         <li>
                             <span class="dropdown-item-text">
                                 <small class="text-muted">{{ auth()->user()->email }}</small>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="dropdown-item-text">
+                                <small class="text-muted">{{ auth()->user()->company?->name }}</small>
                             </span>
                         </li>
                         <li><hr class="dropdown-divider"></li>

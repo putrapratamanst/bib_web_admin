@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChartOfAccount extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompany;
 
     use HasUlids;
 

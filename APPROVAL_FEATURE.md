@@ -71,6 +71,10 @@ GET    /transaction/contracts/{id}/edit - Edit contract (Admin only)
 
 ## Business Logic
 
+### Luminous Debit Notes
+- Debit Note created for the Luminous company is approved automatically.
+- Receivables created through the Luminous flow also create posted billings, so they are available for payment allocation.
+
 ### Contract Creation
 1. Admin membuat contract baru
 2. Status approval otomatis: `pending`

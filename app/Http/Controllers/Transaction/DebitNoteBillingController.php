@@ -9,6 +9,7 @@ use App\Models\Cashout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class DebitNoteBillingController extends Controller
 {
@@ -64,7 +65,13 @@ public function store(Request $request)
         $request->validate([
             'debit_note_id'    => 'required|exists:debit_notes,id',
             'billing_number'   => 'required|array',
-            'billing_number.*' => 'required|string|max:50|distinct|unique:debit_note_billings,billing_number',
+            'billing_number.*' => [
+                'required',
+                'string',
+                'max:50',
+                'distinct',
+                Rule::unique('debit_note_billings', 'billing_number')->where('company_id', auth()->user()->company_id),
+            ],
             'date'             => 'required|array',
             'date.*'           => 'required|date',
             'due_date'         => 'required|array',

@@ -13,7 +13,7 @@ Route::get('/luminous/login', [\App\Http\Controllers\Auth\LoginController::class
 Route::post('/luminous/login', [\App\Http\Controllers\Auth\LoginController::class, 'luminousLogin'])->name('luminous.login.store');
 
 // Protected Routes
-Route::middleware(['auth', \App\Http\Middleware\RestrictLuminous::class])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
         return view('home');
     })->name('home');
@@ -178,9 +178,10 @@ Route::prefix('transaction')->group(function () {
 });
 
 Route::middleware(['auth', 'can:luminous'])->prefix('luminous')->name('luminous.')->group(function () {
+    Route::get('/receivables', [\App\Http\Controllers\LuminousController::class, 'receivables'])->name('receivables.index');
+    Route::get('/receivables/create', [\App\Http\Controllers\LuminousController::class, 'createReceivable'])->name('receivables.create');
+    Route::post('/receivables', [\App\Http\Controllers\LuminousController::class, 'storeReceivable'])->name('receivables.store');
     Route::get('/invoices', [\App\Http\Controllers\LuminousController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/create', [\App\Http\Controllers\LuminousController::class, 'create'])->name('invoices.create');
-    Route::post('/invoices', [\App\Http\Controllers\LuminousController::class, 'store'])->name('invoices.store');
     Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\LuminousController::class, 'print'])->name('invoices.print');
     Route::post('/invoices/{invoice}/pay', [\App\Http\Controllers\LuminousController::class, 'pay'])->name('invoices.pay');
     Route::get('/aging', [\App\Http\Controllers\LuminousController::class, 'aging'])->name('aging');

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Contract;
+use App\Models\Company;
 use App\Models\CreditNote;
 use App\Models\DebitNote;
 use App\Models\User;
@@ -17,40 +18,48 @@ class SendApprovalReminders extends Command
 
     public function handle(): int
     {
-        $pending = [
-            'contracts' => Contract::query()->where('approval_status', 'pending')->count(),
-            'debit_notes' => DebitNote::query()->where('approval_status', 'pending')->count(),
-            'credit_notes' => CreditNote::query()->where('approval_status', 'pending')->count(),
-        ];
-        $total = array_sum($pending);
+        $reminders = Company::query()->get()->mapWithKeys(function (Company $company) {
+            $pending = [
+                'contracts' => Contract::where('company_id', $company->id)->where('approval_status', 'pending')->count(),
+                'debit_notes' => DebitNote::where('company_id', $company->id)->where('approval_status', 'pending')->count(),
+                'credit_notes' => CreditNote::where('company_id', $company->id)->where('approval_status', 'pending')->count(),
+            ];
 
-        $this->info(sprintf(
-            'Pending approval: %d contract, %d debit note, %d credit note (total %d).',
-            $pending['contracts'],
-            $pending['debit_notes'],
-            $pending['credit_notes'],
-            $total,
-        ));
+            return [$company->id => ['company' => $company, 'pending' => $pending]];
+        })->filter(fn ($row) => array_sum($row['pending']) > 0);
 
-        if ($total === 0 || $this->option('dry-run')) {
+        foreach ($reminders as $row) {
+            $pending = $row['pending'];
+            $this->info(sprintf(
+                '%s: %d contract, %d debit note, %d credit note (total %d).',
+                $row['company']->name,
+                $pending['contracts'],
+                $pending['debit_notes'],
+                $pending['credit_notes'],
+                array_sum($pending),
+            ));
+        }
+
+        if ($reminders->isEmpty() || $this->option('dry-run')) {
             return self::SUCCESS;
         }
 
-        $approvers = User::query()
-            ->where('role', 'approver')
-            ->whereNotNull('email')
-            ->get();
+        foreach ($reminders as $row) {
+            $approvers = User::where('company_id', $row['company']->id)
+                ->where('role', 'approver')
+                ->whereNotNull('email')
+                ->get();
 
-        if ($approvers->isEmpty()) {
-            $this->warn('Tidak ada approver dengan email yang dapat menerima reminder.');
+            if ($approvers->isEmpty()) {
+                $this->warn("Tidak ada approver untuk {$row['company']->name}.");
+                continue;
+            }
 
-            return self::SUCCESS;
+            $approvers->each(function (User $approver) use ($row): void {
+                $approver->notify(new PendingApprovalReminder($row['pending']));
+                $this->line("Reminder dikirim ke {$approver->email}.");
+            });
         }
-
-        $approvers->each(function (User $approver) use ($pending): void {
-            $approver->notify(new PendingApprovalReminder($pending));
-            $this->line("Reminder dikirim ke {$approver->email}.");
-        });
 
         return self::SUCCESS;
     }

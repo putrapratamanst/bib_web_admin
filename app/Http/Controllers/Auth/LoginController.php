@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -36,9 +37,6 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            $user = Auth::user();
-            
-            // Redirect based on role
             return redirect()->intended(route('home'));
         }
 
@@ -50,7 +48,7 @@ class LoginController extends Controller
     public function showLuminousLoginForm()
     {
         if (Auth::check()) {
-            return Auth::user()->role === 'luminous'
+            return Auth::user()->company?->code === 'LUMINOUS'
                 ? redirect()->route('luminous.invoices.index')
                 : redirect()->route('login');
         }
@@ -65,7 +63,11 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt(array_merge($credentials, ['role' => 'luminous']), $request->filled('remember'))) {
+        $companyId = Company::idFor('LUMINOUS');
+
+        abort_unless($companyId, 500, 'Company Luminous belum disiapkan.');
+
+        if (Auth::attempt($credentials + ['company_id' => $companyId], $request->filled('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended(route('luminous.invoices.index'));
         }
@@ -80,11 +82,12 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        $redirect = Auth::user()?->company?->code === 'LUMINOUS' ? 'luminous.login' : 'login';
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route($redirect);
     }
 }
